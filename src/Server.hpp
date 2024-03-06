@@ -1,21 +1,20 @@
 #pragma once
 
-#include "App.hpp"
+#include "Scene.hpp"
 
-class Server : public App {
+class Server : public Scene {
     public:
-        Server() = default;
-        Component renderer() override {
-            return Renderer([&] {
-                return vbox({
-                        text("server rendere") |
-                            color(Color::LightGreenBis),
-                        gauge(0),
-                    }) |
-                    center;
-            });
-        };
-        void shutdown() override{
-
-        };
+        Server();
+        Component renderer() override;
+        void shutdown() override;
+    protected:
+        Component container = Renderer([&] {
+            static int i = 0;
+            return vbox({
+                    text("server rendere " + std::to_string(i++)) |
+                        color(Color::LightGreenBis),
+                    gauge(0),
+                }) |
+                center;
+        });
 };

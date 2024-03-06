@@ -1,10 +1,10 @@
 #pragma once
 
-#include "App.hpp"
+#include "Scene.hpp"
 
 using namespace ftxui;
 
-class Client : public App {
+class Client : public Scene {
     public:
         Client() = default;
         Component renderer() override {
