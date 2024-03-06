@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/eools.dir/src/main.cpp.o -o eools  /usr/local/lib/libftxui-screen.a /usr/local/lib/libftxui-dom.a /usr/local/lib/libftxui-component.a /usr/local/lib/libftxui-dom.a /usr/local/lib/libftxui-screen.a 

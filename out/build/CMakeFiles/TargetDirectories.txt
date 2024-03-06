@@ -1,3 +1,0 @@
-/mnt/d/temp/ftxui/eools/out/build/CMakeFiles/eools.dir
-/mnt/d/temp/ftxui/eools/out/build/CMakeFiles/edit_cache.dir
-/mnt/d/temp/ftxui/eools/out/build/CMakeFiles/rebuild_cache.dir
