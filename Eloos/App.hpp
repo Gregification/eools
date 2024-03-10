@@ -9,6 +9,8 @@ using namespace ftxui;
 
 class App {
     public:
-        virtual Component renderer() {return NULL;};
-        virtual void shutdown() {} 
+        App() = default;
+        virtual void run(Screen screen) {};
+    protected:
+        std::unique_ptr<std::thread> screenRenderer;
 };
