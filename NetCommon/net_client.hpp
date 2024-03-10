@@ -29,7 +29,7 @@ namespace net {
 
 					//resolve host string to something asio can target
 					asio::ip::tcp::resolver resolver(m_context);
-					m_endpoints = resolver.resolve(host, std::to_string(port)); //throes exception on bad input
+					asio::ip::tcp::resolver::results_type m_endpoints = resolver.resolve(host, std::to_string(port)); //throws exception on bad input
 					
 					m_connection->ConnectToServer(m_endpoints);
 

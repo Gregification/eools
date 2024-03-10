@@ -21,13 +21,14 @@ namespace net {
 		//asio
 		protected:
 			asio::ip::tcp::socket m_socket; //unique remote socket
-			asio::io_context& m_asioContext;
+			
+			asio::io_context& m_asioContext;//singleton
 
 			//outgoing messages
 			tsqueue<message<T>> m_qMessagesOut;
 
 			//messages received from remote
-			tsqueue<owned_message>& m_qMessagesIn;
+			tsqueue<owned_message<T>>& m_qMessagesIn;
 
 	};
 }

@@ -8,7 +8,7 @@ namespace net {
 	class tsqueue {
 		public:
 			tsqueue() = default;
-			tsqueue(const txqueue<T>&) = delete;
+			tsqueue(const tsqueue<T>&) = delete;
 
 		public:
 			const T& front() {

@@ -5,5 +5,5 @@
 class Client : public App {
 public:
 	Client();
-	void run(Screen screen) override;
+	void run(ScreenInteractive& screen);
 };

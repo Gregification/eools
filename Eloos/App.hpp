@@ -10,7 +10,7 @@ using namespace ftxui;
 class App {
     public:
         App() = default;
-        virtual void run(Screen screen) {};
+        virtual void run(ScreenInteractive& screen) {};
     protected:
         std::unique_ptr<std::thread> screenRenderer;
 };

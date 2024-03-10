@@ -4,6 +4,6 @@ Client::Client() {
 
 }
 
-void Client::run(Screen screen) {
+void Client::run(ScreenInteractive& screen) {
 
 }

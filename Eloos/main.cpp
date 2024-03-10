@@ -19,6 +19,8 @@ int main() {
     else std::cout << "\a";
 
     delete app;
+    screen.Exit();
+
 	return EXIT_SUCCESS;
 }
 
@@ -34,7 +36,7 @@ void prepScene() {
             switch (selected) {
                 case 0: app = new Client();
                     break;
-                case 1: app = new Server();
+                case 1: app = new Server(60000);
                     break;
                 default: break;
             }
