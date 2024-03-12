@@ -45,25 +45,28 @@ namespace net {
 			void WaitForClientConnection() {
 				m_asioAcceptor.async_accept(
 					[this](std::error_code ec, asio::ip::tcp::socket socket) {
-						if (ec)
-							onError(std::string("[SERVER] New Connection Error: ") + ec.message());
-						else {
-							//std::shared_ptr<connection<T>> newconn =
-							//	std::make_shared<connection<T>>(connection<T>::owner::server,
-							//		m_asioContext, std::move(socket), m_qMessagedIn);
-
-							////filter connection
-							//if (onClientConnect(newconn)) {
-							//	m_deqConnections.push_back(std::move_backward(newconn));
-
-							//	//assign unique id (yeah it'll eventually overflow but eh, congrats if your server gets that popular)
-							//	m_deqConnections.back()->ConnectToClient(nIDCounter++);
-
-							onEvent(std::string("connection accepted [") + socket.local_endpoint().address().to_string() + std::string(":") + std::to_string(socket.local_endpoint().port()) + "]");
-							//} else {
-							//	onEvent("connection denied");
-							//}
+						if (ec) {
+							onError(std::string("New Connection Error: ") + ec.message());
+							return;
 						}
+
+						onEvent(std::string("connection request [") + std::string(socket.local_endpoint().address().to_string()) + ":" + std::to_string(socket.local_endpoint().port()) + "]");
+
+						std::shared_ptr<connection<T>> newconn =
+							std::make_shared<connection<T>>(connection<T>::owner::server,
+								m_asioContext, std::move(socket), m_qMessagedIn);
+
+						//filter connection
+						if (onClientConnect(newconn)) { //if connection approved
+							m_deqConnections.push_back(std::move(newconn));
+						
+							m_deqConnections.back()->ConnectToClient(nIDCounter++);
+
+							onEvent("connection accepted [" + std::to_string(nIDCounter-1) +"]");
+						} else {
+							onEvent("connection denied");
+						}
+
 						//reprime asio context 
 						WaitForClientConnection();
 					});
@@ -108,7 +111,7 @@ namespace net {
 			}
 
 			//trigger to start processing given number of messages. defaults to max count. calls this.OnMessage for each
-			void Update(size_t nMaxMessages = -1) {
+			bool Update(size_t nMaxMessages = -1) {
 				size_t nMessageCount = 0;
 				while (nMessageCount < nMaxMessages && !m_qMessagedIn.isEmpty()) {
 					auto msg = m_qMessagedIn.pop_front();
@@ -117,6 +120,8 @@ namespace net {
 
 					nMessageCount++;
 				}
+
+				return nMessageCount > 0;
 			}
 
 		protected:
@@ -158,6 +163,6 @@ namespace net {
 			asio::ip::tcp::acceptor m_asioAcceptor;
 
 			//client id
-			uint32_t nIDCounter = 10000;
+			uint32_t nIDCounter = 1;
 	};
 }

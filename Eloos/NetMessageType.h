@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
-enum class NetMessageType : uint32_t {
-	ServerMessage
+enum class NetMsgType : uint32_t {
+	ServerMessage,
+	Ping
 };

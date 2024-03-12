@@ -14,7 +14,7 @@ namespace net {
 	template <typename T>
 	class client_interface {
 		public:
-			client_interface() : m_socket(m_context) {
+			client_interface() {
 
 			}
 			
@@ -25,17 +25,21 @@ namespace net {
 		public:
 			bool Connect(const std::string& host, const uint16_t port) {
 				try { //establish asio connection
-					m_connection = std::make_unique<connection<T>>(); //TODO
-
 					//resolve host string to something asio can target
 					asio::ip::tcp::resolver resolver(m_context);
-					asio::ip::tcp::resolver::results_type m_endpoints = resolver.resolve(host, std::to_string(port)); //throws exception on bad input
+					asio::ip::tcp::resolver::results_type endpoint = resolver.resolve(host, std::to_string(port)); //throws exception on bad input
+
+					m_connection = std::make_unique<connection<T>>(
+						connection<T>::owner::client,
+						m_context,
+						asio::ip::tcp::socket(m_context),
+						m_qMessagesIn
+					);
 					
-					m_connection->ConnectToServer(m_endpoints);
+					m_connection->ConnectToServer(endpoint);
 
 					thrContext = std::thread([this]() {m_context.run(); });
 				} catch (std::exception& e) { //intended for asio exceptions
-					std::cerr << "panic~ mayhem~ a cl9ent connection exception!: " << e.what() << "\n";
 					return false;
 				}
 
@@ -55,7 +59,7 @@ namespace net {
 				m_connection.release();
 			}
 
-			void isConnected() {
+			bool isConnected() {
 				if(m_connection)
 					return m_connection->isConnected();
 				return false;
@@ -70,8 +74,7 @@ namespace net {
 			asio::io_context m_context;
 			/*thread running the asio context*/
 			std::thread thrContext;
-			/*socket to server*/
-			asio::ip::tcp::socket m_socket;
+
 			/*connected instance of socket, handles data transfer*/
 			std::unique_ptr<connection<T>> m_connection;
 
