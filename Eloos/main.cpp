@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "Server.hpp"
-#include "Client.hpp"
+#include "QueueClient.hpp"
 
 void prepScene();
 
@@ -11,8 +11,12 @@ using namespace ftxui;
 
 static App *app;
 static ScreenInteractive screen = ScreenInteractive::Fullscreen();
+uint16_t serverPort = SERVER_PORT;
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc > 1)
+        serverPort = std::stoi(argv[1]);
+
     prepScene();
 
     if (app) app->run(screen);
@@ -34,9 +38,9 @@ void prepScene() {
     MenuOption option;
     option.on_enter = [&] {
             switch (selected) {
-                case 0: app = new Client();
+                case 0: app = new QueueClient();
                     break;
-                case 1: app = new Server(60000);
+                case 1: app = new Server(serverPort);
                     break;
                 default: break;
             }

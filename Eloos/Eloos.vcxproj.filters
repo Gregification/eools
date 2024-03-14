@@ -19,6 +19,15 @@
     <Filter Include="Source Files\Client">
       <UniqueIdentifier>{7c85c7cb-dec3-48b0-9f44-58c85207ca5b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Game">
+      <UniqueIdentifier>{39f49b6e-fd84-4f91-8025-46c89f5a32c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\Player">
+      <UniqueIdentifier>{adcd3f1d-6a40-4d78-b02c-4ad719289049}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\World">
+      <UniqueIdentifier>{45d7559d-fa08-4c21-9632-1076e72fecb4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -28,6 +37,9 @@
       <Filter>Source Files\Server</Filter>
     </ClCompile>
     <ClCompile Include="Client.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="QueueClient.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,6 +55,18 @@
     </ClInclude>
     <ClInclude Include="NetMessageType.h">
       <Filter>Source Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="QueueClient.hpp">
+      <Filter>Source Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="GameMap.hpp">
+      <Filter>Source Files\Game\World</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.hpp">
+      <Filter>Source Files\Game\World</Filter>
+    </ClInclude>
+    <ClInclude Include="Ship.hpp">
+      <Filter>Source Files\Game\Player</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

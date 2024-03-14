@@ -13,6 +13,8 @@ namespace net {
 	*/
 	template <typename T>
 	class client_interface {
+		friend class client_interface;
+
 		public:
 			client_interface() {
 
@@ -65,8 +67,26 @@ namespace net {
 				return false;
 			}
 
+			void Send(const message<T>& msg) {
+				if (isConnected())
+					m_connection->Send(msg);
+			}
+
 			tsqueue<owned_message<T>>& Incomming() {
 				return m_qMessagesIn;
+			}
+
+			size_t Update(size_t nMaxMessages = -1) {
+				size_t nMessageCount = 0;
+				while (nMessageCount < nMaxMessages && !m_qMessagesIn.isEmpty()) {
+					auto msg = m_qMessagesIn.pop_front();
+
+					OnMessage(msg.msg);
+
+					nMessageCount++;
+				}
+
+				return nMessageCount;
 			}
 
 		protected:
@@ -78,8 +98,12 @@ namespace net {
 			/*connected instance of socket, handles data transfer*/
 			std::unique_ptr<connection<T>> m_connection;
 
-		private:
 			/*messages from server*/
 			tsqueue<owned_message<T>> m_qMessagesIn;
+
+			virtual void OnMessage(message<T>& msg) {
+
+			}
+
 	};
 }

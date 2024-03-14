@@ -4,14 +4,15 @@
 
 #include "NetMessageType.h"
 #include <eol_net.hpp>
+#include <set>
 
 class Server : public App, public net::server_interface<NetMsgType> {
 public:
 	Server(uint16_t listeningPort) : net::server_interface<NetMsgType>(listeningPort) {
-
+		messages.push_back(text(std::format("see NetMessageType.h for message types.")) | color(Color::DarkSeaGreen3) | underlined);
 	}
 
-    void run(ScreenInteractive& screen);
+    void run(ScreenInteractive& screen) override;
 protected:
 	//returns true/accept or false/decline regarding the connection. think Swing predicate filters
 	virtual bool onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) override;
@@ -28,10 +29,8 @@ protected:
 	virtual void onEvent(std::string message) override;
 
 protected:
-	std::thread screenThread;
-
-private:
-	std::recursive_mutex renderMutex;
 	ftxui::Component renderer;
+
 	ftxui::Elements messages;
+	std::set<std::string> blacklist_ip;
 };

@@ -49,8 +49,11 @@ namespace net {
 			}
 
 			bool Disconnect() {
-				if (isConnected())
+				if (isConnected()) {
 					asio::post(m_asioContext, [this]() {m_socket.close(); });
+					return true;
+				}
+				return false;
 			}
 
 			bool isConnected() const {
@@ -66,6 +69,19 @@ namespace net {
 						if (!isQueueWorking)
 							WriteHeader();
 					});
+			}
+
+
+			std::string ToString() {
+				return std::string("[") + GetIP() + ":" + std::to_string(GetPort()) + "]";
+			}
+
+			std::string GetIP() {
+				return m_socket.local_endpoint().address().to_string();
+			}
+
+			asio::ip::port_type GetPort() {
+				return m_socket.local_endpoint().port();
 			}
 
 		//asio

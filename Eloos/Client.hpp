@@ -9,5 +9,5 @@ class Client : public App, public net::client_interface<NetMsgType> {
 public:
 	Client() {}
 
-	void run(ScreenInteractive& screen);
+	void run(ScreenInteractive& screen) override;
 };

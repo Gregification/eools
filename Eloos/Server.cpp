@@ -1,29 +1,98 @@
 #pragma once
 
 #include "Server.hpp"
-#include "ftxui/dom/canvas.hpp"
 
 void Server::run(ScreenInteractive& screen) {
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
-				Elements eles;
-				for (size_t i = 0; i < m_deqConnections.size(); i++) {
-					uint32_t id = m_deqConnections.at(i)->GetID();
 
-					eles.push_back(text(std::to_string(id)));
+				Elements eles;
+				{
+					std::lock_guard lk(m_mutexDeqConnections);
+					for (auto& sptr : m_deqConnections) {
+						try {
+							if (!sptr->isConnected()) continue;
+
+							uint32_t id = sptr->GetID();
+
+							eles.push_back(text(std::format("{0:3} {1}", std::to_string(id), sptr->ToString())) | bold);
+						}
+						catch (std::exception& e) {
+							onError(e.what());
+						}
+					}
 				}
 
-				return window(text("users"), vbox(std::move(eles))) | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 50);
+				return window(text(std::format("users (hosted on port:{0})", std::to_string(listeningPort))), vbox(std::move(eles)));
 			});
 
 			auto messagePane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
-				return window(text("messages"), vbox(messages)) | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 50);
+				return window(text("messages"), vbox(messages));
 			});
 
-			int preffSize = 50;
-			auto container = ResizableSplitLeft(messagePane, userPane, &preffSize);
+			std::string usrSelected;
+			Component usrInput = Input(&usrSelected);
+			usrInput |= CatchEvent([&](Event event) {
+					return event.is_character() && !std::isdigit(event.character()[0]) && usrSelected.size() > 260;
+				});
+
+			auto controlPane = Container::Vertical({
+					usrInput,
+					Button("kick", [&] {
+							if (usrSelected.size() == 0) return;
+							int id = std::stoi(usrSelected);
+							std::lock_guard lk(m_mutexDeqConnections);
+							for (auto& sptr : m_deqConnections)
+								if (sptr->isConnected() && sptr->GetID() == id) {
+									sptr->Disconnect();
+									return;
+								}
+						}, ButtonOption::Ascii()),
+					Button("ban ip of user", [&] {
+							if (usrSelected.size() == 0) return;
+							int id = std::stoi(usrSelected);
+							std::lock_guard lk(m_mutexDeqConnections);
+							for (auto& sptr : m_deqConnections)
+								if (sptr->isConnected() && sptr->GetID() == id) {
+									blacklist_ip.insert(sptr->GetIP());
+									return;
+								}
+						}, ButtonOption::Ascii()),
+					Button("ban exact ip given", [&] {
+							std::lock_guard lk(renderMutex);
+							if (usrSelected.size() == 0) return;
+							blacklist_ip.insert(usrSelected);
+						}, ButtonOption::Ascii()),
+					Button("unban exact ip given", [&] {
+							std::lock_guard lk(renderMutex);
+							if (usrSelected.size() == 0) return;
+							blacklist_ip.erase(usrSelected);
+						}, ButtonOption::Ascii()),
+					Button("clear messages", [&] {
+							std::lock_guard lk(renderMutex);
+							messages.clear();
+						}, ButtonOption::Ascii())
+				});
+
+			auto bannedPane = Renderer([&]() {
+					std::lock_guard lk(renderMutex);
+
+					Elements eles;
+					for (auto& ipstr : blacklist_ip)
+						eles.push_back(text(ipstr) | bold);
+
+					return window(text("ip blacklist"), vbox(std::move(eles)) | frame | vscroll_indicator);
+				});
+
+			int ctrlPSizePref = 30;
+			auto container = ResizableSplitLeft(controlPane, bannedPane, &ctrlPSizePref);
+			int usrSizePref = 10;
+			container = ResizableSplitBottom(container, userPane, &usrSizePref);
+			//auto container = ResizableSplitBottom(controlPane, userPane, &usrSizePref);
+			int msgSizePref = 50;
+			container = ResizableSplitLeft(messagePane, container, &msgSizePref);
 
 			screen.Loop(container);
 		});
@@ -34,15 +103,17 @@ void Server::run(ScreenInteractive& screen) {
 	while (1) {
 		didWork = Update();
 
-		//cap at 30 fps if nothing is happening
+		//cap at 20 fps if nothing is happening
 		if (!didWork)
-			Sleep(33);
+			Sleep(50);
 	}
 }
 
 //returns true/accept or false/decline regarding the connection. think Swing predicate filters
 bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) {
-	return true;
+	std::lock_guard lk(renderMutex);
+
+	return !blacklist_ip.contains(client->GetIP());
 }
 
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
@@ -53,20 +124,21 @@ void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> cli
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
 
-	messages.push_back(text("[MESSAGE]\n"));
+	messages.push_back(text(std::format("[MESSAGE] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
 void Server::onError(std::string message) {
+	std::cout << "\a";
 	std::lock_guard lk(renderMutex);
 
 	messages.push_back(text("[ERROR]" + message + "\n"));
-	std::cout << "\a";
 }
 
 //on notable evets such as connection being denied, user joining and so on
 void Server::onEvent(std::string message) {
+	std::cout << "\a";
 	std::lock_guard lk(renderMutex);
 
-	messages.push_back(text("[EVENT]" + message + "\n"));
+	messages.push_back(text("[EVENT]" + message + "\n") | blink);
 }

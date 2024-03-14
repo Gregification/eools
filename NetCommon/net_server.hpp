@@ -10,7 +10,7 @@ namespace net {
 	class server_interface {
 		public:
 			server_interface(uint16_t listeningPort)
-				: m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), listeningPort)) 
+				: listeningPort(listeningPort), m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), listeningPort)) 
 			{
 
 			}
@@ -58,6 +58,7 @@ namespace net {
 
 						//filter connection
 						if (onClientConnect(newconn)) { //if connection approved
+							std::lock_guard lk(m_mutexDeqConnections);
 							m_deqConnections.push_back(std::move(newconn));
 						
 							m_deqConnections.back()->ConnectToClient(nIDCounter++);
@@ -79,7 +80,9 @@ namespace net {
 				} else {
 					onClientDisconnect(client);
 					client.reset();
-					
+
+					std::lock_guard lk(m_mutexDeqConnections);
+
 					m_deqConnections.erase(
 						std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
 				}
@@ -88,6 +91,7 @@ namespace net {
 			//broadcast
 			void MessageAllClients(const message<T>& msg, std::shared_ptr<connection<T>> pIgnoreClient = nullptr) {
 				bool invalidClientExists = false;
+				std::lock_guard lk(m_mutexDeqConnections);
 
 				for (auto& client : m_deqConnections) {
 
@@ -154,6 +158,7 @@ namespace net {
 			tsqueue<owned_message<T>> m_qMessagedIn;
 
 			//active validated connections
+			std::recursive_mutex m_mutexDeqConnections;
 			std::deque<std::shared_ptr<connection<T>>> m_deqConnections;
 
 			asio::io_context m_asioContext;
@@ -164,5 +169,7 @@ namespace net {
 
 			//client id
 			uint32_t nIDCounter = 1;
+
+			const uint16_t listeningPort;
 	};
 }

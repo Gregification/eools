@@ -12,5 +12,6 @@ class App {
         App() = default;
         virtual void run(ScreenInteractive& screen) {};
     protected:
-        std::unique_ptr<std::thread> screenRenderer;
+        std::thread screenThread;
+        std::recursive_mutex renderMutex;
 };
