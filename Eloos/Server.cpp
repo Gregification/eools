@@ -16,7 +16,7 @@ void Server::run(ScreenInteractive& screen) {
 
 							uint32_t id = sptr->GetID();
 
-							eles.push_back(text(std::format("{0:3} {1}", std::to_string(id), sptr->ToString())) | bold);
+							eles.push_back(text(std::format("{0:3} ping:{1:4.3} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
 						}
 						catch (std::exception& e) {
 							onError(e.what());
@@ -73,7 +73,8 @@ void Server::run(ScreenInteractive& screen) {
 					Button("clear messages", [&] {
 							std::lock_guard lk(renderMutex);
 							messages.clear();
-						}, ButtonOption::Ascii())
+						}, ButtonOption::Ascii()),
+					
 				});
 
 			auto bannedPane = Renderer([&]() {
@@ -112,19 +113,17 @@ void Server::run(ScreenInteractive& screen) {
 //returns true/accept or false/decline regarding the connection. think Swing predicate filters
 bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 	std::lock_guard lk(renderMutex);
+	
+	net::message<NetMsgType> msg;
+	msg.header.id = NetMsgType::Ping;
+
+	client->Send(msg);
 
 	return !blacklist_ip.contains(client->GetIP());
 }
 
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 
-}
-
-//on message from specific given client
-void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
-	std::lock_guard lk(renderMutex);
-
-	messages.push_back(text(std::format("[MESSAGE] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
@@ -142,3 +141,51 @@ void Server::onEvent(std::string message) {
 
 	messages.push_back(text("[EVENT]" + message + "\n") | blink);
 }
+
+//on message from specific given client
+void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
+	std::lock_guard lk(renderMutex);
+
+	switch (msg.header.id) {
+		case NetMsgType::Ping : {
+				Ping ping = {};
+				msg >> ping;
+
+				if (ping.isComplete())
+					client->pingTime.store(ping.sent - ping.received);
+					return;
+				
+				ping.tagReceived();
+				msg << ping;
+				client->Send(msg);
+			} break;
+		case NetMsgType::IDPartition: {
+				msg.body.clear();
+				
+				IDPartition part = {};
+					part.min = client->GetID() * STD_PARTITION_SIZE;
+					part.max += STD_PARTITION_SIZE;
+
+				msg << part;
+				client->Send(msg);
+			} break;
+		case NetMsgType::IDCorrection : {
+				static IDPartition backupIDParition({ .min = 0, .max = STD_PARTITION_SIZE - 1, .nxt = 0 });
+				
+				IDCorrection corr = {};
+				msg >> corr;
+
+				corr.newId = backupIDParition.getNext();
+
+				msg << corr;
+				MessageAllClients(msg);
+			} break;
+		default: {
+			//broadcast to all clients excluding source client
+			MessageAllClients(msg, client);
+		} break;
+	}
+
+	messages.push_back(text(std::format("[MESSAGE] ordinal: {}", static_cast<int>(msg.header.id))));
+}
+

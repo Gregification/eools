@@ -8,6 +8,8 @@ namespace net {
 	template <typename T>
 	class connection : public std::enable_shared_from_this<connection<T>> {
 	public:
+		std::atomic<time_t> pingTime = -1;
+
 		enum class owner {
 			server,
 			client
@@ -144,7 +146,7 @@ namespace net {
 
 			//ASYNC - prime context ready to read message body
 			void WriteBody() {
-				asio::async_write(m_socket, asio::buffer(&m_qMsgBuffOut.front().body.data(), sizeof(message_header<T>)),
+				asio::async_write(m_socket, asio::buffer(m_qMsgBuffOut.front().body.data(), m_qMsgBuffOut.front().body.size()),
 					[this](std::error_code ec, std::size_t length) {
 						if (ec) {
 							m_socket.close();

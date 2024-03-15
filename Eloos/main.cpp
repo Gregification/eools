@@ -4,16 +4,18 @@
 
 #include "Server.hpp"
 #include "QueueClient.hpp"
-
-void prepScene();
+#include "GameStructs.hpp"
 
 using namespace ftxui;
 
-static App *app;
-static ScreenInteractive screen = ScreenInteractive::Fullscreen();
+void prepScene();
+
+App *app;
+ScreenInteractive screen = ScreenInteractive::Fullscreen();
 uint16_t serverPort = SERVER_PORT;
 
 int main(int argc, char *argv[]) {
+
     if (argc > 1)
         serverPort = std::stoi(argv[1]);
 
@@ -24,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     delete app;
     screen.Exit();
-
+    
 	return EXIT_SUCCESS;
 }
 

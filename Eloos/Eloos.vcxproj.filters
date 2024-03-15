@@ -22,11 +22,14 @@
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{39f49b6e-fd84-4f91-8025-46c89f5a32c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Game\Player">
-      <UniqueIdentifier>{adcd3f1d-6a40-4d78-b02c-4ad719289049}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Game\World">
       <UniqueIdentifier>{45d7559d-fa08-4c21-9632-1076e72fecb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\GameObject">
+      <UniqueIdentifier>{885bc6fe-81f8-45c6-808b-64abb20b17e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\GameObject\Player">
+      <UniqueIdentifier>{adcd3f1d-6a40-4d78-b02c-4ad719289049}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +44,9 @@
     </ClCompile>
     <ClCompile Include="QueueClient.cpp">
       <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Source Files\Game\GameObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,7 +72,13 @@
       <Filter>Source Files\Game\World</Filter>
     </ClInclude>
     <ClInclude Include="Ship.hpp">
-      <Filter>Source Files\Game\Player</Filter>
+      <Filter>Source Files\Game\GameObject\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStructs.hpp">
+      <Filter>Source Files\Game\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.hpp">
+      <Filter>Source Files\Game\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

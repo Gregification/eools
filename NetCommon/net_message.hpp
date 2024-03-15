@@ -42,7 +42,7 @@ namespace net {
 		}
 
 		template<typename DT>
-		friend message<T>& operator >> (message<T>& msg, const DT& data) {
+		friend message<T>& operator >> (message<T>& msg, DT& data) {
 			static_assert(std::is_standard_layout<DT>::value, "too complex to complex to push");
 
 			size_t i = msg.body.size() - sizeof(DT);

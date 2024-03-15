@@ -41,7 +41,7 @@ namespace net {
 					m_connection->ConnectToServer(endpoint);
 
 					thrContext = std::thread([this]() {m_context.run(); });
-				} catch (std::exception& e) { //intended for asio exceptions
+				} catch (std::exception&) { //intended for asio exceptions
 					return false;
 				}
 

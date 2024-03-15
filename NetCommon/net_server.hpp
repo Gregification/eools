@@ -168,7 +168,7 @@ namespace net {
 			asio::ip::tcp::acceptor m_asioAcceptor;
 
 			//client id
-			uint32_t nIDCounter = 1;
+			uint32_t nIDCounter = 1;//THIS MUST START AT 1. server uses this to partition ID's and reserves 0'th index as servers backup ids
 
 			const uint16_t listeningPort;
 	};

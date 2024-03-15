@@ -26,11 +26,14 @@ protected:
 	virtual void onError(std::string message) override;
 
 	//on notable evets such as connection being denied, user joining and so on
-	virtual void onEvent(std::string message) override;
+	virtual void onEvent(std::string message) override;	
 
 protected:
 	ftxui::Component renderer;
 
 	ftxui::Elements messages;
 	std::set<std::string> blacklist_ip;
+
+private:
+
 };

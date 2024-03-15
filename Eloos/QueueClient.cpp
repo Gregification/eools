@@ -11,16 +11,15 @@ void QueueClient::run(ScreenInteractive& screen) {
 	}
 
 	auto canvas_element = canvas([](Canvas& c) {
-		// Draw on the canvas using c.Draw... methods
-		// For example, drawing a line from top-left to bottom-right
-		c.DrawPointLine(0, 0, c.width() - 1, c.height() - 1, Color::Red);
+		c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
+		c.DrawBlock(0, 0, true, Color::Green);
+		
 		});
 	auto flexible_canvas_element = canvas_element | flex;
 
 	screen.Loop(Renderer([&] {
 		return vbox({
 			flexible_canvas_element,
-			// Other elements can be added here
 			});
 		}));
 }
@@ -30,7 +29,7 @@ void QueueClient::startGame() {
 }
 
 void QueueClient::promptConnection(ScreenInteractive& screen) {
-	std::string strip, strport = std::to_string(SERVER_PORT);
+	static std::string strip = "127.0.0.1", strport = std::to_string(SERVER_PORT);
 
 	Component i_ip = Input(&strip);
 	i_ip |= CatchEvent([&](Event event) {
