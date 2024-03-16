@@ -3,28 +3,30 @@
 #include <vector>
 #include <set>
 
-#include "GameStructs.hpp"
+#include "Game_common.hpp"
 #include "GameObject.hpp"
 
 class Grid : virtual GameObject{
 	public:
 		Grid() : GameObject(NAN) {}
+		
+		id_t gridId = NAN;
+		Vec2 gridPos;
 
-		id_t gridId;
-		std::vector<GameObject> objects;
+		std::vector<GId_pair> GameObjects;
 
 	public:
-		void Draw(Canvas& c, Dimensions zoom) const override {
-			GameObject::Draw(c, zoom);
-		}
+		//adds gameobject to grid, if assign id if not so already
+		void addGameObject(GameObject& go);
 
-		void packMessage(net::message<NetMsgType>& msg) const override {
+	public:
+		void Update(time_t dealtaTime, time_t currTime) override;
 
-			GameObject::packMessage(msg);
-		}
+		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
 
-		void unpackMessage(net::message<NetMsgType>& msg) override {
-			GameObject::unpackMessage(msg);
+		void packMessage(net::message<NetMsgType>& msg) const override;
 
-		}
+		void unpackMessage(net::message<NetMsgType>& msg) override;
+
+		virtual bool NeedNetUpdate() override;
 };

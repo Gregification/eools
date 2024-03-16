@@ -28,8 +28,11 @@
     <Filter Include="Source Files\Game\GameObject">
       <UniqueIdentifier>{885bc6fe-81f8-45c6-808b-64abb20b17e8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Game\GameObject\Player">
+    <Filter Include="Source Files\Game\GameObject\Ship">
       <UniqueIdentifier>{adcd3f1d-6a40-4d78-b02c-4ad719289049}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game\User">
+      <UniqueIdentifier>{aa20634a-2a22-4c4e-9e02-bf6a0a6ea369}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -45,8 +48,17 @@
     <ClCompile Include="QueueClient.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
+    <ClCompile Include="GameStructs.cpp">
       <Filter>Source Files\Game\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>Source Files\Game\World</Filter>
+    </ClCompile>
+    <ClCompile Include="Ship.cpp">
+      <Filter>Source Files\Game\GameObject\Ship</Filter>
+    </ClCompile>
+    <ClCompile Include="ShipBuilder.cpp">
+      <Filter>Source Files\Game\User</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,13 +84,19 @@
       <Filter>Source Files\Game\World</Filter>
     </ClInclude>
     <ClInclude Include="Ship.hpp">
-      <Filter>Source Files\Game\GameObject\Player</Filter>
+      <Filter>Source Files\Game\GameObject\Ship</Filter>
     </ClInclude>
     <ClInclude Include="GameStructs.hpp">
       <Filter>Source Files\Game\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.hpp">
       <Filter>Source Files\Game\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Game_common.hpp">
+      <Filter>Source Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="ShipBuilder.hpp">
+      <Filter>Source Files\Game\User</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

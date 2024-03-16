@@ -4,16 +4,15 @@
 #include <limits>
 #include <eol_net.hpp>
 
-#include "NetMessageType.h"
-
-using id_t = uint64_t;
+#include "Game_common.hpp"
 
 //using structs to meet standard layout requirement as needed by 
-namespace gs {	
+namespace gs {
+
 	/* quick inverse squareroot using defined behavior
 	 see reply on stack overlfow of original author https://stackoverflow.com/questions/24405129/how-to-implement-fast-inverse-sqrt-without-undefined-behavior
 	*/
-	float Q_inverseSqrt(float number) {
+	static float Q_inverseSqrt(float number) {
 		static_assert(std::numeric_limits<float>::is_iec559,
 			"fast inverse square root requires IEEE-comliant 'float'");
 		static_assert(sizeof(float) == sizeof(std::uint32_t),
@@ -36,7 +35,7 @@ namespace gs {
 		static Vec2 UnitVec(const Vec2& other) {
 			Vec2 ret(other.x, other.y);
 			float ivsqrt = Q_inverseSqrt(other.magnitudeSquared());
-			if (ivsqrt != 0) ret /= ivsqrt;
+			if (ivsqrt != 0) ret *= ivsqrt;
 			return ret;
 		}
 
@@ -75,6 +74,11 @@ namespace gs {
 	} Vec2;
 	static_assert(std::is_standard_layout<gs::Vec2>::value);
 
+	typedef struct Rectangle {
+		Vec2 pos, size;
+	} Rectangle;
+	static_assert(std::is_standard_layout<gs::Rectangle>::value);
+
 	typedef struct Transform {
 		//server id
 		id_t id;
@@ -88,28 +92,4 @@ namespace gs {
 		Transform(id_t id) : id(id), rotRad(0), mass(1), radius(1) {}
 	} Transform;
 	static_assert(std::is_standard_layout<gs::Transform>::value);
-
-	template<typename T>
-	void packArray(net::message<NetMsgType>& msg, const T *arr, size_t len) {
-		static_assert(std::is_standard_layout<T>::value);
-
-		for (size_t i = len; i > 0; i--)
-			msg << arr[len];
-		msg << len;
-	}
-	
-	template<typename T>
-	std::vector<T> unpackArray(net::message<NetMsgType>& msg) {
-		static_assert(std::is_standard_layout<T>::value);
-		size_t len = 0;
-		msg >> len;
-
-		std::vector<T> arr;
-		arr.reserve(len);
-
-		for (size_t i = 0; i < len; i++)
-			msg >> arr[i];
-	}
-
-
 }

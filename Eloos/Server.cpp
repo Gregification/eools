@@ -3,6 +3,8 @@
 #include "Server.hpp"
 
 void Server::run(ScreenInteractive& screen) {
+	gmap.makeGrid({ 0,1 });
+
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
@@ -163,14 +165,15 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				msg.body.clear();
 				
 				IDPartition part = {};
-					part.min = client->GetID() * STD_PARTITION_SIZE;
+					part.min = partitionCounter * STD_PARTITION_SIZE;
 					part.max += STD_PARTITION_SIZE;
 
 				msg << part;
 				client->Send(msg);
+				partitionCounter++;
 			} break;
 		case NetMsgType::IDCorrection : {
-				static IDPartition backupIDParition({ .min = 0, .max = STD_PARTITION_SIZE - 1, .nxt = 0 });
+				static struct IDPartition backupIDParition(0, STD_PARTITION_SIZE - 1, 0);
 				
 				IDCorrection corr = {};
 				msg >> corr;
@@ -179,6 +182,9 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				msg << corr;
 				MessageAllClients(msg);
+			} break;
+		case NetMsgType::StarterPacket : {
+				struct StarterPacket sp;
 			} break;
 		default: {
 			//broadcast to all clients excluding source client

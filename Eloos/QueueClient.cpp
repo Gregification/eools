@@ -4,28 +4,37 @@
 
 void QueueClient::run(ScreenInteractive& screen) {
 	promptConnection(screen);
-
 	while (!isConnected()) {
 		std::cout << "\a";
 		promptConnection(screen);
 	}
 
-	auto canvas_element = canvas([](Canvas& c) {
-		c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
-		c.DrawBlock(0, 0, true, Color::Green);
-		
-		});
-	auto flexible_canvas_element = canvas_element | flex;
+	//ping for starter packet and id partition
+	{
+		net::message<NetMsgType> msg;
+		msg.header.id = NetMsgType::StarterPacket;
+		Send(msg);
 
-	screen.Loop(Renderer([&] {
-		return vbox({
-			flexible_canvas_element,
-			});
-		}));
+		msg.header.id = NetMsgType::IDPartition;
+		Send(msg);
+	}
+
+	//wait for starter packet and partition
+	/*auto epicWaitingScreen = Renderer([] {
+		
+	});*/
+
+
+	//yippie!
+	startGame();
 }
 
 void QueueClient::startGame() {
 
+}
+
+void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
+	
 }
 
 void QueueClient::promptConnection(ScreenInteractive& screen) {

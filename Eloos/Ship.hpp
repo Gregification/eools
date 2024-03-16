@@ -3,18 +3,22 @@
 #include "GameObject.hpp"
 
 class Ship : virtual GameObject {
-public:
-	void Draw(Canvas& c, Dimensions zoom) const override{
-		GameObject::Draw(c, zoom);
-	}
+	public:
+		Ship(id_t id) : GameObject(id) {
 
-	void packMessage(net::message<NetMsgType>& msg) const override {
-		GameObject::packMessage(msg);
+		}
+		~Ship() {}
 
-	}
+		float capacitor;
 
-	void unpackMessage(net::message<NetMsgType>& msg) override {
-		GameObject::unpackMessage(msg);
-		
-	}
+		std::vector<Vec2> body;
+
+	public:
+		void Update(time_t dealtaTime, time_t currTime) override;
+
+		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
+
+		void packMessage(net::message<NetMsgType>& msg) const override;
+
+		void unpackMessage(net::message<NetMsgType>& msg) override;
 };

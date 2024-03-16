@@ -168,21 +168,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="GameStructs.cpp" />
+    <ClCompile Include="Grid.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="QueueClient.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="Ship.cpp" />
+    <ClCompile Include="ShipBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp" />
     <ClInclude Include="Client.hpp" />
     <ClInclude Include="GameObject.hpp" />
     <ClInclude Include="GameStructs.hpp" />
+    <ClInclude Include="Game_common.hpp" />
     <ClInclude Include="Grid.hpp" />
     <ClInclude Include="NetMessageType.h" />
     <ClInclude Include="QueueClient.hpp" />
     <ClInclude Include="Server.hpp" />
     <ClInclude Include="GameMap.hpp" />
     <ClInclude Include="Ship.hpp" />
+    <ClInclude Include="ShipBuilder.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

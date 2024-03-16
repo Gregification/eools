@@ -1,15 +1,22 @@
 #pragma once
 
-#include "App.hpp"
-
-#include "NetMessageType.h"
 #include <eol_net.hpp>
 #include <set>
 
+#include "App.hpp"
+#include "NetMessageType.h"
+#include "GameMap.hpp"
+
 class Server : public App, public net::server_interface<NetMsgType> {
 public:
-	Server(uint16_t listeningPort) : net::server_interface<NetMsgType>(listeningPort) {
+	Server(uint16_t listeningPort)
+			: net::server_interface<NetMsgType>(listeningPort),
+			partitionCounter(nIDCounter)
+		{
 		messages.push_back(text(std::format("see NetMessageType.h for message types.")) | color(Color::DarkSeaGreen3) | underlined);
+		
+		LOCAL_PARITION.nxt = LOCAL_PARITION.min = 0;
+		LOCAL_PARITION.max = STD_PARTITION_SIZE;
 	}
 
     void run(ScreenInteractive& screen) override;
@@ -35,5 +42,6 @@ protected:
 	std::set<std::string> blacklist_ip;
 
 private:
-
+	GameMap gmap;
+	uint32_t partitionCounter;
 };
