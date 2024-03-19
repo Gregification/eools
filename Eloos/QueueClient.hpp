@@ -26,4 +26,6 @@ private:
 	std::atomic<float> loadingStatus;
 
 	ftxui::Elements messages;
+	StarterPacket starterPacket = StarterPacket();
+	std::atomic_bool isReady = false;
 };

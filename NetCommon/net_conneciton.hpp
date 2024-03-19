@@ -144,7 +144,7 @@ namespace net {
 					});
 			}
 
-			//ASYNC - prime context ready to read message body
+			//ASYNC - prime context ready to write message body
 			void WriteBody() {
 				asio::async_write(m_socket, asio::buffer(m_qMsgBuffOut.front().body.data(), m_qMsgBuffOut.front().body.size()),
 					[this](std::error_code ec, std::size_t length) {
@@ -161,7 +161,7 @@ namespace net {
 					});
 			}
 
-			//ASYNC - prime context to write a message body
+			//ASYNC - prime context to read a message body
 			void ReadBody() {
 				asio::async_read(m_socket, asio::buffer(m_msgBuffIn.body.data(), m_msgBuffIn.body.size()),
 					[this](std::error_code ec, std::size_t length) {

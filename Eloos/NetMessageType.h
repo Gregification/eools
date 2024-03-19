@@ -68,10 +68,9 @@ void unpackArray(
 //////////////////////////////////////////////////////////////////////////////
 
 struct IDPartition {
-
 	id_t min, max, nxt;
 	
-	IDPartition() : IDPartition(0,0,0) {}
+	IDPartition() : IDPartition(0,0,-1) {}
 	IDPartition(id_t mi, id_t mx, id_t nx) : min(mi), max(mx), nxt(nx) {}
 
 	id_t getNext() {
@@ -81,9 +80,13 @@ struct IDPartition {
 	bool withinRange(id_t num) {
 		return num >= min && num <= max;
 	}
+
+	bool isBad() {
+		return nxt < min || nxt > max;
+	}
 };
 static_assert(std::is_standard_layout<struct IDPartition>::value);
-static struct IDPartition LOCAL_PARITION = {};
+static struct IDPartition LOCAL_PARITION = IDPartition();
 
 struct Ping {
 	id_t sent = 0, received = 0;

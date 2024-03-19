@@ -9,9 +9,11 @@ void QueueClient::run(ScreenInteractive& screen) {
 		promptConnection(screen);
 	}
 
-	//ping for starter packet and id partition
+	//request a id partition
+	//too critical to do anything without
 	{
 		net::message<NetMsgType> msg;
+
 		msg.header.id = NetMsgType::StarterPacket;
 		Send(msg);
 
@@ -19,22 +21,43 @@ void QueueClient::run(ScreenInteractive& screen) {
 		Send(msg);
 	}
 
-	//wait for starter packet and partition
-	/*auto epicWaitingScreen = Renderer([] {
-		
-	});*/
+	//using screen thread as wait
+	auto epicwaitingscreen = Renderer([&]() {
+		if (isReady) {
+			screen.Exit();
+			return text("yippie");
+		}
 
+		std::lock_guard lk(renderMutex);
+		return vbox(messages);
+	});
 
-	//yippie!
+	screen.Loop(epicwaitingscreen);
+
 	startGame();
 }
 
 void QueueClient::startGame() {
-
+	std::cout << "\a";
 }
 
 void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
-	
+	static bool otherIsReady = false;
+	switch (msg.header.id) {
+		case NetMsgType::StarterPacket: {
+			msg >> starterPacket;
+			if (otherIsReady) isReady = true;
+			otherIsReady = true;
+			}break;
+		case NetMsgType::IDPartition: {
+			msg >> LOCAL_PARITION;
+			if (otherIsReady) isReady = true;
+			otherIsReady = true;
+			}break;
+	}
+
+	std::lock_guard lk(renderMutex);
+	messages.push_back(text(std::to_string(static_cast<int>(msg.header.id)) + " \tsize:" + std::to_string(msg.size())));
 }
 
 void QueueClient::promptConnection(ScreenInteractive& screen) {
