@@ -12,8 +12,15 @@ using namespace ftxui;
 
 class GameObject {
 	public:
+		static const unsigned int GAMEOBJECT_CLASS_ID = __COUNTER__; //unique id for each class
+
 		GameObject(id_t id) : transform(id) {};
 
+	public:
+		bool needNetUpdate = true;
+		Transform transform;
+
+	public:
 		virtual void Update(time_t dealtaTime, time_t currTime) {
 
 		}
@@ -22,12 +29,12 @@ class GameObject {
 			c.DrawBlock(transform.position.x, transform.position.y, true);
 		};
 		
-		//pack the current class, then pack the super class
+		//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
 		virtual void packMessage(net::message<NetMsgType>& msg) const { 
 			msg << transform;
 		}
 
-		//unpack the current class, then unpack the super class
+		//UNPACK SUPER CLASS FIRST
 		virtual void unpackMessage(net::message<NetMsgType>& msg) {
 			msg >> transform;
 		}
@@ -39,10 +46,6 @@ class GameObject {
 		virtual bool NeedNetUpdate() {
 			return needNetUpdate;
 		}
-
-	public:
-		bool needNetUpdate = true;
-		Transform transform;
 };
 
 typedef struct GId_pair : std::pair<id_t, std::shared_ptr<GameObject>> {

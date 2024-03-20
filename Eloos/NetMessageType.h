@@ -16,9 +16,6 @@ enum class NetMsgType : id_t {
 	//broadcast
 	IDCorrection,
 
-	//starter pack of info when joining the game
-	StarterPacket,
-
 	//request resource by id. grid and object id supprted
 	RequestById,
 
@@ -67,6 +64,20 @@ void unpackArray(
 //	standarized server messages
 //////////////////////////////////////////////////////////////////////////////
 
+struct ID {
+	static enum ID_TYPE {
+		GRID,
+		USER,
+		OBJECT
+	};
+	ID() : idNum(NAN), gridId(NAN), targetType(GRID) {}
+
+	ID_TYPE targetType;
+	id_t gridId;
+	id_t idNum;
+};
+static_assert(std::is_standard_layout<struct ID>::value);
+
 struct IDPartition {
 	id_t min, max, nxt;
 	
@@ -89,7 +100,7 @@ static_assert(std::is_standard_layout<struct IDPartition>::value);
 static struct IDPartition LOCAL_PARITION = IDPartition();
 
 struct Ping {
-	id_t sent = 0, received = 0;
+	time_t sent = 0, received = 0;
 	bool isComplete()	{ return sent && received; }
 	void tagSent()		{ sent = std::time(0); }
 	void tagReceived()	{ received = std::time(0); }
@@ -97,30 +108,17 @@ struct Ping {
 static_assert(std::is_standard_layout<struct Ping>::value);
 
 struct IDCorrection {
-	id_t formerId, newId;
+	ID formerId;
+	id_t newId;
 };
 static_assert(std::is_standard_layout<struct IDCorrection>::value);
 
 struct RequestById {
-	static const id_t
-		flag_byGridId		= 1 << 0,
-		flag_forTransform	= 1 << 1;
-	id_t id, flags;
-
-	bool isLookingForTransform() const {
-		return flags & flag_forTransform;
-	}
-
-	bool isLookingForGrid() {
-
-	}
+	ID targetId;
+	bool transformOnly;
 };
 static_assert(std::is_standard_layout<struct RequestById>::value);
 
-struct StarterPacket {
-	id_t gridId;
-};
-static_assert(std::is_standard_layout<struct StarterPacket>::value);
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
 //////////////////////////////////////////////////////////////////////////////

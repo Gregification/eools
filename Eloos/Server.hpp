@@ -7,6 +7,7 @@
 #include "NetMessageType.h"
 #include "GameMap.hpp"
 
+//dollar store singleton pattern supported with certified trust-me-bro design
 class Server : public App, public net::server_interface<NetMsgType> {
 public:
 	Server(uint16_t listeningPort)

@@ -9,13 +9,12 @@ void QueueClient::run(ScreenInteractive& screen) {
 		promptConnection(screen);
 	}
 
+	messages.push_back(text("waiting for server to assign id partition ..."));
+
 	//request a id partition
 	//too critical to do anything without
 	{
 		net::message<NetMsgType> msg;
-
-		msg.header.id = NetMsgType::StarterPacket;
-		Send(msg);
 
 		msg.header.id = NetMsgType::IDPartition;
 		Send(msg);
@@ -39,20 +38,14 @@ void QueueClient::run(ScreenInteractive& screen) {
 
 void QueueClient::startGame() {
 	std::cout << "\a";
+	Sleep(5000);
 }
 
 void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
-	static bool otherIsReady = false;
 	switch (msg.header.id) {
-		case NetMsgType::StarterPacket: {
-			msg >> starterPacket;
-			if (otherIsReady) isReady = true;
-			otherIsReady = true;
-			}break;
 		case NetMsgType::IDPartition: {
 			msg >> LOCAL_PARITION;
-			if (otherIsReady) isReady = true;
-			otherIsReady = true;
+			isReady = true;
 			}break;
 	}
 

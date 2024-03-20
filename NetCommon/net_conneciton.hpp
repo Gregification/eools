@@ -66,6 +66,7 @@ namespace net {
 				asio::post(m_asioContext, 
 					[this, msg]() {
 						bool isQueueWorking = !m_qMessagesOut.isEmpty();
+
 						m_qMessagesOut.push_back(msg);
 
 						if (!isQueueWorking)
@@ -108,7 +109,7 @@ namespace net {
 		private:
 			//ASYNC - prime context ready to read message header
 			void WriteHeader() {
-				asio::async_write(m_socket, asio::buffer(&m_qMsgBuffOut.front().header, sizeof(message_header<T>)),
+				asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
 					[this](std::error_code ec, std::size_t length) {
 						if (ec) {
 							m_socket.close();

@@ -21,6 +21,10 @@ namespace net {
 			return sizeof(message_header<T>) + body.size();
 		}
 
+		void sizeBody(const size_t size) {
+			body.resize(body.size() + size);
+		}
+
 		friend std::ostream& operator << (std::ostream& os, const message<T>& msg) {
 			os << "ID:" << int(msg.header.id) << " Size:" << msg.header.size;
 			return os;
@@ -53,6 +57,20 @@ namespace net {
 			msg.header.size = msg.size();
 
 			return msg;
+		}
+
+		//non distructive >> 
+		template<typename DT>
+		message<T>& peek(DT& data) const {
+			static_assert(std::is_standard_layout<DT>::value, "nonguarenteed mem locations! :(");
+
+			std::memcpy(
+				&data,
+				body.data() + body.size() - sizeof(DT),
+				sizeof(DT)
+			);
+
+			return this;
 		}
 	};
 

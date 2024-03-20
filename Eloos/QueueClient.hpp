@@ -9,7 +9,7 @@ class QueueClient : public App, public net::client_interface<NetMsgType> {
 	friend class Client;
 
 public:
-	QueueClient() : loadingStatus(0) {}
+	QueueClient() = default;
 
 public:
 	void run(ScreenInteractive& screen) override;
@@ -23,9 +23,6 @@ private:
 	void promptConnection(ScreenInteractive& screen);
 
 private:
-	std::atomic<float> loadingStatus;
-
 	ftxui::Elements messages;
-	StarterPacket starterPacket = StarterPacket();
 	std::atomic_bool isReady = false;
 };

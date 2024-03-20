@@ -183,9 +183,6 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				msg << corr;
 				MessageAllClients(msg);
 			} break;
-		case NetMsgType::StarterPacket : {
-				struct StarterPacket sp;
-			} break;
 		default: {
 			//broadcast to all clients excluding source client
 			MessageAllClients(msg, client);
