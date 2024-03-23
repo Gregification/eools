@@ -9,7 +9,7 @@ void QueueClient::run(ScreenInteractive& screen) {
 		promptConnection(screen);
 	}
 
-	messages.push_back(text("waiting for server to assign id partition ..."));
+	messages.push_back(text("waiting for server ..."));
 
 	//request a id partition
 	//too critical to do anything without
@@ -22,27 +22,49 @@ void QueueClient::run(ScreenInteractive& screen) {
 
 	//using screen thread as wait
 	auto epicwaitingscreen = Renderer([&]() {
-		if (isReady) {
-			screen.Exit();
-			return text("yippie");
-		}
-
 		std::lock_guard lk(renderMutex);
 		return vbox(messages);
 	});
 
-	screen.Loop(epicwaitingscreen);
+	screenThread = std::thread([&]() {
+		screen.Loop(epicwaitingscreen);
+	});
+
+	while (!isReady) {
+		Update();
+		screen.Post(Event::Custom);
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+	}
+
+	messages.push_back(text("yippie") | center | bold);
+	screen.Post(Event::Custom);
+	std::this_thread::sleep_for(std::chrono::milliseconds(250));
+	screen.Exit();
+
+	screenThread.join();
 
 	startGame();
 }
 
 void QueueClient::startGame() {
 	std::cout << "\a";
-	Sleep(5000);
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
 	switch (msg.header.id) {
+		case NetMsgType::Ping: {
+				Ping ping = {};
+				msg >> ping;
+
+				if (ping.isComplete()) 
+					break; //idk, do something something
+
+				ping.tagReceived();
+
+				msg << ping;
+				Send(msg);
+			}break;
 		case NetMsgType::IDPartition: {
 			msg >> LOCAL_PARITION;
 			isReady = true;
@@ -50,7 +72,7 @@ void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
 	}
 
 	std::lock_guard lk(renderMutex);
-	messages.push_back(text(std::to_string(static_cast<int>(msg.header.id)) + " \tsize:" + std::to_string(msg.size())));
+	messages.push_back(text("[packet] ordnial:" + std::to_string(static_cast<int>(msg.header.id)) + " \tsize:" + std::to_string(msg.size())));
 }
 
 void QueueClient::promptConnection(ScreenInteractive& screen) {

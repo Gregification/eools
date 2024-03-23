@@ -41,7 +41,7 @@ void Server::run(ScreenInteractive& screen) {
 				});
 
 			auto controlPane = Container::Vertical({
-					usrInput,
+					usrInput | borderLight,
 					Button("kick", [&] {
 							if (usrSelected.size() == 0) return;
 							int id = std::stoi(usrSelected);
@@ -164,13 +164,14 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		case NetMsgType::IDPartition: {
 				msg.body.clear();
 				
-				IDPartition part = {};
+				IDPartition part = IDPartition();
 					part.min = partitionCounter * STD_PARTITION_SIZE;
-					part.max += STD_PARTITION_SIZE;
+					part.max = part.min + STD_PARTITION_SIZE;
+					part.nxt = part.min;
 
 				msg << part;
-				client->Send(msg);
 				partitionCounter++;
+				client->Send(msg);
 			} break;
 		case NetMsgType::IDCorrection : {
 				static struct IDPartition backupIDParition(0, STD_PARTITION_SIZE - 1, 0);
