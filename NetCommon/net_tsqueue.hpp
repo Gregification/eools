@@ -45,7 +45,7 @@ namespace net {
 				return q.emplace_back(std::move(item));
 			}
 
-			bool isEmpty() {
+			bool empty() {
 				std::scoped_lock lock(qMutex);
 				return q.empty();
 			}

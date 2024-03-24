@@ -9,17 +9,6 @@ void QueueClient::run(ScreenInteractive& screen) {
 		promptConnection(screen);
 	}
 
-	messages.push_back(text("waiting for server ..."));
-
-	//request a id partition
-	//too critical to do anything without
-	{
-		net::message<NetMsgType> msg;
-
-		msg.header.id = NetMsgType::IDPartition;
-		Send(msg);
-	}
-
 	//using screen thread as wait
 	auto epicwaitingscreen = Renderer([&]() {
 		std::lock_guard lk(renderMutex);
@@ -30,15 +19,28 @@ void QueueClient::run(ScreenInteractive& screen) {
 		screen.Loop(epicwaitingscreen);
 	});
 
-	while (!isReady) {
-		Update();
-		screen.Post(Event::Custom);
-		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+	//request a id partition
+	{
+		net::message<NetMsgType> msg;
+		msg.header.id = NetMsgType::IDPartition;
+		Send(msg);
+
+		std::lock_guard lk(renderMutex);
+		messages.push_back(text("requesting id partition..."));
 	}
 
-	messages.push_back(text("yippie") | center | bold);
+	while (!isReady) {
+		screen.Post(Event::Custom);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+		Update();
+	}
+
+	{
+		std::lock_guard lk(renderMutex);
+		messages.push_back(text("yippie") | center | bold);
+	}
 	screen.Post(Event::Custom);
-	std::this_thread::sleep_for(std::chrono::milliseconds(250));
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	screen.Exit();
 
 	screenThread.join();
@@ -54,11 +56,14 @@ void QueueClient::startGame() {
 void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
-				Ping ping = {};
-				msg >> ping;
+				if (msg.size() == 0) break;
 
-				if (ping.isComplete()) 
-					break; //idk, do something something
+				Ping ping = Ping();
+				msg >> ping;
+				if (ping.isComplete()) {
+					m_connection->pingTime = ping.getTime();
+					break;
+				}
 
 				ping.tagReceived();
 

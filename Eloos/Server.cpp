@@ -18,7 +18,7 @@ void Server::run(ScreenInteractive& screen) {
 
 							uint32_t id = sptr->GetID();
 
-							eles.push_back(text(std::format("{0:3} ping:{1:4.3} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
+							eles.push_back(text(std::format("{0:3} RTping:{1:4.3} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
 						}
 						catch (std::exception& e) {
 							onError(e.what());
@@ -116,12 +116,18 @@ void Server::run(ScreenInteractive& screen) {
 bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 	std::lock_guard lk(renderMutex);
 	
+	if (blacklist_ip.contains(client->GetIP()))
+		return false;
+
 	net::message<NetMsgType> msg;
 	msg.header.id = NetMsgType::Ping;
+	Ping ping = {};
+	ping.tagSent();
+	msg << ping;
 
 	client->Send(msg);
 
-	return !blacklist_ip.contains(client->GetIP());
+	return true;
 }
 
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
@@ -148,14 +154,17 @@ void Server::onEvent(std::string message) {
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
 
+	auto b = client->isConnected();
+
 	switch (msg.header.id) {
 		case NetMsgType::Ping : {
 				Ping ping = {};
 				msg >> ping;
 
-				if (ping.isComplete())
-					client->pingTime.store(ping.sent - ping.received);
-					return;
+				if (ping.isComplete()) {
+					client->pingTime = ping.getTime();
+					break;
+				}
 				
 				ping.tagReceived();
 				msg << ping;
@@ -171,6 +180,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				msg << part;
 				partitionCounter++;
+
 				client->Send(msg);
 			} break;
 		case NetMsgType::IDCorrection : {
@@ -189,7 +199,8 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 			MessageAllClients(msg, client);
 		} break;
 	}
-
+	if (b)
+		onError("ba");
 	messages.push_back(text(std::format("[MESSAGE] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 

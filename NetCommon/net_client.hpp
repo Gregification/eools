@@ -78,7 +78,7 @@ namespace net {
 
 			size_t Update(size_t nMaxMessages = -1) {
 				size_t nMessageCount = 0;
-				while (nMessageCount < nMaxMessages && !m_qMessagesIn.isEmpty()) {
+				while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
 					auto msg = m_qMessagesIn.pop_front();
 
 					OnMessage(msg.msg);

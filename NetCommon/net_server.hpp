@@ -47,27 +47,28 @@ namespace net {
 					[this](std::error_code ec, asio::ip::tcp::socket socket) {
 						if (ec) {
 							onError(std::string("New Connection Error: ") + ec.message());
-							return;
 						}
+						else {
 
-						onEvent(std::string("connection request [") + std::string(socket.local_endpoint().address().to_string()) + ":" + std::to_string(socket.local_endpoint().port()) + "]");
+							onEvent(std::string("connection request [") + std::string(socket.local_endpoint().address().to_string()) + ":" + std::to_string(socket.local_endpoint().port()) + "]");
 
-						std::shared_ptr<connection<T>> newconn =
-							std::make_shared<connection<T>>(connection<T>::owner::server,
-								m_asioContext, std::move(socket), m_qMessagedIn);
+							std::shared_ptr<connection<T>> newconn =
+								std::make_shared<connection<T>>(connection<T>::owner::server,
+									m_asioContext, std::move(socket), m_qMessagedIn);
 
-						//filter connection
-						if (onClientConnect(newconn)) { //if connection approved
-							std::lock_guard lk(m_mutexDeqConnections);
-							m_deqConnections.push_back(std::move(newconn));
-						
-							m_deqConnections.back()->ConnectToClient(nIDCounter++);
+							//filter connection
+							if (onClientConnect(newconn)) { //if connection approved
+								std::lock_guard lk(m_mutexDeqConnections);
+								m_deqConnections.push_back(std::move(newconn));
 
-							onEvent("connection accepted [" + std::to_string(nIDCounter-1) +"]");
-						} else {
-							onEvent("connection denied");
+								m_deqConnections.back()->ConnectToClient(nIDCounter++);
+
+								onEvent("connection accepted [" + std::to_string(m_deqConnections.back()->GetID()) + "]");
+							}
+							else {
+								onEvent("connection denied");
+							}
 						}
-
 						//reprime asio context 
 						WaitForClientConnection();
 					});
@@ -117,7 +118,7 @@ namespace net {
 			//trigger to start processing given number of messages. defaults to max count. calls this.OnMessage for each
 			bool Update(size_t nMaxMessages = -1) {
 				size_t nMessageCount = 0;
-				while (nMessageCount < nMaxMessages && !m_qMessagedIn.isEmpty()) {
+				while (nMessageCount < nMaxMessages && !m_qMessagedIn.empty()) {
 					auto msg = m_qMessagedIn.pop_front();
 
 					OnMessage(msg.remote, msg.msg);

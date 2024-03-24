@@ -100,10 +100,11 @@ static_assert(std::is_standard_layout<struct IDPartition>::value);
 static struct IDPartition LOCAL_PARITION = IDPartition();
 
 struct Ping {
-	time_t sent = 0, received = 0;
-	bool isComplete()	{ return sent && received; }
+	time_t sent = -1, received = -1;
+	bool isComplete()	{ return sent > 0 && received > 0; }
 	void tagSent()		{ sent = std::time(0); }
 	void tagReceived()	{ received = std::time(0); }
+	time_t getTime()	{ return received - sent; }
 };
 static_assert(std::is_standard_layout<struct Ping>::value);
 

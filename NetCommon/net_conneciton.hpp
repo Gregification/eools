@@ -65,7 +65,7 @@ namespace net {
 			void Send(const message<T>& msg) {
 				asio::post(m_asioContext, 
 					[this, msg]() {
-						bool isQueueWorking = !m_qMessagesOut.isEmpty();
+						bool isQueueWorking = !m_qMessagesOut.empty();
 
 						m_qMessagesOut.push_back(msg);
 
@@ -101,7 +101,6 @@ namespace net {
 
 			//internal message management io buffers
 			message<T> m_msgBuffIn;
-			std::deque<message<T>> m_qMsgBuffOut;
 
 			owner m_OwnerType = owner::server;
 			uint32_t id = 0;
@@ -116,12 +115,12 @@ namespace net {
 							return;
 						}
 
-						if (m_qMsgBuffOut.front().body.size() > 0) {
+						if (m_qMessagesOut.front().body.size() > 0) {
 							WriteBody();
 						} else {
-							m_qMsgBuffOut.pop_front();
+							m_qMessagesOut.pop_front();
 
-							if (!m_qMsgBuffOut.empty())
+							if (!m_qMessagesOut.empty())
 								WriteHeader();
 						}
 					});
@@ -147,16 +146,16 @@ namespace net {
 
 			//ASYNC - prime context ready to write message body
 			void WriteBody() {
-				asio::async_write(m_socket, asio::buffer(m_qMsgBuffOut.front().body.data(), m_qMsgBuffOut.front().body.size()),
+				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.front().body.size()),
 					[this](std::error_code ec, std::size_t length) {
 						if (ec) {
 							m_socket.close();
 							return;
 						}
 
-						m_qMsgBuffOut.pop_front();
+						m_qMessagesOut.pop_front();
 
-						if (!m_qMsgBuffOut.empty()) {
+						if (!m_qMessagesOut.empty()) {
 							WriteHeader();
 						}
 					});
