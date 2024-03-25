@@ -15,8 +15,7 @@ public:
 	void run(ScreenInteractive& screen) override;
 
 protected:
-	void OnMessage(net::message<NetMsgType>& msg) override;
-
+	void OnMessage(net::message<NetMsgType> msg) override;
 
 private:
 	void startGame();

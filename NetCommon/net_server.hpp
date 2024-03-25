@@ -85,7 +85,8 @@ namespace net {
 					std::lock_guard lk(m_mutexDeqConnections);
 
 					m_deqConnections.erase(
-						std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
+						std::remove(m_deqConnections.begin(), m_deqConnections.end(), client),
+						m_deqConnections.end());
 				}
 			}
 

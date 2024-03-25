@@ -135,8 +135,9 @@ namespace net {
 							return;
 						}
 
+						m_msgBuffIn.body.resize(m_msgBuffIn.header.size);
 						if (m_msgBuffIn.header.size > 0) {
-							m_msgBuffIn.body.resize(m_msgBuffIn.header.size);
+
 							ReadBody();
 						} else {
 							AddToIncomingMessageQueue();

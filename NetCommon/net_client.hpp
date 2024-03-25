@@ -79,9 +79,8 @@ namespace net {
 			size_t Update(size_t nMaxMessages = -1) {
 				size_t nMessageCount = 0;
 				while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
-					auto msg = m_qMessagesIn.pop_front();
 
-					OnMessage(msg.msg);
+					OnMessage(std::move(m_qMessagesIn.pop_front().msg));
 
 					nMessageCount++;
 				}
@@ -101,7 +100,7 @@ namespace net {
 			/*messages from server*/
 			tsqueue<owned_message<T>> m_qMessagesIn;
 
-			virtual void OnMessage(message<T>& msg) {
+			virtual void OnMessage(message<T> msg) {
 
 			}
 

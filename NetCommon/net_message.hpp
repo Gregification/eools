@@ -18,7 +18,7 @@ namespace net {
 		std::vector<uint8_t> body;
 
 		size_t size() const {
-			return sizeof(message_header<T>) + body.size();
+			return body.size();
 		}
 
 		void sizeBody(const size_t size) {
@@ -49,13 +49,15 @@ namespace net {
 		friend message<T>& operator >> (message<T>& msg, DT& data) {
 			static_assert(std::is_standard_layout<DT>::value, "too complex to complex to push");
 
-			size_t i = msg.body.size() - sizeof(DT);
+			size_t i = msg.body.size();
+			if (i >= sizeof(DT)) {
+				i -= sizeof(DT);
 
-			std::memcpy(&data, msg.body.data() + i, sizeof(DT));
+				std::memcpy(&data, msg.body.data() + i, sizeof(DT));
 
-			msg.body.resize(i);
+				msg.body.resize(i);
+			}
 			msg.header.size = msg.size();
-
 			return msg;
 		}
 

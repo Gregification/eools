@@ -18,7 +18,7 @@ void Server::run(ScreenInteractive& screen) {
 
 							uint32_t id = sptr->GetID();
 
-							eles.push_back(text(std::format("{0:3} RTping:{1:4.3} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
+							eles.push_back(text(std::format("{0:3} RTping:{1:6} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
 						}
 						catch (std::exception& e) {
 							onError(e.what());
@@ -102,13 +102,9 @@ void Server::run(ScreenInteractive& screen) {
 
 	Start();
 
-	bool didWork = false;//for readability
 	while (1) {
-		didWork = Update();
-
-		//cap at 20 fps if nothing is happening
-		if (!didWork)
-			Sleep(50);
+		if (!Update())
+			Sleep(30);
 	}
 }
 
@@ -121,8 +117,8 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 
 	net::message<NetMsgType> msg;
 	msg.header.id = NetMsgType::Ping;
-	Ping ping = {};
-	ping.tagSent();
+	Ping ping = Ping();
+	ping.tag();
 	msg << ping;
 
 	client->Send(msg);
@@ -154,11 +150,9 @@ void Server::onEvent(std::string message) {
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
 
-	auto b = client->isConnected();
-
 	switch (msg.header.id) {
 		case NetMsgType::Ping : {
-				Ping ping = {};
+				Ping ping = Ping();
 				msg >> ping;
 
 				if (ping.isComplete()) {
@@ -166,13 +160,13 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 					break;
 				}
 				
-				ping.tagReceived();
+				ping.tag();
 				msg << ping;
-				client->Send(msg);
+				MessageClient(client, msg);
 			} break;
 		case NetMsgType::IDPartition: {
 				msg.body.clear();
-				
+
 				IDPartition part = IDPartition();
 					part.min = partitionCounter * STD_PARTITION_SIZE;
 					part.max = part.min + STD_PARTITION_SIZE;
@@ -181,7 +175,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				msg << part;
 				partitionCounter++;
 
-				client->Send(msg);
+				MessageClient(client, msg);
 			} break;
 		case NetMsgType::IDCorrection : {
 				static struct IDPartition backupIDParition(0, STD_PARTITION_SIZE - 1, 0);
@@ -199,8 +193,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 			MessageAllClients(msg, client);
 		} break;
 	}
-	if (b)
-		onError("ba");
-	messages.push_back(text(std::format("[MESSAGE] ordinal: {}", static_cast<int>(msg.header.id))));
+
+	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 

@@ -53,26 +53,27 @@ void QueueClient::startGame() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
-void QueueClient::OnMessage(net::message<NetMsgType>& msg) {
+void QueueClient::OnMessage(net::message<NetMsgType> msg) {
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
-				if (msg.size() == 0) break;
-
 				Ping ping = Ping();
 				msg >> ping;
+
 				if (ping.isComplete()) {
 					m_connection->pingTime = ping.getTime();
 					break;
 				}
 
-				ping.tagReceived();
+				ping.tag();
 
 				msg << ping;
 				Send(msg);
 			}break;
 		case NetMsgType::IDPartition: {
-			msg >> LOCAL_PARITION;
-			isReady = true;
+				IDPartition idp = IDPartition();
+				msg >> idp;
+				LOCAL_PARITION = idp;
+				isReady = true;
 			}break;
 	}
 
@@ -88,7 +89,7 @@ void QueueClient::promptConnection(ScreenInteractive& screen) {
 		return
 			event.is_character()
 			&& (!std::isdigit(event.character()[0]) || event.character()[0] == '.')
-			&& strip.size() > 40;
+			&& strip.size() > 64;
 		});
 
 	Component i_port = Input(&strport);

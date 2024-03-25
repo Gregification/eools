@@ -12,8 +12,6 @@ using namespace ftxui;
 
 class GameObject {
 	public:
-		static const unsigned int GAMEOBJECT_CLASS_ID = __COUNTER__; //unique id for each class
-
 		GameObject(id_t id) : transform(id) {};
 
 	public:
@@ -65,3 +63,26 @@ typedef struct GId_pair : std::pair<id_t, std::shared_ptr<GameObject>> {
 		return a.first == b.first && a.first != NAN;
 	}
 } GId_pair;
+
+template<typename T>
+class GameObjectFactory {
+	public:
+
+		GameObjectFactory() {
+			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to game object factory");
+
+			ClassList.push_back([]() -> std::unique_ptr<GameObject> { return std::make_unique<T>(); });
+			nextIdx++;
+		}
+
+		static std::unique_ptr<GameObject> createObject(size_t id) const {
+			assert(id < Factory.ClassList.size());
+
+			return Factory.ClassList[id]();
+		}
+
+	public:
+		static std::vector<std::function<std::unique_ptr<GameObject>()>> ClassList;
+	private:
+		static size_t nextIdx;
+};

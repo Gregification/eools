@@ -1,12 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <chrono>
 #include <functional>
 #include <eol_net.hpp>
 
 #include "Game_common.hpp"
 
-enum class NetMsgType : id_t {
+enum class NetMsgType : uint16_t {
 	Ping,
 	
 	//request a GameObject id partition
@@ -38,7 +39,7 @@ void packArray(
 	){
 	static_assert(std::is_standard_layout<TARG>::value);
 
-	for(id_t i = len - 1; i >= 0; i--)
+	for(size_t i = len - 1; i >= 0; i--)
 		msg << getVal(arr, i);
 
 	msg << len;
@@ -51,12 +52,12 @@ void unpackArray(
 		T (*getVal)(net::message<NetMsgType>&)
 	){
 	static_assert(std::is_standard_layout<T>::value);
-	id_t len = 0;
+	size_t len = 0;
 	msg >> len;
 
 	arr.reserve(len + arr.size());
 
-	for (id_t i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 		arr.push_back(getVal(msg));
 }
 
@@ -65,7 +66,7 @@ void unpackArray(
 //////////////////////////////////////////////////////////////////////////////
 
 struct ID {
-	static enum ID_TYPE {
+	static enum ID_TYPE : uint16_t {
 		GRID,
 		USER,
 		OBJECT
@@ -100,11 +101,20 @@ static_assert(std::is_standard_layout<struct IDPartition>::value);
 static struct IDPartition LOCAL_PARITION = IDPartition();
 
 struct Ping {
-	time_t sent = -1, received = -1;
+	long long sent, received;
+	
+	Ping() : sent(-1), received(-1) {}
+
 	bool isComplete()	{ return sent > 0 && received > 0; }
-	void tagSent()		{ sent = std::time(0); }
-	void tagReceived()	{ received = std::time(0); }
-	time_t getTime()	{ return received - sent; }
+	long long getTime()	{ return received - sent; }
+	void tag() { 
+		using namespace std::chrono;
+		long long rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		if (sent <= 0)
+			sent = rn;
+		else
+			received = rn;
+	}
 };
 static_assert(std::is_standard_layout<struct Ping>::value);
 
