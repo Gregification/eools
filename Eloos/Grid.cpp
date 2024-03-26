@@ -2,6 +2,8 @@
 
 #include "Grid.hpp"
 
+const GameObjectFactory<Grid> Grid::gof = GameObjectFactory<Grid>();
+
 void Grid::Update(time_t dt, time_t ct) {
 	for (auto& go : GameObjects) {
 		if (go.second)

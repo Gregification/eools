@@ -6,10 +6,13 @@
 #include "Game_common.hpp"
 #include "GameObject.hpp"
 
-class Grid : virtual GameObject{
+class Grid : public GameObject {
 	public:
 		Grid() : GameObject(NAN) {}
-		
+		~Grid() = default;
+
+		const static GameObjectFactory<Grid> gof;
+
 		id_t gridId = NAN;
 		Vec2 gridPos;
 

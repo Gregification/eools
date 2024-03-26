@@ -13,6 +13,7 @@ using namespace ftxui;
 class GameObject {
 	public:
 		GameObject(id_t id) : transform(id) {};
+		virtual ~GameObject() = default;
 
 	public:
 		bool needNetUpdate = true;
@@ -67,22 +68,29 @@ typedef struct GId_pair : std::pair<id_t, std::shared_ptr<GameObject>> {
 template<typename T>
 class GameObjectFactory {
 	public:
-
 		GameObjectFactory() {
 			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to game object factory");
 
-			ClassList.push_back([]() -> std::unique_ptr<GameObject> { return std::make_unique<T>(); });
-			nextIdx++;
+			ClassList.push_back([]() {
+					return std::make_unique<T>();
+				});
+			index = nextIdx++;
 		}
 
-		static std::unique_ptr<GameObject> createObject(size_t id) const {
-			assert(id < Factory.ClassList.size());
+		static std::unique_ptr<GameObject> createObject(size_t id) {
+			assert(id < ClassList.size());
 
-			return Factory.ClassList[id]();
+			return std::move(ClassList[id]());
 		}
 
 	public:
 		static std::vector<std::function<std::unique_ptr<GameObject>()>> ClassList;
-	private:
-		static size_t nextIdx;
+		static std::atomic<size_t> nextIdx;
+
+		size_t index;
 };
+
+template<typename T>
+std::vector<std::function<std::unique_ptr<GameObject>()>> GameObjectFactory<T>::ClassList;
+template<typename T>
+std::atomic<size_t> GameObjectFactory<T>::nextIdx(0);
