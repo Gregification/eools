@@ -9,7 +9,16 @@ void QueueClient::run(ScreenInteractive& screen) {
 		promptConnection(screen);
 	}
 
-	//using screen thread as wait
+	//update state
+	{
+		ConnectionStatus stat = ConnectionStatus();
+			stat.isQueue = true;
+
+		net::message<NetMsgType> msg;
+		msg.header.id = NetMsgType::ConnectionStatus;
+		msg << stat;
+	}
+
 	auto epicwaitingscreen = Renderer([&]() {
 		std::lock_guard lk(renderMutex);
 		return vbox(messages);
@@ -20,7 +29,7 @@ void QueueClient::run(ScreenInteractive& screen) {
 	});
 
 	//request a id partition
-	{
+	if(LOCAL_PARITION.isBad()) {
 		net::message<NetMsgType> msg;
 		msg.header.id = NetMsgType::IDPartition;
 		Send(msg);
@@ -38,19 +47,30 @@ void QueueClient::run(ScreenInteractive& screen) {
 	{
 		std::lock_guard lk(renderMutex);
 		messages.push_back(text("yippie") | center | bold);
+		screen.Post(Event::Custom);
 	}
-	screen.Post(Event::Custom);
+
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	screen.Exit();
-
 	screenThread.join();
 
-	startGame();
+	startGame(screen);
 }
 
-void QueueClient::startGame() {
-	std::cout << "\a";
-	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+void QueueClient::startGame(ScreenInteractive& screen) {
+	//pass this.net_client to client.net_client... somehow
+	//lazy solution: dont, just reconnect
+	std::unique_ptr<Client> client = std::unique_ptr<Client>(new Client());
+
+	uint16_t port = std::stoi(strport);
+	client->Connect(strip, port);
+
+	if (client->isConnected()) {
+		this->Disconnect();
+		client->run(screen);
+	}
+
+	run(screen);
 }
 
 void QueueClient::OnMessage(net::message<NetMsgType> msg) {
@@ -82,8 +102,6 @@ void QueueClient::OnMessage(net::message<NetMsgType> msg) {
 }
 
 void QueueClient::promptConnection(ScreenInteractive& screen) {
-	static std::string strip = "127.0.0.1", strport = std::to_string(SERVER_PORT);
-
 	Component i_ip = Input(&strip);
 	i_ip |= CatchEvent([&](Event event) {
 		return

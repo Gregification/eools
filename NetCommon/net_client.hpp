@@ -16,9 +16,7 @@ namespace net {
 		friend class client_interface;
 
 		public:
-			client_interface() {
-
-			}
+			client_interface() { }
 			
 			~client_interface() {
 				Disconnect();
@@ -27,7 +25,6 @@ namespace net {
 		public:
 			bool Connect(const std::string& host, const uint16_t port) {
 				try { //establish asio connection
-					//resolve host string to something asio can target
 					asio::ip::tcp::resolver resolver(m_context);
 					asio::ip::tcp::resolver::results_type endpoint = resolver.resolve(host, std::to_string(port)); //throws exception on bad input
 

@@ -10,6 +10,9 @@
 enum class NetMsgType : uint16_t {
 	Ping,
 	
+	//is it someone in the queue? or ready to start?
+	ConnectionStatus,
+
 	//request a GameObject id partition
 	IDPartition,
 
@@ -99,6 +102,17 @@ struct IDPartition {
 };
 static_assert(std::is_standard_layout<struct IDPartition>::value);
 static struct IDPartition LOCAL_PARITION = IDPartition();
+
+struct ConnectionStatus {
+	id_t clientId;
+	bool isQueue;
+	ConnectionStatus() : isQueue(false), clientId(getIdFromPartition(LOCAL_PARITION)) {}
+
+	static id_t getIdFromPartition(const IDPartition& part) {
+		return part.min / STD_PARTITION_SIZE;
+	}
+};
+static_assert(std::is_standard_layout<struct ConnectionStatus>::value);
 
 struct Ping {
 	long long sent, received;

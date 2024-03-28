@@ -132,16 +132,12 @@ void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> cli
 
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
 void Server::onError(std::string message) {
-	std::cout << "\a";
-
 	std::lock_guard lk(renderMutex);
 	messages.push_back(text("[ERROR]" + message + "\n"));
 }
 
 //on notable evets such as connection being denied, user joining and so on
 void Server::onEvent(std::string message) {
-	std::cout << "\a";
-
 	std::lock_guard lk(renderMutex);
 	messages.push_back(text("[EVENT]" + message + "\n") | blink);
 	messages.push_back(text("grid gof idx:" + std::to_string(Grid::gof.index)));
