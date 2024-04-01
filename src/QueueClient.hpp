@@ -4,7 +4,7 @@
 #include "Client.hpp"
 
 #include "NetMessageType.h"
-#include <eol_net.hpp>
+#include "NetCommon/eol_net.hpp"
 
 class QueueClient : public App, public net::client_interface<NetMsgType> {
 	friend class Client;
