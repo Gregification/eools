@@ -29,14 +29,14 @@ set(ASIO_CMAKE_ASIO_TAG asio-1-28-0)
 FetchContent_MakeAvailable(asio-cmake)
 
 file(GLOB SOURCES
-    src/*.hpp
-    src/*.h   # ... yeah
     src/NetCommon/*.hpp
+    src/*.hpp
     src/*.cpp
+    src/Game/*.cpp
+    src/Game/*.hpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-# target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/NetCommon/)
 
 target_link_libraries(${PROJECT_NAME} 
   PRIVATE

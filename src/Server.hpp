@@ -4,7 +4,7 @@
 #include "NetCommon/eol_net.hpp"
 
 #include "App.hpp"
-#include "NetMessageType.h"
+#include "NetMessageType.hpp"
 #include "GameMap.hpp"
 
 //dollar store singleton pattern supported with certified trust-me-bro design
