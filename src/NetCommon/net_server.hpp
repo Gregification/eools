@@ -117,7 +117,7 @@ namespace net {
 			}
 
 			//trigger to start processing given number of messages. defaults to max count. calls this.OnMessage for each
-			bool Update(size_t nMaxMessages = -1) {
+			size_t Update(size_t nMaxMessages = -1) {
 				size_t nMessageCount = 0;
 				while (nMessageCount < nMaxMessages && !m_qMessagedIn.empty()) {
 					auto msg = m_qMessagedIn.pop_front();

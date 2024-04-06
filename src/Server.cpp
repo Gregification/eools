@@ -102,9 +102,12 @@ void Server::run(ScreenInteractive& screen) {
 
 	Start();
 
-	while (1) {
-		if (!Update())
+	for (size_t n = 0;; n = Update()) {
+
+		if (n < 1) {
 			Sleep(30);
+			screen.Post(Event::Custom);
+		}
 	}
 }
 
