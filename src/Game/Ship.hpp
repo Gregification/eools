@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject.hpp"
+#include "../GameObject.hpp"
 
 class Ship : virtual GameObject {
 	public:

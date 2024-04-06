@@ -3,7 +3,7 @@
 #include <ftxui/dom/canvas.hpp>
 #include <ftxui/screen/color.hpp>
 
-#include "NetMessageType.h"
+#include "NetMessageType.hpp"
 #include "GameStructs.hpp"
 #include "Game_common.hpp"
 

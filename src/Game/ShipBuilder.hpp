@@ -2,7 +2,7 @@
 
 #include <ftxui/component/component.hpp>
 
-#include "GameStructs.hpp"
+#include "../GameStructs.hpp"
 #include "Ship.hpp"
 
 using namespace ftxui;

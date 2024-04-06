@@ -3,7 +3,7 @@
 #include "NetCommon/eol_net.hpp"
 
 #include "App.hpp"
-#include "NetMessageType.h"
+#include "NetMessageType.hpp"
 
 class Client : public App, public net::client_interface<NetMsgType> {
 public:

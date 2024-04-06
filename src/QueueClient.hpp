@@ -3,7 +3,7 @@
 #include "App.hpp"
 #include "Client.hpp"
 
-#include "NetMessageType.h"
+#include "NetMessageType.hpp"
 #include "NetCommon/eol_net.hpp"
 
 class QueueClient : public App, public net::client_interface<NetMsgType> {
