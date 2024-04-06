@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include <limits>
-#include <eol_net.hpp>
 
+#include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
 
 //using structs to meet standard layout requirement as needed by 

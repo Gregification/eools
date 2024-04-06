@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <chrono>
 #include <functional>
-#include <eol_net.hpp>
+#include "NetCommon/eol_net.hpp"
 
 #include "Game_common.hpp"
 
@@ -69,7 +69,7 @@ void unpackArray(
 //////////////////////////////////////////////////////////////////////////////
 
 struct ID {
-	static enum ID_TYPE : uint16_t {
+	enum ID_TYPE : uint16_t {
 		GRID,
 		USER,
 		OBJECT

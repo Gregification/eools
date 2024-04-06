@@ -13,8 +13,6 @@ namespace net {
 	*/
 	template <typename T>
 	class client_interface {
-		friend class client_interface;
-
 		public:
 			client_interface() { }
 			

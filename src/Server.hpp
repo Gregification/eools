@@ -1,7 +1,7 @@
 #pragma once
 
-#include <eol_net.hpp>
 #include <set>
+#include "NetCommon/eol_net.hpp"
 
 #include "App.hpp"
 #include "NetMessageType.h"
