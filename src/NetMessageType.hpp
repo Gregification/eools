@@ -27,9 +27,6 @@ enum class NetMsgType : uint16_t {
 	//broadcast
 	GameObjectUpdate,
 
-	//new game object event
-	GameObjectDeclaration,
-
 	GridChange
 };
 
@@ -144,8 +141,20 @@ struct RequestById {
 };
 static_assert(std::is_standard_layout<struct RequestById>::value);
 
+struct GridChange {
+	static 
+	ID newGridID;
+	bool transformOnly;
+};
+static_assert(std::is_standard_layout<struct GridChange>::value);
+
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
+// * see Gameobject & GameObjectFactory.
 //////////////////////////////////////////////////////////////////////////////
 
-//nothing. the objects sort themselves. see Gameobject class.
+struct GameObjectUpdate {
+	ID objectID;
+	bool transformOnly;
+};
+static_assert(std::is_standard_layout<struct GameObjectUpdate>::value);

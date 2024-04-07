@@ -20,22 +20,31 @@ void Client::run(ScreenInteractive& screen) {
 		});
 	std::vector<std::string> tab_entries = {
 			"control",
+			"map",
 			"cargo",
 			"expansions"
 		};
 	auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
 	auto tab_content = Container::Tab({
 			Renderer_play(),
+			Renderer_map(),
 			Renderer_inventory(),
 			Renderer_upgrades()
 		},
 		&tab_index);
+	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
+			if (e.is_mouse()) {
+				mouse.x = e.mouse().x;
+				mouse.y = e.mouse().y;
+			}
+			return false;
+		});
 	auto main_container = Container::Vertical({
 			Container::Horizontal({
 				tab_selection,
 				clientStats
 			}),
-			tab_content
+			tab_with_mouse
 		});
 	auto main_renderer = Renderer(main_container, [&] {
 		return vbox({
@@ -43,7 +52,7 @@ void Client::run(ScreenInteractive& screen) {
 					tab_selection->Render(),
 					clientStats->Render()
 				}),
-				tab_content->Render() | flex
+				tab_with_mouse->Render() | flex
 			});
 		});
 
@@ -72,7 +81,7 @@ void Client::run(ScreenInteractive& screen) {
 			now = steady_clock::now();
 			dt = duration_cast<milliseconds>(now - start).count();
 
-			if (2*dt < target)
+			if (dt*2 < target)
 				std::this_thread::sleep_for(milliseconds(target - dt*2));
 			
 			now = steady_clock::now();
@@ -115,10 +124,20 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 
 Component Client::Renderer_play() {
 	return Renderer([&] {
+		return canvas([&](Canvas& c) {
+			ship.Draw(c, Vec2(20, 20), 1);
+			//c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
+			//c.DrawBlock(0, 0, true, Color::Green);
+		});
+	});
+}
+
+Component Client::Renderer_map() {
+	return Renderer([&] {
 		return vbox({
 				text("renderer map") | center
 			});
-	});
+		});
 }
 
 Component Client::Renderer_upgrades() {

@@ -8,27 +8,35 @@
 #include "App.hpp"
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"
+#include "Game/Ship.hpp"
 
 class Client : public App, public net::client_interface<NetMsgType> {
 public:
-	Client() {
+	Client() : ship(LOCAL_PARITION.getNext()){
 
 	}
 
 	~Client() = default;
 
 public:
-	float fps = 0;
-
 	void run(ScreenInteractive& screen) override;
+
+public:
+	float fps = 0;
+	Grid currentGrid;
+
+protected:
+	void OnMessage(net::message<NetMsgType> msg) override;
 
 protected:
 	GameMap gameMap;
-	
-	void OnMessage(net::message<NetMsgType> msg) override;
+	Ship ship;
 
 private:
+	Vec2 mouse;
+
 	Component Renderer_play();
+	Component Renderer_map();
 	Component Renderer_upgrades();
 	Component Renderer_inventory();
 };

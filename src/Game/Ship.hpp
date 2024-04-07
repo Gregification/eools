@@ -5,7 +5,7 @@
 class Ship : virtual GameObject {
 	public:
 		Ship(id_t id) : GameObject(id) {
-
+			body = { Vec2(0,5), Vec2(-5,-5), Vec2(5,-5), Vec2(0,5)};
 		}
 		~Ship() {}
 

@@ -21,9 +21,6 @@ class Grid : public GameObject {
 	public:
 		//adds gameobject to grid, if assign id if not so already
 		void addGameObject(GameObject& go);
-		void randGen(long seed) {
-
-		}
 
 	public:
 		void Update(time_t dealtaTime, time_t currTime) override;
