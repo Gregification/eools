@@ -15,7 +15,7 @@ void Ship::Draw(Canvas& c, const Vec2& offset, float scale) const {
 	}
 }
 
-void Ship::packMessage(net::message<NetMsgType>& msg) const {
+void Ship::packMessage(net::message<NetMsgType>& msg) {
 
 }
 

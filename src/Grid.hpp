@@ -8,7 +8,7 @@
 
 class Grid : public GameObject {
 	public:
-		Grid() : GameObject(NAN) {}
+		Grid() : GameObject(NAN), GameObjects(0), gridPos(0,0) {}
 		~Grid() = default;
 
 		const static GameObjectFactory<Grid> gof;
@@ -27,7 +27,7 @@ class Grid : public GameObject {
 
 		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
 
-		void packMessage(net::message<NetMsgType>& msg) const override;
+		void packMessage(net::message<NetMsgType>& msg) override;
 
 		void unpackMessage(net::message<NetMsgType>& msg) override;
 

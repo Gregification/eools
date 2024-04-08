@@ -6,13 +6,14 @@
 #include "NetMessageType.hpp"
 #include "GameStructs.hpp"
 #include "Game_common.hpp"
+#include "Body.hpp"
 
 using namespace gs;
 using namespace ftxui;
 
-class GameObject {
+class GameObject : public Body {
 	public:
-		GameObject(id_t id) : transform(id) {};
+		GameObject(id_t id) : Body(), transform(id) {};
 		virtual ~GameObject() = default;
 
 	public:
@@ -29,8 +30,9 @@ class GameObject {
 		};
 		
 		//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
-		virtual void packMessage(net::message<NetMsgType>& msg) const { 
+		virtual void packMessage(net::message<NetMsgType>& msg) { 
 			msg << transform;
+			
 		}
 
 		//UNPACK SUPER CLASS FIRST
@@ -48,8 +50,8 @@ class GameObject {
 };
 
 typedef struct GId_pair : std::pair<id_t, std::shared_ptr<GameObject>> {
-	static const id_t* util_packArray(const GId_pair* arr, size_t i) {
-		return &(arr[i].first);
+	static id_t & util_packArray(GId_pair& obj) {
+		return obj.first;
 	}
 
 	static GId_pair util_unpackArray(net::message<NetMsgType>& msg) {

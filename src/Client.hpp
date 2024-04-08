@@ -29,6 +29,7 @@ protected:
 	void OnMessage(net::message<NetMsgType> msg) override;
 
 protected:
+	//game
 	GameMap gameMap;
 	Ship ship;
 

@@ -15,14 +15,16 @@ void Grid::Draw(Canvas& c, const Vec2& offset, float scale) const {
 	GameObject::Draw(c, offset, scale);
 }
 
-void Grid::packMessage(net::message<NetMsgType>& msg) const {
+void Grid::packMessage(net::message<NetMsgType>& msg) {
 	GameObject::packMessage(msg);
 
-	packArray(
+	for (auto& v : GameObjects) msg << v.first;
+	msg << GameObjects.size();
+
+	packArray<GId_pair, id_t>(
 		msg,
-		&GameObjects[0],
-		GameObjects.size(),
-		GId_pair::util_packArray
+		GameObjects,
+		[](auto& v) -> auto& { return v.first; }
 	);
 	
 	msg << gridPos;

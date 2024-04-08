@@ -34,8 +34,8 @@ void Client::run(ScreenInteractive& screen) {
 		&tab_index);
 	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
 			if (e.is_mouse()) {
-				mouse.x = e.mouse().x;
-				mouse.y = e.mouse().y;
+				mouse.x = (e.mouse().x - 1) * 2;
+				mouse.y = (e.mouse().y - 1) * 4;
 			}
 			return false;
 		});
@@ -125,7 +125,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 Component Client::Renderer_play() {
 	return Renderer([&] {
 		return canvas([&](Canvas& c) {
-			ship.Draw(c, Vec2(20, 20), 1);
+			ship.Draw(c, mouse, 1);
 			//c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
 			//c.DrawBlock(0, 0, true, Color::Green);
 		});
