@@ -43,13 +43,14 @@ namespace gs {
 			return ret;
 		}
 
-		//rotates relative to origin
-		static Vec2 Rot(const Vec2& point, const float radian) {
+		static Vec2 Rot(const Vec2& point, const Vec2& pivot, const float radian) {
 			float s = std::sinf(radian);
 			float c = std::cosf(radian);
-			return Vec2(point.x * c - point.y * s, point.x * s + point.y * c);
+			Vec2 ret = point - pivot;
+			return Vec2(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
 		}
 
+		//https://youtu.be/Ip3X9LOh2dk?t=150
 		static float determinate(const Vec2& a, const Vec2& b) {
 			return (a.x + b.x) * (a.y + b.y);
 		}
@@ -142,14 +143,31 @@ namespace gs {
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
 	typedef struct Transform {
-		//server id
-		id_t id;
-
 		float mass;
 
-		gs::Vec2 position, velocity, acceleration;
+		float rotation;//radians
+		float angularVelocity, angularAcceleration;
 
-		Transform(id_t id) : id(id), mass(1) {}
+		Vec2 position, velocity, acceleration;
+
+		Transform() :
+				mass(1),
+				rotation(0),
+				angularVelocity(0),
+				angularAcceleration(0),
+				position(0, 0),
+				velocity(0, 0),
+				acceleration(0, 0)
+			{}
+
+		void PhysUpdate(float dt) {
+			angularVelocity += dt * angularAcceleration;
+			rotation += dt * angularVelocity;
+
+			velocity += acceleration * dt;
+			position += velocity * dt;
+		}
+
 	} Transform;
 	static_assert(std::is_standard_layout<gs::Transform>::value);
 }

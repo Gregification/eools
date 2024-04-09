@@ -12,6 +12,8 @@ void Client::run(ScreenInteractive& screen) {
 		Send(msg);
 	}
 
+	bool updatePhys = true;
+
 	//ui rendering
 	float avgPackets = 0;
 	int tab_index = 0;
@@ -37,6 +39,14 @@ void Client::run(ScreenInteractive& screen) {
 				mouse.x = (e.mouse().x - 1) * 2;
 				mouse.y = (e.mouse().y - 1) * 4;
 			}
+
+			static int former_tabIdx = -1;
+			if (former_tabIdx != tab_index) {
+				former_tabIdx = tab_index;
+
+				updatePhys = tab_index == 0;	
+			}
+
 			return false;
 		});
 	auto main_container = Container::Vertical({
@@ -62,9 +72,10 @@ void Client::run(ScreenInteractive& screen) {
 	{
 		using namespace std::chrono;
 
-		time_point 
-			start = steady_clock::now(),
-			now = steady_clock::now();
+		time_point
+			start	= steady_clock::now(),
+			now		= start,
+			lastPhysTime = start;
 
 		const long long target = 1000 / 60;
 		long long dt;
@@ -79,11 +90,21 @@ void Client::run(ScreenInteractive& screen) {
 			float numPkt = Update();
 
 			now = steady_clock::now();
+
+			if (updatePhys) {
+				dt = duration_cast<milliseconds>(now - lastPhysTime).count();
+				lastPhysTime = now;
+
+				PhysUpdate(dt / 1000.0);
+
+				now = steady_clock::now();
+			}
+
 			dt = duration_cast<milliseconds>(now - start).count();
 
 			if (dt*2 < target)
 				std::this_thread::sleep_for(milliseconds(target - dt*2));
-			
+
 			now = steady_clock::now();
 			dt = duration_cast<milliseconds>(now - start).count();
 
@@ -95,6 +116,11 @@ void Client::run(ScreenInteractive& screen) {
 			screen.PostEvent(Event::Custom);
 		}
 	}
+}
+
+void Client::PhysUpdate(float dt) {
+	if (currentGrid)
+		currentGrid->PhysUpdate(dt);
 }
 
 void Client::OnMessage(net::message<NetMsgType> msg) {
@@ -125,7 +151,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 Component Client::Renderer_play() {
 	return Renderer([&] {
 		return canvas([&](Canvas& c) {
-			ship.Draw(c, mouse, 1);
+			ship->Draw(c, mouse, 1);
 			//c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
 			//c.DrawBlock(0, 0, true, Color::Green);
 		});

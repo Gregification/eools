@@ -2,7 +2,7 @@
 
 #include "Ship.hpp"
 
-void Ship::Update(time_t dealtaTime, time_t currTime) {
+void Ship::Update(float dt) {
 
 }
 

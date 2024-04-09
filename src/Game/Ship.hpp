@@ -14,7 +14,7 @@ class Ship : virtual GameObject {
 		std::vector<Vec2> body;
 
 	public:
-		void Update(time_t dealtaTime, time_t currTime) override;
+		void Update(float dt) override;
 
 		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
 

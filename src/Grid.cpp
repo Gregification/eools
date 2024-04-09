@@ -4,10 +4,10 @@
 
 const GameObjectFactory<Grid> Grid::gof = GameObjectFactory<Grid>();
 
-void Grid::Update(time_t dt, time_t ct) {
+void Grid::Update(float dt) {
 	for (auto& go : GameObjects) {
 		if (go.second)
-			go.second->Update(dt, ct);
+			go.second->Update(dt);
 	}
 }
 

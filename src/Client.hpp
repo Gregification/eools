@@ -12,7 +12,7 @@
 
 class Client : public App, public net::client_interface<NetMsgType> {
 public:
-	Client() : ship(LOCAL_PARITION.getNext()){
+	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())){
 
 	}
 
@@ -23,7 +23,9 @@ public:
 
 public:
 	float fps = 0;
-	Grid currentGrid;
+	std::shared_ptr<Grid> currentGrid;
+
+	void PhysUpdate(float dt);
 
 protected:
 	void OnMessage(net::message<NetMsgType> msg) override;
@@ -31,7 +33,7 @@ protected:
 protected:
 	//game
 	GameMap gameMap;
-	Ship ship;
+	std::shared_ptr<Ship> ship;
 
 private:
 	Vec2 mouse;
