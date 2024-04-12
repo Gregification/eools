@@ -11,8 +11,9 @@
 #include "Game/Ship.hpp"
 
 class Client : public App, public net::client_interface<NetMsgType> {
+	friend class Camera;
 public:
-	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())){
+	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 
 	}
 
@@ -36,10 +37,14 @@ protected:
 	std::shared_ptr<Ship> ship;
 
 private:
-	Vec2 mouse;
+	bool gridIsReady = false;
+	Vec2 mouse, camOffset;
+	float scale = 1;
 
 	Component Renderer_play();
 	Component Renderer_map();
 	Component Renderer_upgrades();
 	Component Renderer_inventory();
+
+	void Draw(Canvas& c);
 };

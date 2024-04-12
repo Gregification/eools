@@ -68,7 +68,7 @@ void Client::run(ScreenInteractive& screen) {
 
 	Loop loop(&screen, main_renderer);
 
-	//main loop
+	//main
 	{
 		using namespace std::chrono;
 
@@ -83,7 +83,7 @@ void Client::run(ScreenInteractive& screen) {
 		float avgElapse = 1000 / target;
 		const float weight = avgElapse < 10 ? 10 : avgElapse;
 
-		while (!loop.HasQuitted()) {			
+		while (!loop.HasQuitted()) {		//game loop	
 			start = steady_clock::now();
 
 			loop.RunOnce();
@@ -109,7 +109,7 @@ void Client::run(ScreenInteractive& screen) {
 			dt = duration_cast<milliseconds>(now - start).count();
 
 			avgElapse = avgElapse - (avgElapse / weight) + dt / weight;
-			avgPackets=avgPackets - (avgPackets/ weight) +numPkt/ weight;
+			avgPackets= avgPackets- (avgPackets/ weight) +numPkt/ weight;
 
 			fps = 1000 / avgElapse;
 
@@ -151,9 +151,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 Component Client::Renderer_play() {
 	return Renderer([&] {
 		return canvas([&](Canvas& c) {
-			ship->Draw(c, mouse, 1);
-			//c.DrawPointLine(1, 1, c.width() - 1, c.height() - 1, Color::Red);
-			//c.DrawBlock(0, 0, true, Color::Green);
+			Draw(c);
 		});
 	});
 }
@@ -180,4 +178,35 @@ Component Client::Renderer_inventory() {
 				text("renderer inventory") | center
 			});
 	});
+}
+
+void Client::Draw(Canvas& c) {
+	if (gridIsReady)
+		currentGrid->Draw(c, camOffset, scale);
+	else {
+		using namespace std::chrono;
+		static time_point
+			start = steady_clock::now(),
+			now = start;
+		now = steady_clock::now();
+		const float dt = duration_cast<milliseconds>(start - now).count() % 1000 / 1000;
+		start = now;
+
+		static float offX = 0, offY = 0;
+		offX *= 1.2 * dt;
+		offY *= 1.2 * dt;
+		int w = c.width(), h = c.height();
+		int w2 = w / 2, h2 = h / 2;
+
+		for (int i = 1; i < 5; i++) {
+			float r = 1 / i;
+
+			c.DrawPointEllipse(
+				w2,
+				h2,
+				w2 * r + (mouse.x - w2) * i,
+				h2 * r + (mouse.y - h2) * i
+			);
+		}
+	}
 }

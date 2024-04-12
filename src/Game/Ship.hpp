@@ -8,10 +8,11 @@ class Ship : virtual GameObject {
 			body = { Vec2(0,5), Vec2(-5,-5), Vec2(5,-5), Vec2(0,5)};
 		}
 		~Ship() {}
+		
+	public:
+		std::vector<Vec2> body;
 
 		float capacitor;
-
-		std::vector<Vec2> body;
 
 	public:
 		void Update(float dt) override;

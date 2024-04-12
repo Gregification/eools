@@ -29,7 +29,7 @@ namespace gs {
 		return y * (1.5F - (x2 * y * y));
 	}
 
-	typedef struct Vec2 {
+	struct Vec2 {
 		float x, y;
 
 		Vec2() : Vec2(0,0) {}
@@ -76,26 +76,26 @@ namespace gs {
 		Vec2 operator - (const float other) const { return Vec2(x - other, y - other); }
 		Vec2 operator * (const float other) const { return Vec2(x * other, y * other); }
 		Vec2 operator / (const float other) const { return Vec2(x / other, y / other); }
-	} Vec2;
+	};
 	static_assert(std::is_standard_layout<gs::Vec2>::value);
 
-	typedef struct Rectangle {
+	struct Rectangle {
 		Rectangle() : Rectangle(Vec2(0,0), Vec2(1,1)) {}
 		Rectangle(Vec2 pos, Vec2 size) : pos(pos), size(size) {}
 
 		Vec2 pos, size;
-	} Rectangle;
+	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
 	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
-	typedef std::array<std::array<float, 3>, 3> Mat3x3;
-	typedef struct Transformation_2D {
+	using Mat3x3 = std::array<std::array<float, 3>, 3>;
+	struct Transformation_2D {
 		Transformation_2D() : Transformation_2D(identity) {}
 		Transformation_2D(Mat3x3 mat) : mat(mat) {}
 
 		Mat3x3 mat;//[row][column]
 
-		float & scaleX() { return mat[0][1]; }
+		float & scaleX() { return mat[0][0]; }
 		float & scaleY() { return mat[1][1]; }
 		float & transX() { return mat[0][2]; }
 		float & transY() { return mat[1][2]; }
@@ -117,7 +117,7 @@ namespace gs {
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |
 			//  [this]      [vec]   [final]
-			// ignore the resulting Z
+			// ignore Z
 			const float vecz = 1;
 
 			vec.x =	mat[0][0] * vec.x //ax
@@ -137,12 +137,11 @@ namespace gs {
 				{{0,0,0}},
 				{{0,0,0}},
 				{{0,0,1}}	//for consistency
-			}};
-
-	} Transformation_2D;
+			} };
+	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
-	typedef struct Transform {
+	struct Transform {
 		float mass;
 
 		float rotation;//radians
@@ -151,14 +150,14 @@ namespace gs {
 		Vec2 position, velocity, acceleration;
 
 		Transform() :
-				mass(1),
-				rotation(0),
-				angularVelocity(0),
-				angularAcceleration(0),
-				position(0, 0),
-				velocity(0, 0),
-				acceleration(0, 0)
-			{}
+			mass(1),
+			rotation(0),
+			angularVelocity(0),
+			angularAcceleration(0),
+			position(0, 0),
+			velocity(0, 0),
+			acceleration(0, 0)
+		{}
 
 		void PhysUpdate(float dt) {
 			angularVelocity += dt * angularAcceleration;
@@ -168,6 +167,11 @@ namespace gs {
 			position += velocity * dt;
 		}
 
-	} Transform;
+		Transformation_2D getRotationTransformation() const {
+			Transformation_2D ret = Transformation_2D();
+			ret.rotateBy(rotation);
+			return std::move(ret);
+		}
+	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);
 }

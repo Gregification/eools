@@ -25,7 +25,7 @@ public:
 	void updateCoverage();
 	gs::Transformation_2D effectiveTransformation();
 
-protected:
+private:
 	float rotation_cached;
-	gs::Transformation_2D rotatedTransformation; //cache
+	gs::Transformation_2D rotatedTransformation;
 };
