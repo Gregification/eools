@@ -3,8 +3,6 @@
 #include "Server.hpp"
 
 void Server::run(ScreenInteractive& screen) {
-	gmap.makeGrid({ 0,1 });
-
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
@@ -104,8 +102,10 @@ void Server::run(ScreenInteractive& screen) {
 
 	for (size_t n = 0;; n = Update()) {
 
-		if (n < 1) {
-			Sleep(30);
+		if (n < 1)
+			Sleep(50);
+		else {
+			Sleep(20);
 			screen.Post(Event::Custom);
 		}
 	}
@@ -149,6 +149,8 @@ void Server::onEvent(std::string message) {
 //on message from specific given client
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
+
+	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 
 	switch (msg.header.id) {
 		case NetMsgType::Ping : {
@@ -197,6 +199,5 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		} break;
 	}
 
-	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 

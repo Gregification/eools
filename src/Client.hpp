@@ -11,7 +11,7 @@
 #include "Game/Ship.hpp"
 
 class Client : public App, public net::client_interface<NetMsgType> {
-	friend class Camera;
+	//friend class Camera;
 public:
 	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 
@@ -19,14 +19,11 @@ public:
 
 	~Client() = default;
 
-public:
 	void run(ScreenInteractive& screen) override;
 
 public:
 	float fps = 0;
-	std::shared_ptr<Grid> currentGrid;
-
-	void PhysUpdate(float dt);
+	id_t currentGrid;
 
 protected:
 	void OnMessage(net::message<NetMsgType> msg) override;
@@ -45,6 +42,8 @@ private:
 	Component Renderer_map();
 	Component Renderer_upgrades();
 	Component Renderer_inventory();
+
+	void onInput(Event e);
 
 	void Draw(Canvas& c);
 };

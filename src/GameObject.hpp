@@ -11,14 +11,14 @@
 using namespace gs;
 using namespace ftxui;
 
-class GameObject : public Body {
+class GameObject : virtual Body {
 	public:
 		GameObject(id_t id) :
 				Body(),
 				id(id),
 				needNetUpdate(false)
-			{};
-		virtual ~GameObject() = default;
+			{}
+		virtual ~GameObject() override = default;
 
 	public:
 		id_t id;
@@ -38,7 +38,6 @@ class GameObject : public Body {
 		//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
 		virtual void packMessage(net::message<NetMsgType>& msg) { 
 			msg << transform;
-			
 		}
 
 		//UNPACK SUPER CLASS FIRST
@@ -50,24 +49,6 @@ class GameObject : public Body {
 
 		virtual bool NeedNetUpdate();
 };
-
-typedef struct GId_pair : std::pair<id_t, std::shared_ptr<GameObject>> {
-	static id_t & util_packArray(GId_pair& obj) {
-		return obj.first;
-	}
-
-	static GId_pair util_unpackArray(net::message<NetMsgType>& msg) {
-		GId_pair ret = {};
-		msg >> ret.first;
-		ret.second = NULL;
-
-		return ret;
-	}
-	
-	friend bool operator == (const GId_pair& a, const GId_pair& b) {
-		return a.first == b.first && a.first != NAN;
-	}
-} GId_pair;
 
 template<typename T>
 class GameObjectFactory {

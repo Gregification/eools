@@ -12,8 +12,6 @@ void Client::run(ScreenInteractive& screen) {
 		Send(msg);
 	}
 
-	bool updatePhys = true;
-
 	//ui rendering
 	float avgPackets = 0;
 	int tab_index = 0;
@@ -35,18 +33,7 @@ void Client::run(ScreenInteractive& screen) {
 		},
 		&tab_index);
 	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
-			if (e.is_mouse()) {
-				mouse.x = (e.mouse().x - 1) * 2;
-				mouse.y = (e.mouse().y - 1) * 4;
-			}
-
-			static int former_tabIdx = -1;
-			if (former_tabIdx != tab_index) {
-				former_tabIdx = tab_index;
-
-				updatePhys = tab_index == 0;	
-			}
-
+			onInput(std::move(e));
 			return false;
 		});
 	auto main_container = Container::Vertical({
@@ -90,17 +77,9 @@ void Client::run(ScreenInteractive& screen) {
 			float numPkt = Update();
 
 			now = steady_clock::now();
-
-			if (updatePhys) {
-				dt = duration_cast<milliseconds>(now - lastPhysTime).count();
-				lastPhysTime = now;
-
-				PhysUpdate(dt / 1000.0);
-
-				now = steady_clock::now();
-			}
-
 			dt = duration_cast<milliseconds>(now - start).count();
+			
+			ship->PhysUpdate(dt / 1000.0);
 
 			if (dt*2 < target)
 				std::this_thread::sleep_for(milliseconds(target - dt*2));
@@ -108,19 +87,13 @@ void Client::run(ScreenInteractive& screen) {
 			now = steady_clock::now();
 			dt = duration_cast<milliseconds>(now - start).count();
 
+			fps = 1000 / avgElapse;
 			avgElapse = avgElapse - (avgElapse / weight) + dt / weight;
 			avgPackets= avgPackets- (avgPackets/ weight) +numPkt/ weight;
-
-			fps = 1000 / avgElapse;
 
 			screen.PostEvent(Event::Custom);
 		}
 	}
-}
-
-void Client::PhysUpdate(float dt) {
-	if (currentGrid)
-		currentGrid->PhysUpdate(dt);
 }
 
 void Client::OnMessage(net::message<NetMsgType> msg) {
@@ -182,31 +155,59 @@ Component Client::Renderer_inventory() {
 
 void Client::Draw(Canvas& c) {
 	if (gridIsReady)
-		currentGrid->Draw(c, camOffset, scale);
+		;//currentGrid()->Draw(c, camOffset, scale);
 	else {
 		using namespace std::chrono;
 		static time_point
 			start = steady_clock::now(),
 			now = start;
 		now = steady_clock::now();
-		const float dt = duration_cast<milliseconds>(start - now).count() % 1000 / 1000;
+		const float dt = duration_cast<milliseconds>(start - now).count() / 1000.0;
 		start = now;
 
-		static float offX = 0, offY = 0;
-		offX *= 1.2 * dt;
-		offY *= 1.2 * dt;
+		const int l = 6;
 		int w = c.width(), h = c.height();
 		int w2 = w / 2, h2 = h / 2;
+		float o = 10 * dt;
 
-		for (int i = 1; i < 5; i++) {
+		static float offX = 4, offY = 4, xs = 1, ys = 1;
+		offX += o * xs;
+		offY += o * ys;
+
+		if(offX > w/l || offX < 3) xs *= -1;
+		if(offY > h/l || offY < 3) ys *= -1;
+
+		for (int i = 1; i < l; i++) {
 			float r = 1 / i;
 
 			c.DrawPointEllipse(
-				w2,
-				h2,
-				w2 * r + (mouse.x - w2) * i,
-				h2 * r + (mouse.y - h2) * i
+				w2 + (mouse.x - w2) *i*i / w2,
+				h2 + (mouse.y - h2) *i*i / h2,
+				offX * i,
+				offY * i
 			);
+		}
+	}
+}
+
+void Client::onInput(Event e) {
+	if (e.is_mouse()) {
+		mouse.x = (e.mouse().x - 1) * 2;
+		mouse.y = (e.mouse().y - 1) * 4;
+
+		switch (e.mouse().button) {
+			case Mouse::Left:
+				break;
+			case Mouse::Middle:
+				break;
+			case Mouse::Right:
+				break;
+			case Mouse::WheelUp:
+				scale += scale * 1.2;
+				break;
+			case Mouse::WheelDown:
+				scale -= scale / 1.2;
+				break;
 		}
 	}
 }

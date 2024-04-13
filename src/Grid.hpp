@@ -8,21 +8,16 @@
 
 class Grid : public GameObject {
 	public:
-		Grid() : GameObject(NAN), GameObjects(0), gridPos(0,0) {}
-		~Grid() = default;
+		Grid() : GameObject(BAD_ID), gridPos(0,0) {}
+		~Grid() override = default;
 
 		const static GameObjectFactory<Grid> gof;
 
-		id_t gridId = NAN;
+		id_t gridId = BAD_ID;
 		Vec2 gridPos;
 
-		std::vector<GId_pair> GameObjects;
-
 	public:
-		//adds gameobject to grid, if assign id if not so already
-		void addGameObject(GameObject& go);
 
-	public:
 		void Update(float dt) override;
 
 		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
@@ -32,4 +27,11 @@ class Grid : public GameObject {
 		void unpackMessage(net::message<NetMsgType>& msg) override;
 
 		virtual bool NeedNetUpdate() override;
+
+		void addGameObject(std::shared_ptr<GameObject>& go);
+		std::shared_ptr<GameObject> getObject(id_t);
+		std::shared_ptr<GameObject> removeObject(id_t);
+
+	private:
+		std::unordered_map<id_t, std::shared_ptr<GameObject>> gameObjects;
 };

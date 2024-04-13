@@ -2,7 +2,7 @@
 
 #include "../GameObject.hpp"
 
-class Ship : virtual GameObject {
+class Ship : public GameObject {
 	public:
 		Ship(id_t id) : GameObject(id) {
 			body = { Vec2(0,5), Vec2(-5,-5), Vec2(5,-5), Vec2(0,5)};
