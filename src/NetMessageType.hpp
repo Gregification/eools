@@ -27,23 +27,20 @@ enum class NetMsgType : uint16_t {
 	//broadcast
 	GameObjectUpdate,
 
-	//new game object event
-	GameObjectDeclaration,
-
 	GridChange
 };
 
-template<typename ELE, typename TARG>
+template<typename ELE, typename TARG = ELE>
 void packArray(
 		net::message<NetMsgType>& msg,
-		const ELE* arr,
-		const size_t len,
-		const TARG* (*getVal)(const ELE*, size_t) = (const ELE * arr, size_t i){ return static_cast<TARG>(arr[i]); }
+		std::vector<ELE>& vec,
+		TARG& (*getVal)(ELE&)
 	){
 	static_assert(std::is_standard_layout<TARG>::value);
 
-	for(size_t i = len - 1; i >= 0; i--)
-		msg << getVal(arr, i);
+	size_t len = vec.size();
+	for(size_t i = 0; i < len; i++)
+		msg << getVal(vec[i]);
 
 	msg << len;
 }
@@ -144,8 +141,20 @@ struct RequestById {
 };
 static_assert(std::is_standard_layout<struct RequestById>::value);
 
+struct GridChange {
+	static 
+	ID newGridID;
+	bool transformOnly;
+};
+static_assert(std::is_standard_layout<struct GridChange>::value);
+
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
+// * see Gameobject & GameObjectFactory.
 //////////////////////////////////////////////////////////////////////////////
 
-//nothing. the objects sort themselves. see Gameobject class.
+struct GameObjectUpdate {
+	ID objectID;
+	bool transformOnly;
+};
+static_assert(std::is_standard_layout<struct GameObjectUpdate>::value);

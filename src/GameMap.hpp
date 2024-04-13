@@ -7,17 +7,16 @@
 */
 class GameMap {
 public:
-	GameMap() : grids(5){
+	GameMap() : grids(){
 
 	}
 	~GameMap() {}
 
 public:
-	std::vector<std::shared_ptr<Grid>> grids;
+	std::shared_ptr<Grid> makeGrid(Vec2);
+	inline std::shared_ptr<Grid> getGrid(id_t);
 
-	std::shared_ptr<Grid> makeGrid(Vec2 pos) {
-		auto grid = std::make_shared<Grid>();
+public:
+	std::unordered_map<id_t, std::shared_ptr<Grid>> grids;
 
-		return grid;
-	}
 };

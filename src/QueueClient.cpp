@@ -39,8 +39,7 @@ void QueueClient::run(ScreenInteractive& screen) {
 	}
 
 	while (!isReady) {
-		screen.Post(Event::Custom);
-		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		Update();
 	}
 
@@ -50,7 +49,7 @@ void QueueClient::run(ScreenInteractive& screen) {
 		screen.Post(Event::Custom);
 	}
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	screen.Exit();
 	screenThread.join();
 

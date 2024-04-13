@@ -4,10 +4,10 @@
 
 const GameObjectFactory<Grid> Grid::gof = GameObjectFactory<Grid>();
 
-void Grid::Update(time_t dt, time_t ct) {
-	for (auto& go : GameObjects) {
-		if (go.second)
-			go.second->Update(dt, ct);
+void Grid::Update(float dt) {
+	for (auto& [id, go] : gameObjects) {
+		if (go)
+			go->Update(dt);
 	}
 }
 
@@ -15,41 +15,38 @@ void Grid::Draw(Canvas& c, const Vec2& offset, float scale) const {
 	GameObject::Draw(c, offset, scale);
 }
 
-void Grid::packMessage(net::message<NetMsgType>& msg) const {
+void Grid::packMessage(net::message<NetMsgType>& msg) {
 	GameObject::packMessage(msg);
 
-	packArray(
-		msg,
-		&GameObjects[0],
-		GameObjects.size(),
-		GId_pair::util_packArray
-	);
-	
+	for (auto& [id, go] : gameObjects) msg << id;
+
+	msg << gameObjects.size();
 	msg << gridPos;
 	msg << gridId;
 }
 
-void  Grid::unpackMessage(net::message<NetMsgType>& msg) {
+void Grid::unpackMessage(net::message<NetMsgType>& msg) {
 	id_t msg_id;
 	msg >> msg_id;
 	msg >> gridPos;
 
-	if (gridId == NAN || msg_id != gridId) {
+	if (gridId == BAD_ID || msg_id != gridId) {
 		gridId = msg_id;
-		GameObjects.clear();
+		gameObjects.clear();
 	} else
 		msg_id = 0;
 
-	unpackArray(
-		msg,
-		GameObjects,
-		GId_pair::util_unpackArray
-	);
+	size_t l;
+	msg >> l;
+	for (int i = 0; i < l; i++) {
+		id_t id;
+		msg >> id;
 
-	//if not baselining off server
-	if(msg_id) {//filter, make unique
-		auto last = std::unique(GameObjects.begin(), GameObjects.end());
-		GameObjects.resize(std::distance(GameObjects.begin(), last));
+		if (!msg_id) { //if NOT baselining from server
+			if (gameObjects.find(id) != gameObjects.end()) //if already exists
+				continue;
+		}
+		gameObjects.insert({id, std::shared_ptr<GameObject>(nullptr)});
 	}
 
 	needNetUpdate = false;
@@ -57,10 +54,33 @@ void  Grid::unpackMessage(net::message<NetMsgType>& msg) {
 	GameObject::unpackMessage(msg);
 }
 
-void Grid::addGameObject(GameObject& go) {
-	GId_pair gp;
-}
 
 bool Grid::NeedNetUpdate() {
 	return GameObject::needNetUpdate;
+}
+
+void Grid::addGameObject(std::shared_ptr<GameObject>& go) {
+	if (go->id == BAD_ID)
+		go->id = LOCAL_PARITION.getNext();
+
+	gameObjects.insert({ go->id, go });
+}
+
+std::shared_ptr<GameObject> Grid::getObject(id_t id) {
+	auto ret = gameObjects.find(id);
+
+	if (ret == gameObjects.end())
+		return std::shared_ptr<GameObject>(nullptr);
+	else
+		return ret->second;
+}
+
+std::shared_ptr<GameObject> Grid::removeObject(id_t id) {
+	auto it = gameObjects.find(id);
+	if(it == gameObjects.end())
+		return std::shared_ptr<GameObject>(nullptr);
+
+	gameObjects.erase(it);
+
+	return it->second;
 }

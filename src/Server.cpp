@@ -3,8 +3,6 @@
 #include "Server.hpp"
 
 void Server::run(ScreenInteractive& screen) {
-	gmap.makeGrid({ 0,1 });
-
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
@@ -102,9 +100,14 @@ void Server::run(ScreenInteractive& screen) {
 
 	Start();
 
-	while (1) {
-		if (!Update())
-			Sleep(30);
+	for (size_t n = 0;; n = Update()) {
+
+		if (n < 1)
+			Sleep(50);
+		else {
+			Sleep(20);
+			screen.Post(Event::Custom);
+		}
 	}
 }
 
@@ -147,6 +150,8 @@ void Server::onEvent(std::string message) {
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
 
+	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
+
 	switch (msg.header.id) {
 		case NetMsgType::Ping : {
 				Ping ping = Ping();
@@ -185,12 +190,14 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				msg << corr;
 				MessageAllClients(msg);
 			} break;
+		case NetMsgType::GameObjectUpdate: {
+				
+			} break;
 		default: {
 			//broadcast to all clients excluding source client
 			MessageAllClients(msg, client);
 		} break;
 	}
 
-	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 }
 

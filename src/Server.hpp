@@ -22,7 +22,7 @@ public:
 
     void run(ScreenInteractive& screen) override;
 protected:
-	//returns true/accept or false/decline regarding the connection. think Swing predicate filters
+	//returns true/accept or false/decline regarding the connection. Swing predicate filters
 	virtual bool onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) override;
 
 	virtual void onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) override;
