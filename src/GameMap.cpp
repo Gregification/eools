@@ -26,7 +26,7 @@ void GameMap::Draw(Canvas&, Transformation_2D& transform) {
 }
 
 void GameMap::correctID(IDCorrection idc) {
-	auto grid = getGrid(idc.formerId.gridId);
+	auto grid = getGrid(idc.formerID.gridId);
 	if (!grid) return;
 
 	
@@ -38,57 +38,60 @@ void GameMap::processMessage(net::message<NetMsgType> msg, std::function<void(co
 	auto gou = GameObjectUpdate();
 	msg >> gou;
 
-	auto grid = getGrid(gou.objectID.gridId);
-	if (!grid) { // if local doesn't know grid exists
-		//assume grid is valid and all is good
+	std::shared_ptr<GameObject> target = find(gou.objectID);
 
-		//register grid localy
-		grid = std::shared_ptr<Grid>(new Grid);
-		grid->id = gou.objectID.gridId;
-		grids.insert({gou.objectID.gridId, grid});
+	if (!target) { //if local has no record of the object
+		//set up a new instance
+		target = GameObjectFactory::getInstance(gou.objectID.classId);
+		
+		//check if the grid even exists
+		//grids are a special case that have to be set up manualy
+		if (grids.find(gou.objectID.gridId) == grids.end()) { //if grid DNE
+			std::shared_ptr<Grid> grid;
 
-		//if the intention was not to tell of the creation of a new grid, then ask for more info on the grid
-		if (gou.objectID.targetType != ID::GRID) {
-			auto msg = net::message<NetMsgType>();
-			msg.header.id = NetMsgType::RequestById;
+			if (gou.objectID.targetType == ID::GRID) //if intention was to introduce a new grid
+				grid = std::dynamic_pointer_cast<Grid>(target); //then the target must be a grid
+			else
+				grid = std::shared_ptr<Grid>(new Grid); //otherwise improvise a new grid
+			
+			//either case, locally register the grid
+			grids.insert( {gou.objectID.gridId, grid} );
 
-			auto gc = RequestById();
-				gc.targetId.targetType = ID::GRID;
-				gc.targetId.id = gou.objectID.gridId;
+			//send upate after its registered localy so itll work for multi 
+			// threaded updates if I ever get to that
+			if (gou.objectID.targetType == ID::GRID) { //if the grid wasent the target, request a update for it
+				auto gc = RequestById();
+					gc.targetID			= gou.objectID;
+					gc.transformOnly	= false;
 
-			Send(msg);
+				auto msg = net::message<NetMsgType>();
+					msg.header.id		= NetMsgType::RequestById;
+
+				msg << gc;
+				Send(msg);
+			}
 		}
 	}
 
-	if (gou.transformOnly) {
-		Transform tf = {};
-		msg >> tf;
-
-		switch (gou.objectID.targetType) {
-			case ID::ID_TYPE::GRID: {
-				
-			} break;
-			case ID::ID_TYPE::PLAYER: {
-
-			} break;
-			case ID::ID_TYPE::OBJECT: {
-
-			} break;
-		}
-	}
-	else switch (gou.objectID.targetType) {
-		case ID::ID_TYPE::GRID: {
-				
-			} break;
-		case ID::ID_TYPE::PLAYER: {
-
-			} break;
-		case ID::ID_TYPE::OBJECT: {
-
-			} break;
-	}
+	//apply update
+	if (gou.transformOnly)		//if updating transform only
+		msg >> (target->transform);
+	else						//otherwise object specific unpacking needed
+		target->unpackMessage(msg);
 }
 
-std::shared_ptr<GameObject> GameMap::find(id_t) {
-	return std::shared_ptr<GameObject>(nullptr);
+std::shared_ptr<GameObject> GameMap::find(ID id) {
+	auto found = grids.find(id.gridId);
+	if (found != grids.end()) {
+		std::shared_ptr<Grid> grid = found->second;
+
+		if (id.targetType == ID::GRID || !grid)
+			return grid;
+
+		for (auto& [gid, go] : grid->gameObjects)
+			if (gid == id.instanceId)
+				return go;
+	}
+
+	return nullptr;
 }

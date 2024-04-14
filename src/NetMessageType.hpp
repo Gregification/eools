@@ -70,16 +70,25 @@ void unpackArray(
 //////////////////////////////////////////////////////////////////////////////
 
 struct ID {
-	enum ID_TYPE : uint16_t {
+	enum ID_TYPE : uint8_t {
 		GRID,
 		PLAYER,
-		OBJECT
+		OBJECT,
+		BAD_TYPE
 	};
-	ID() : id(BAD_ID), gridId(BAD_ID), targetType(GRID) {}
+	ID() : instanceId(BAD_ID), gridId(BAD_ID), targetType(BAD_TYPE), classId(BAD_ID) {}
+
+	bool isBad() {
+		return	ID_TYPE::BAD_TYPE == targetType
+			||	BAD_ID == classId
+			||	BAD_ID == gridId
+			||	BAD_ID == instanceId;
+	}
 
 	ID_TYPE targetType;
 	id_t gridId;
-	id_t id;
+	id_t instanceId;
+	cid_t classId;
 };
 static_assert(std::is_standard_layout<struct ID>::value);
 
@@ -134,13 +143,13 @@ struct Ping {
 static_assert(std::is_standard_layout<struct Ping>::value);
 
 struct IDCorrection {
-	ID formerId;
+	ID formerID;
 	id_t newId;
 };
 static_assert(std::is_standard_layout<struct IDCorrection>::value);
 
 struct RequestById {
-	ID targetId;
+	ID targetID;
 	bool transformOnly;
 };
 static_assert(std::is_standard_layout<struct RequestById>::value);
@@ -163,6 +172,6 @@ static_assert(std::is_standard_layout<struct GridCreation>::value);
 
 struct GameObjectUpdate {
 	ID objectID;
-	bool transformOnly;
+	bool transformOnly; //the most common & frequent update
 };
 static_assert(std::is_standard_layout<struct GameObjectUpdate>::value);

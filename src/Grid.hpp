@@ -6,6 +6,7 @@
 #include "GameObject.hpp"
 
 class Grid : public GameObject {
+	friend class GameMap;
 	public:
 		const static GameObjectFactory gof;
 

@@ -151,8 +151,8 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 					currentGrid_id = gc.newGridId;
 
 					auto rq = RequestById();
-						rq.targetId.targetType	= ID::GRID;
-						rq.targetId.id			= gc.newGridId;
+						rq.targetID.targetType	= ID::GRID;
+						rq.targetID.instanceId			= gc.newGridId;
 						rq.transformOnly		= false;
 
 					msg.header.id = NetMsgType::RequestById;

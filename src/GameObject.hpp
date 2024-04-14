@@ -2,6 +2,8 @@
 
 #include <ftxui/dom/canvas.hpp>
 #include <ftxui/screen/color.hpp>
+#include <unordered_map>
+#include <map>
 
 #include "NetMessageType.hpp"
 #include "GameStructs.hpp"
@@ -27,9 +29,7 @@ class GameObject : virtual public Body {
 		bool needNetUpdate;
 
 	public:
-		virtual void Update(float dt) {
-
-		}
+		virtual void Update(float dt)	{}
 
 		virtual void PhysUpdate(float dt) {
 			transform.PhysUpdate(dt);
@@ -48,6 +48,8 @@ class GameObject : virtual public Body {
 		}
 
 		virtual std::string GetDescription() const;
+		
+		virtual ID getID() const;
 
 		virtual bool NeedNetUpdate();
 };
@@ -56,22 +58,28 @@ class GameObjectFactory {
 	public:
 		template<class T>
 		GameObjectFactory(T* dummy) :
-			index(nextIdx++)
+			class_id(nextIdx++)
 		{
 			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 
-			ClassList.push_back([]() {
-					return std::make_shared<T>();
-				});
+			std::function<std::shared_ptr<GameObject>()> initFunc = []() { return std::make_shared<T>(); };
+
+			ClassList.insert(std::map<cid_t, std::function<std::shared_ptr<GameObject>()>>::value_type(
+				class_id,
+				initFunc
+			));
 		}
 
-		static std::shared_ptr<GameObject> getInstance(size_t id) {
-			return std::move(ClassList[id]());
+		static std::shared_ptr<GameObject> getInstance(cid_t id) {
+			return std::move((ClassList.find(id)->second)());
 		}
 
-	public:
-		static std::vector<std::function<std::shared_ptr<GameObject>()>> ClassList;
-		static size_t nextIdx;
+		const cid_t class_id;
 
-		const size_t index;
+		inline cid_t classCount() { return nextIdx; }
+
+	private:
+		static std::unordered_map<cid_t, std::function<std::shared_ptr<GameObject>()>> ClassList;
+		static cid_t nextIdx;
+
 };

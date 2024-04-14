@@ -26,7 +26,7 @@ public:
 
 	void Draw(Canvas&, Transformation_2D& transform);
 
-	std::shared_ptr<GameObject> find(id_t);
+	std::shared_ptr<GameObject> find(ID);
 
 	void correctID(IDCorrection);
 	void processMessage(net::message<NetMsgType>, std::function<void(const net::message<NetMsgType>&)> Send);

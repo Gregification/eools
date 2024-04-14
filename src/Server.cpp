@@ -4,8 +4,8 @@
 
 void Server::run(ScreenInteractive& screen) {
 	//debug
-	messages.push_back(text("grid gof id:" + std::to_string(Grid::gof.index)));
-	messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.index)));
+	messages.push_back(text("grid gof id:" + std::to_string(Grid::gof.class_id)));
+	messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.class_id)));
 
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
@@ -137,7 +137,6 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 	msg << ping;
 
 	client->Send(msg);
-
 
 	return true;
 }
