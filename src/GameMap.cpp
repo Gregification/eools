@@ -42,7 +42,7 @@ void GameMap::processMessage(net::message<NetMsgType> msg, std::function<void(co
 	if (!grid) { // if local doesn't know grid exists
 		//assume grid is valid and all is good
 
-		//register grid
+		//register grid localy
 		grid = std::shared_ptr<Grid>(new Grid);
 		grid->id = gou.objectID.gridId;
 		grids.insert({gou.objectID.gridId, grid});
@@ -61,6 +61,9 @@ void GameMap::processMessage(net::message<NetMsgType> msg, std::function<void(co
 	}
 
 	if (gou.transformOnly) {
+		Transform tf = {};
+		msg >> tf;
+
 		switch (gou.objectID.targetType) {
 			case ID::ID_TYPE::GRID: {
 				
@@ -84,4 +87,8 @@ void GameMap::processMessage(net::message<NetMsgType> msg, std::function<void(co
 
 			} break;
 	}
+}
+
+std::shared_ptr<GameObject> GameMap::find(id_t) {
+	return std::shared_ptr<GameObject>(nullptr);
 }

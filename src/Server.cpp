@@ -3,6 +3,10 @@
 #include "Server.hpp"
 
 void Server::run(ScreenInteractive& screen) {
+	//debug
+	messages.push_back(text("grid gof id:" + std::to_string(Grid::gof.index)));
+	messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.index)));
+
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
@@ -152,8 +156,6 @@ void Server::onError(std::string message) {
 void Server::onEvent(std::string message) {
 	std::lock_guard lk(renderMutex);
 	messages.push_back(text("[EVENT]" + message + "\n") | blink);
-	messages.push_back(text("grid gof idx:" + std::to_string(Grid::gof.index)));
-	messages.push_back(text("ship gof idx:" + std::to_string(Ship::gof.index)));
 }
 
 //on message from specific given client
