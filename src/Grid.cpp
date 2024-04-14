@@ -2,7 +2,7 @@
 
 #include "Grid.hpp"
 
-const GameObjectFactory<Grid> Grid::gof = GameObjectFactory<Grid>();
+const GameObjectFactory Grid::gof(static_cast<Grid*>(nullptr));
 
 void Grid::Update(float dt) {
 	for (auto& [id, go] : gameObjects) {
@@ -11,8 +11,11 @@ void Grid::Update(float dt) {
 	}
 }
 
-void Grid::Draw(Canvas& c, const Vec2& offset, float scale) const {
-	GameObject::Draw(c, offset, scale);
+void Grid::Draw(Canvas& c, Transformation_2D& transform) const {
+	for (auto& [id, go] : gameObjects) {
+		if(go)
+			go->Draw(c, transform);
+	}
 }
 
 void Grid::packMessage(net::message<NetMsgType>& msg) {

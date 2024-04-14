@@ -11,14 +11,16 @@
 using namespace gs;
 using namespace ftxui;
 
-class GameObject : virtual Body {
+class GameObject : virtual public Body {
 	public:
 		GameObject(id_t id) :
-				Body(),
-				id(id),
-				needNetUpdate(false)
-			{}
-		virtual ~GameObject() override = default;
+			Body(),
+			id(id),
+			needNetUpdate(false)
+		{
+			
+		}
+		virtual ~GameObject() = default;
 
 	public:
 		id_t id;
@@ -33,7 +35,7 @@ class GameObject : virtual Body {
 			transform.PhysUpdate(dt);
 		}
 
-		virtual void Draw(Canvas& c, const Vec2& offset, float scale) const;
+		virtual void Draw(Canvas& c, Transformation_2D& transform) const;
 		
 		//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
 		virtual void packMessage(net::message<NetMsgType>& msg) { 
@@ -50,32 +52,26 @@ class GameObject : virtual Body {
 		virtual bool NeedNetUpdate();
 };
 
-template<typename T>
 class GameObjectFactory {
 	public:
-		GameObjectFactory() {
-			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to game object factory");
+		template<class T>
+		GameObjectFactory(T* dummy) :
+			index(nextIdx++)
+		{
+			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 
 			ClassList.push_back([]() {
-					return std::make_unique<T>();
+					return std::make_shared<T>();
 				});
-			index = nextIdx++;
 		}
 
-		static std::unique_ptr<GameObject> createObject(size_t id) {
-			assert(id < ClassList.size());
-
+		static std::shared_ptr<GameObject> getInstance(size_t id) {
 			return std::move(ClassList[id]());
 		}
 
 	public:
-		static std::vector<std::function<std::unique_ptr<GameObject>()>> ClassList;
-		static std::atomic<size_t> nextIdx;
+		static std::vector<std::function<std::shared_ptr<GameObject>()>> ClassList;
+		static size_t nextIdx;
 
-		size_t index;
+		const size_t index;
 };
-
-template<typename T>
-std::vector<std::function<std::unique_ptr<GameObject>()>> GameObjectFactory<T>::ClassList;
-template<typename T>
-std::atomic<size_t> GameObjectFactory<T>::nextIdx(0);

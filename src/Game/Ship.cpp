@@ -2,16 +2,18 @@
 
 #include "Ship.hpp"
 
+const GameObjectFactory Ship::gof(static_cast<Ship*>(nullptr));
+
 void Ship::Update(float dt) {
 
 }
 
-void Ship::Draw(Canvas& c, const Vec2& offset, float scale) const {
-	Vec2 bodyStart = offset;
+void Ship::Draw(Canvas& c, Transformation_2D& transform) const {
+	Vec2 former = Vec2(transform.offX(), transform.offY());
 	for (Vec2 v : body) {
-		v += offset;
-		c.DrawBlockLine(bodyStart.x, bodyStart.y, v.x, v.y);
-		bodyStart = v;
+		transform.applyTo(v);
+		c.DrawBlockLine(former.x, former.y, v.x, v.y);
+		former = v;
 	}
 }
 

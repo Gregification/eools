@@ -3,8 +3,8 @@
 void Client::run(ScreenInteractive& screen) {
 	//update connection state
 	{
-		ConnectionStatus stat = ConnectionStatus();
-		stat.isQueue = true;
+		auto stat = ConnectionStatus();
+		stat.isQueue = false;
 
 		net::message<NetMsgType> msg;
 		msg.header.id = NetMsgType::ConnectionStatus;
@@ -12,26 +12,36 @@ void Client::run(ScreenInteractive& screen) {
 		Send(msg);
 	}
 
+	//i'm lost, send me to a valid grid
+	{
+		auto gc = GridChange();
+		gc.newGridId = BAD_ID;
+
+		net::message<NetMsgType> msg;
+		msg.header.id = NetMsgType::GridChange;
+		msg << gc;
+		Send(msg);
+	}
+
 	//ui rendering
 	float avgPackets = 0;
-	int tab_index = 0;
 	auto clientStats = Renderer([&] {
 			return text(std::format("| ~PKTs:{:3.0f} | fps:{:2.0f} |", avgPackets, fps));
 		});
-	std::vector<std::string> tab_entries = {
-			"control",
-			"map",
-			"cargo",
-			"expansions"
-		};
-	auto tab_selection = Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
+	std::vector<std::string> tab_entries(4);
+	tab_entries[CLIENT_TAB::CONTROL]	= "control";
+	tab_entries[CLIENT_TAB::MAP]		= "map";
+	tab_entries[CLIENT_TAB::CARGO]		= "cargo";
+	tab_entries[CLIENT_TAB::EXPANSIONS] = "expansions";
+		
+	auto tab_selection = Menu(&tab_entries, &client_tab, MenuOption::HorizontalAnimated());
 	auto tab_content = Container::Tab({
 			Renderer_play(),
 			Renderer_map(),
 			Renderer_inventory(),
 			Renderer_upgrades()
 		},
-		&tab_index);
+		&client_tab);
 	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
 			onInput(std::move(e));
 			return false;
@@ -99,25 +109,66 @@ void Client::run(ScreenInteractive& screen) {
 void Client::OnMessage(net::message<NetMsgType> msg) {
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
-			Ping ping = Ping();
-			msg >> ping;
+				Ping ping = Ping();
+				msg >> ping;
 
-			if (ping.isComplete()) {
-				m_connection->pingTime = ping.getTime();
-				break;
-			}
+				if (ping.isComplete()) {
+					m_connection->pingTime = ping.getTime();
+				} else {
+					ping.tag();
 
-			ping.tag();
+					msg << ping;
+					Send(msg);
+				}
 
-			msg << ping;
-			Send(msg);
-		}break;
+			}break;
 		case NetMsgType::IDPartition: {
-			IDPartition idp = IDPartition();
-			msg >> idp;
-			if(!idp.isBad())
-				LOCAL_PARITION = idp;
-		}break;
+				IDPartition idp = IDPartition();
+				msg >> idp;
+				if (!idp.isBad())
+					LOCAL_PARITION = idp;
+			}break;
+		case NetMsgType::ConnectionStatus: {
+				auto stat = ConnectionStatus();
+					stat.isQueue = false;
+
+				msg.body.clear();
+				msg << stat;
+				Send(msg);
+			}break;
+		case NetMsgType::GridChange: {
+				auto gc = GridChange();
+				msg >> gc;
+
+				if (gc.newGridId == BAD_ID) { //ur screwed!
+					gridIsReady = false;
+					
+					msg << gc;
+					Send(msg); //make another request
+				} else {
+					gridIsReady = true;
+
+					currentGrid_id = gc.newGridId;
+
+					auto rq = RequestById();
+						rq.targetId.targetType	= ID::GRID;
+						rq.targetId.id			= gc.newGridId;
+						rq.transformOnly		= false;
+
+					msg.header.id = NetMsgType::RequestById;
+
+					msg.body.clear(); //should already be empty
+					msg << rq;
+					Send(msg);
+				}
+
+			} break;
+		case NetMsgType::GameObjectUpdate: {
+			gameMap.processMessage(
+				msg, 
+				[&](const net::message<NetMsgType>& m) -> void { Send(m); }
+			);
+			}break;
 	}
 }
 
@@ -153,9 +204,9 @@ Component Client::Renderer_inventory() {
 	});
 }
 
-void Client::Draw(Canvas& c) {
+void Client::Draw(Canvas& c) {//play renderer
 	if (gridIsReady)
-		;//currentGrid()->Draw(c, camOffset, scale);
+		gameCam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
 	else {
 		using namespace std::chrono;
 		static time_point
@@ -176,10 +227,8 @@ void Client::Draw(Canvas& c) {
 
 		if(offX > w/l || offX < 3) xs *= -1;
 		if(offY > h/l || offY < 3) ys *= -1;
-
+		
 		for (int i = 1; i < l; i++) {
-			float r = 1 / i;
-
 			c.DrawPointEllipse(
 				w2 + (mouse.x - w2) *i*i / w2,
 				h2 + (mouse.y - h2) *i*i / h2,
@@ -192,8 +241,18 @@ void Client::Draw(Canvas& c) {
 
 void Client::onInput(Event e) {
 	if (e.is_mouse()) {
-		mouse.x = (e.mouse().x - 1) * 2;
-		mouse.y = (e.mouse().y - 1) * 4;
+		Vec2 dm(0,0);
+			dm.x = (e.mouse().x - 1) * 2 - mouse.x;
+			dm.y = (e.mouse().y - 1) * 4 - mouse.y;
+		mouse += dm;
+
+		bool isGameControl = false;
+		Camera& cam = client_tab == CLIENT_TAB::MAP ? mapCam : gameCam;
+		switch (client_tab) {
+			case CLIENT_TAB::CONTROL:
+			case CLIENT_TAB::MAP: 
+				isGameControl = true;
+		}
 
 		switch (e.mouse().button) {
 			case Mouse::Left:
@@ -201,12 +260,16 @@ void Client::onInput(Event e) {
 			case Mouse::Middle:
 				break;
 			case Mouse::Right:
+				if(isGameControl) 
+					cam.offset += dm;
 				break;
 			case Mouse::WheelUp:
-				scale += scale * 1.2;
+				if (isGameControl)
+					cam.scale += 1 + cam.scale * 1.2;
 				break;
 			case Mouse::WheelDown:
-				scale -= scale / 1.2;
+				if (isGameControl)
+					cam.scale -= 1 + cam.scale * 1.2;
 				break;
 		}
 	}

@@ -14,9 +14,15 @@ void Server::run(ScreenInteractive& screen) {
 						try {
 							if (!sptr->isConnected()) continue;
 
-							uint32_t id = sptr->GetID();
+							id_t id = sptr->connectionID;
 
-							eles.push_back(text(std::format("{0:3} RTping:{1:6} {2}", std::to_string(id), std::to_string(sptr->pingTime.load()), sptr->ToString())) | bold);
+							eles.push_back(text(
+									std::format("{0:3} RTping:{1:6} {2}",
+										std::to_string(id),
+										std::to_string(sptr->pingTime.load()),
+										sptr->ToString())
+								) | bold
+							);
 						}
 						catch (std::exception& e) {
 							onError(e.what());
@@ -45,7 +51,7 @@ void Server::run(ScreenInteractive& screen) {
 							int id = std::stoi(usrSelected);
 							std::lock_guard lk(m_mutexDeqConnections);
 							for (auto& sptr : m_deqConnections)
-								if (sptr->isConnected() && sptr->GetID() == id) {
+								if (sptr->isConnected() && sptr->connectionID == id) {
 									sptr->Disconnect();
 									return;
 								}
@@ -55,7 +61,7 @@ void Server::run(ScreenInteractive& screen) {
 							int id = std::stoi(usrSelected);
 							std::lock_guard lk(m_mutexDeqConnections);
 							for (auto& sptr : m_deqConnections)
-								if (sptr->isConnected() && sptr->GetID() == id) {
+								if (sptr->isConnected() && sptr->connectionID == id) {
 									blacklist_ip.insert(sptr->GetIP());
 									return;
 								}
@@ -98,6 +104,8 @@ void Server::run(ScreenInteractive& screen) {
 			screen.Loop(container);
 		});
 
+	primeGameMap();
+
 	Start();
 
 	for (size_t n = 0;; n = Update()) {
@@ -126,6 +134,7 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 
 	client->Send(msg);
 
+
 	return true;
 }
 
@@ -144,6 +153,7 @@ void Server::onEvent(std::string message) {
 	std::lock_guard lk(renderMutex);
 	messages.push_back(text("[EVENT]" + message + "\n") | blink);
 	messages.push_back(text("grid gof idx:" + std::to_string(Grid::gof.index)));
+	messages.push_back(text("ship gof idx:" + std::to_string(Ship::gof.index)));
 }
 
 //on message from specific given client
@@ -167,11 +177,13 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageClient(client, msg);
 			} break;
 		case NetMsgType::IDPartition: {
+				static int partitionCounter = 1; //0'th reserved for server
+				
 				msg.body.clear();
 
 				IDPartition part = IDPartition();
 					part.min = partitionCounter * STD_PARTITION_SIZE;
-					part.max = part.min + STD_PARTITION_SIZE;
+					part.max = part.min + STD_PARTITION_SIZE - 1;
 					part.nxt = part.min;
 
 				msg << part;
@@ -180,7 +192,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageClient(client, msg);
 			} break;
 		case NetMsgType::IDCorrection : {
-				static struct IDPartition backupIDParition(0, STD_PARTITION_SIZE - 1, 0);
+				static struct IDPartition backupIDParition(BAD_ID+1, STD_PARTITION_SIZE - 1, 0);
 				
 				IDCorrection corr = {};
 				msg >> corr;
@@ -191,7 +203,11 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-				
+				MessageAllClients(msg);
+				gameMap.processMessage(
+					msg,
+					[&](const net::message<NetMsgType>& m) -> void { MessageAllClients(m, client); }
+				);
 			} break;
 		default: {
 			//broadcast to all clients excluding source client
@@ -201,3 +217,6 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 }
 
+void Server::primeGameMap() {
+	gameMap.makeGrid({ 0,0 });
+}

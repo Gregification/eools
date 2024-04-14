@@ -6,6 +6,7 @@
 #include "NetCommon/eol_net.hpp"
 
 #include "Game_common.hpp"
+#include "GameStructs.hpp"
 
 enum class NetMsgType : uint16_t {
 	Ping,
@@ -23,8 +24,11 @@ enum class NetMsgType : uint16_t {
 	//request resource by id. grid and object id supprted
 	RequestById,
 
+	//user tries to make a new grid at a location. if location is 
+	// not allowed server corrects grid id to effectively rerout the user
+	GridCreation,
+
 	//game object update event. 
-	//broadcast
 	GameObjectUpdate,
 
 	GridChange
@@ -68,14 +72,14 @@ void unpackArray(
 struct ID {
 	enum ID_TYPE : uint16_t {
 		GRID,
-		USER,
+		PLAYER,
 		OBJECT
 	};
-	ID() : idNum(NAN), gridId(NAN), targetType(GRID) {}
+	ID() : id(BAD_ID), gridId(BAD_ID), targetType(GRID) {}
 
 	ID_TYPE targetType;
 	id_t gridId;
-	id_t idNum;
+	id_t id;
 };
 static_assert(std::is_standard_layout<struct ID>::value);
 
@@ -142,11 +146,15 @@ struct RequestById {
 static_assert(std::is_standard_layout<struct RequestById>::value);
 
 struct GridChange {
-	static 
-	ID newGridID;
-	bool transformOnly;
+	id_t newGridId;
 };
 static_assert(std::is_standard_layout<struct GridChange>::value);
+
+struct GridCreation {
+	id_t newGridId;
+	gs::Vec2 pos;
+};
+static_assert(std::is_standard_layout<struct GridCreation>::value);
 
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages

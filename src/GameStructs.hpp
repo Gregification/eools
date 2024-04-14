@@ -97,8 +97,8 @@ namespace gs {
 
 		float & scaleX() { return mat[0][0]; }
 		float & scaleY() { return mat[1][1]; }
-		float & transX() { return mat[0][2]; }
-		float & transY() { return mat[1][2]; }
+		float & offX()	 { return mat[0][2]; }
+		float & offY()   { return mat[1][2]; }
 		float & shearX() { return mat[0][1]; }
 		float & shearY() { return mat[1][0]; }
 

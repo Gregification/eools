@@ -9,11 +9,19 @@
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"
 #include "Game/Ship.hpp"
+#include "Camera.hpp"
+
+enum CLIENT_TAB : int {
+	CONTROL = 0,
+	MAP,
+	CARGO,
+	EXPANSIONS
+};
 
 class Client : public App, public net::client_interface<NetMsgType> {
-	//friend class Camera;
+	friend class Camera;
 public:
-	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
+	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())){
 
 	}
 
@@ -23,7 +31,7 @@ public:
 
 public:
 	float fps = 0;
-	id_t currentGrid;
+	id_t currentGrid_id = 0;
 
 protected:
 	void OnMessage(net::message<NetMsgType> msg) override;
@@ -35,8 +43,11 @@ protected:
 
 private:
 	bool gridIsReady = false;
-	Vec2 mouse, camOffset;
-	float scale = 1;
+
+	Vec2 mouse;
+
+	int client_tab = CLIENT_TAB::CONTROL;
+	Camera gameCam, mapCam;
 
 	Component Renderer_play();
 	Component Renderer_map();
@@ -46,4 +57,5 @@ private:
 	void onInput(Event e);
 
 	void Draw(Canvas& c);
+
 };

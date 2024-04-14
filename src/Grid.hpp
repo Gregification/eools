@@ -3,15 +3,15 @@
 #include <vector>
 #include <set>
 
-#include "Game_common.hpp"
 #include "GameObject.hpp"
 
 class Grid : public GameObject {
 	public:
-		Grid() : GameObject(BAD_ID), gridPos(0,0) {}
-		~Grid() override = default;
+		const static GameObjectFactory gof;
 
-		const static GameObjectFactory<Grid> gof;
+		Grid() : GameObject(BAD_ID), gridPos(0,0) {}
+		~Grid() = default;
+
 
 		id_t gridId = BAD_ID;
 		Vec2 gridPos;
@@ -20,7 +20,7 @@ class Grid : public GameObject {
 
 		void Update(float dt) override;
 
-		void Draw(Canvas& c, const Vec2& offset, float scale) const override;
+		void Draw(Canvas& c, Transformation_2D& transform) const override;
 
 		void packMessage(net::message<NetMsgType>& msg) override;
 

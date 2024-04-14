@@ -9,6 +9,7 @@ namespace net {
 	class connection : public std::enable_shared_from_this<connection<T>> {
 	public:
 		std::atomic<time_t> pingTime = -1;
+		int connectionID;
 
 		enum class owner {
 			server,
@@ -16,22 +17,21 @@ namespace net {
 		};
 
 		connection(owner parent, asio::io_context& asioContext, asio::ip::tcp::socket socket, tsqueue<owned_message<T>>& qIn)
-			: m_asioContext(asioContext),m_socket(std::move(socket)), m_qMessagesIn(qIn)
+			:	m_asioContext(asioContext),
+				m_socket(std::move(socket)),
+				m_qMessagesIn(qIn),
+				connectionID(-1)
 		{
 			m_OwnerType = parent;
 		}
 
 		virtual ~connection() {};
 
-		uint32_t GetID() const {
-			return id;
-		}
-
 		public:
-			void ConnectToClient(uint32_t nid = 0) {
+			void ConnectToClient(int nid = 0) {
 				if (m_OwnerType == owner::server) {
 					if (m_socket.is_open()) {
-						id = nid;
+						connectionID = nid;
 						ReadHeader();
 					}
 				}
@@ -103,7 +103,6 @@ namespace net {
 			message<T> m_msgBuffIn;
 
 			owner m_OwnerType = owner::server;
-			uint32_t id = 0;
 
 		private:
 			//ASYNC - prime context ready to read message header

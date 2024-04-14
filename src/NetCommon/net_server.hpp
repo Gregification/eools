@@ -63,7 +63,7 @@ namespace net {
 
 								m_deqConnections.back()->ConnectToClient(nIDCounter++);
 
-								onEvent("connection accepted [" + std::to_string(m_deqConnections.back()->GetID()) + "]");
+								onEvent("connection accepted [" + std::to_string(m_deqConnections.back()->connectionID) + "]");
 							}
 							else {
 								onEvent("connection denied");
@@ -169,9 +169,7 @@ namespace net {
 			//to get sockets of accepted clients
 			asio::ip::tcp::acceptor m_asioAcceptor;
 
-			//client id
-			uint32_t nIDCounter = 1;//THIS MUST START AT 1. server uses this to partition ID's and reserves 0'th index as servers backup ids
-
 			const uint16_t listeningPort;
+			int nIDCounter = 1;
 	};
 }

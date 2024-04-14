@@ -6,13 +6,13 @@
 #include "App.hpp"
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"
+#include "Game/Ship.hpp"
 
 //dollar store singleton pattern supported with certified trust-me-bro design
 class Server : public App, public net::server_interface<NetMsgType> {
 public:
 	Server(uint16_t listeningPort)
-			: net::server_interface<NetMsgType>(listeningPort),
-			partitionCounter(nIDCounter)
+			: net::server_interface<NetMsgType>(listeningPort)
 		{
 		messages.push_back(text(std::format("see NetMessageType.h for message types.")) | color(Color::DarkSeaGreen3) | underlined);
 		
@@ -42,7 +42,9 @@ protected:
 	ftxui::Elements messages;
 	std::set<std::string> blacklist_ip;
 
+	void primeGameMap();
+
 private:
-	GameMap gmap;
-	uint32_t partitionCounter;
+	GameMap gameMap;
+	std::unordered_map<int, id_t> clientId_to_gridId_map;
 };

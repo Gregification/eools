@@ -29,11 +29,8 @@ set(ASIO_CMAKE_ASIO_TAG asio-1-28-0)
 FetchContent_MakeAvailable(asio-cmake)
 
 file(GLOB SOURCES
-    src/NetCommon/*.hpp
-    src/*.hpp
     src/*.cpp
     src/Game/*.cpp
-    src/Game/*.hpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
