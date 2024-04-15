@@ -55,6 +55,7 @@ class GameObject : virtual public Body {
 };
 
 class GameObjectFactory {
+	using InstanceConstructor = std::function<std::shared_ptr<GameObject>()>;
 	public:
 		template<class T>
 		GameObjectFactory(T* dummy) :
@@ -62,13 +63,19 @@ class GameObjectFactory {
 		{
 			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 
-			std::function<std::shared_ptr<GameObject>()> initFunc = []() { return std::make_shared<T>(); };
+			InstanceConstructor initFunc = []() { return std::make_shared<T>(); };
 
-			ClassList.insert(std::map<cid_t, std::function<std::shared_ptr<GameObject>()>>::value_type(
+			ClassList = std::unordered_map<cid_t, InstanceConstructor>();
+			nextIdx = BAD_ID + 1;
+
+			ClassList.insert(std::map<cid_t, InstanceConstructor>::value_type(
 				class_id,
 				initFunc
 			));
 		}
+
+		static std::unordered_map<cid_t, InstanceConstructor> ClassList;
+		static cid_t nextIdx;
 
 		static std::shared_ptr<GameObject> getInstance(cid_t id) {
 			return std::move((ClassList.find(id)->second)());
@@ -77,9 +84,4 @@ class GameObjectFactory {
 		const cid_t class_id;
 
 		inline cid_t classCount() { return nextIdx; }
-
-	private:
-		static std::unordered_map<cid_t, std::function<std::shared_ptr<GameObject>()>> ClassList;
-		static cid_t nextIdx;
-
 };

@@ -14,7 +14,6 @@ uint16_t serverPort = SERVER_PORT;
 
 int main(int argc, char *argv[]) {
 
-
     if (argc > 1)
         serverPort = std::stoi(argv[1]);
 
