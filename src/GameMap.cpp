@@ -1,7 +1,10 @@
 #include "GameMap.hpp"
 
+#ifdef DrawText
+#undef DrawText
+#endif
 
-std::shared_ptr<Grid> GameMap::makeGrid(Vec2 pos) {
+std::shared_ptr<Grid> GameMap::getGrid(Vec2 pos) {
 	for (auto& [id, g] : grids)
 		if ((g->transform.position - pos).magnitudeSquared() < MIN_GRID_SEPERATION_SQUARED)
 			return g;
@@ -19,16 +22,16 @@ std::shared_ptr<Grid> GameMap::getGrid(id_t id) {
 	return std::move(grids.find(id)->second);
 }
 
-void GameMap::Draw(Canvas&, Transformation_2D& transform) {
+void GameMap::Draw(ftxui::Canvas& c, Transformation_2D& transform) {
 	for (auto& [id, grid] : grids) {
-
+		c.DrawText(c.width() / 2, c.height() / 2, "drawing grid");
 	}
 }
 
 void GameMap::correctID(IDCorrection idc) {
 	auto grid = getGrid(idc.formerID.gridId);
 	if (!grid) return;
-
+	
 	
 }
 

@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-project(EOOLS LANGUAGES CXX)
+project(EOOLS 
+    LANGUAGES CXX
+    VERSION 0.0.0
+    DESCRIPTION "Server-Client terminal template."
+)
+
+option(EOOLS_O3 "Set to ON to build for speed" OFF)
+
+if(EOOLS_03)
+    target_compile_options(${PROJECT_NAME} PRIVATE -O3)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

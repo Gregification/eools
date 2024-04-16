@@ -19,7 +19,7 @@ public:
 	inline static const float MIN_GRID_SEPERATION_SQUARED =  std::pow(5'000'000.0f, 2);
 
 public:
-	std::shared_ptr<Grid> makeGrid(Vec2);
+	std::shared_ptr<Grid> getGrid(Vec2);
 	std::shared_ptr<Grid> getGrid(id_t);
 
 	Grid mapGrid;

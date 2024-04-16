@@ -14,19 +14,18 @@ void Client::run(ScreenInteractive& screen) {
 
 	//i'm lost, send me to a valid grid
 	{
-		auto gc = GridChange();
-		gc.newGridId = BAD_ID;
+		auto gr = GridRequest();
 
 		net::message<NetMsgType> msg;
-		msg.header.id = NetMsgType::GridChange;
-		msg << gc;
+		msg.header.id = NetMsgType::GridRequest;
+		msg << gr;
 		Send(msg);
 	}
 
 	//ui rendering
 	float avgPackets = 0;
 	auto clientStats = Renderer([&] {
-			return text(std::format("| ~PKTs:{:3.0f} | fps:{:2.0f} | ping:", avgPackets, fps) 
+			return text(std::format("| ~PKTs:{:2.0f} | fps:{:3.0f} | ping:", avgPackets, fps) 
 				+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION")
 				+ " |");
 		});
@@ -80,7 +79,7 @@ void Client::run(ScreenInteractive& screen) {
 		long long dt;
 
 		float avgElapse = 1000 / target;
-		const float weight = avgElapse < 10 ? 10 : avgElapse;
+		const float weight = 10 ;
 
 		while (!loop.HasQuitted()) {		//game loop	
 			start = steady_clock::now();
@@ -93,14 +92,14 @@ void Client::run(ScreenInteractive& screen) {
 			
 			ship->PhysUpdate(dt / 1000.0);
 
-			if (dt*2 < target)
-				std::this_thread::sleep_for(milliseconds(target - dt*2));
-
 			now = steady_clock::now();
 			dt = duration_cast<milliseconds>(now - start).count();
 
+			if (dt*2 < target)
+				std::this_thread::sleep_for(milliseconds(target - dt*2));
+
 			fps = 1000 / avgElapse;
-			avgElapse = avgElapse - (avgElapse / weight) + dt / weight;
+			avgElapse = avgElapse - (avgElapse / weight) + dt   / weight;
 			avgPackets= avgPackets- (avgPackets/ weight) +numPkt/ weight;
 
 			screen.PostEvent(Event::Custom);
@@ -138,31 +137,10 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				msg << stat;
 				Send(msg);
 			}break;
-		case NetMsgType::GridChange: {
-				auto gc = GridChange();
-				msg >> gc;
-
-				if (gc.newGridId == BAD_ID) { //ur screwed!
-					gridIsReady = false;
-					
-					msg << gc;
-					Send(msg); //make another request
-				} else {
-					gridIsReady = true;
-
-					currentGrid_id = gc.newGridId;
-
-					auto rq = RequestById();
-						rq.targetID.targetType	= ID::GRID;
-						rq.targetID.instanceId			= gc.newGridId;
-						rq.transformOnly		= false;
-
-					msg.header.id = NetMsgType::RequestById;
-
-					msg.body.clear(); //should already be empty
-					msg << rq;
-					Send(msg);
-				}
+		case NetMsgType::GridRequest: {
+				auto gr = GridRequest();
+				msg >> gr;
+				
 
 			} break;
 		case NetMsgType::GameObjectUpdate: {

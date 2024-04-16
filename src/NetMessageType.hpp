@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <chrono>
 #include <functional>
-#include "NetCommon/eol_net.hpp"
 
+#include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
 #include "GameStructs.hpp"
 
@@ -26,12 +26,10 @@ enum class NetMsgType : uint16_t {
 
 	//user tries to make a new grid at a location. if location is 
 	// not allowed server corrects grid id to effectively rerout the user
-	GridCreation,
+	GridRequest,
 
 	//game object update event. 
-	GameObjectUpdate,
-
-	GridChange
+	GameObjectUpdate
 };
 
 template<typename ELE, typename TARG = ELE>
@@ -77,11 +75,11 @@ struct ID {
 		OBJECT,
 		BAD_TYPE
 	};
-	ID() : instanceId(BAD_ID), gridId(BAD_ID), targetType(BAD_TYPE), classId(BAD_ID) {}
+	ID() : instanceId(BAD_ID), gridId(BAD_ID), targetType(BAD_TYPE), classId(BAD_CLASS_ID) {}
 
 	bool isBad() {
 		return	ID_TYPE::BAD_TYPE == targetType
-			||	BAD_ID == classId
+			||	BAD_CLASS_ID == classId
 			||	BAD_ID == gridId
 			||	BAD_ID == instanceId;
 	}
@@ -91,7 +89,7 @@ struct ID {
 	id_t instanceId;
 	cid_t classId;
 };
-static_assert(std::is_standard_layout<struct ID>::value);
+static_assert(std::is_standard_layout<ID>::value);
 
 struct IDPartition {
 	id_t min, max, nxt;
@@ -111,8 +109,8 @@ struct IDPartition {
 		return nxt < min || nxt > max;
 	}
 };
-static_assert(std::is_standard_layout<struct IDPartition>::value);
-static struct IDPartition LOCAL_PARITION = IDPartition();
+static_assert(std::is_standard_layout<IDPartition>::value);
+static struct IDPartition LOCAL_PARITION;
 
 struct ConnectionStatus {
 	id_t clientId;
@@ -123,7 +121,7 @@ struct ConnectionStatus {
 		return part.min / STD_PARTITION_SIZE;
 	}
 };
-static_assert(std::is_standard_layout<struct ConnectionStatus>::value);
+static_assert(std::is_standard_layout<ConnectionStatus>::value);
 
 struct Ping {
 	long long sent, received;
@@ -143,30 +141,27 @@ struct Ping {
 		return getTime();
 	}
 };
-static_assert(std::is_standard_layout<struct Ping>::value);
+static_assert(std::is_standard_layout<Ping>::value);
 
 struct IDCorrection {
 	ID formerID;
 	id_t newId;
 };
-static_assert(std::is_standard_layout<struct IDCorrection>::value);
+static_assert(std::is_standard_layout<IDCorrection>::value);
 
 struct RequestById {
 	ID targetID;
 	bool transformOnly;
 };
-static_assert(std::is_standard_layout<struct RequestById>::value);
+static_assert(std::is_standard_layout<RequestById>::value);
 
-struct GridChange {
-	id_t newGridId;
-};
-static_assert(std::is_standard_layout<struct GridChange>::value);
+struct GridRequest {
+	GridRequest() : pos(0,0) {}
 
-struct GridCreation {
-	id_t newGridId;
 	gs::Vec2 pos;
 };
-static_assert(std::is_standard_layout<struct GridCreation>::value);
+static_assert(std::is_standard_layout<GridRequest>::value);
+
 
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
@@ -177,4 +172,4 @@ struct GameObjectUpdate {
 	ID objectID;
 	bool transformOnly; //the most common & frequent update
 };
-static_assert(std::is_standard_layout<struct GameObjectUpdate>::value);
+static_assert(std::is_standard_layout<GameObjectUpdate>::value);

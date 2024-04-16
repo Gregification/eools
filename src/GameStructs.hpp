@@ -47,7 +47,12 @@ namespace gs {
 			float s = std::sinf(radian);
 			float c = std::cosf(radian);
 			Vec2 ret = point - pivot;
+		
 			return Vec2(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
+		}
+
+		bool isBad() {
+			return x == NAN || y == NAN;
 		}
 
 		//https://youtu.be/Ip3X9LOh2dk?t=150

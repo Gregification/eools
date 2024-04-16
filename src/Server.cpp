@@ -21,7 +21,7 @@ void Server::run(ScreenInteractive& screen) {
 							id_t id = sptr->connectionID;
 
 							eles.push_back(text(
-									std::format("{0:3} RTping:{1:6} {2}",
+									std::format("{:3} RTping:{:6} {}",
 										std::to_string(id),
 										std::to_string(sptr->pingTime.load()),
 										sptr->ToString())
@@ -130,7 +130,7 @@ void Server::run(ScreenInteractive& screen) {
 			now = steady_clock::now();
 			long long dt = duration_cast<milliseconds>(now - start).count();
 
-			if (dt > 1000) {
+			if (dt > 2000) {
 				start = now;
 				Ping ping = Ping();
 				ping.tag();
@@ -151,6 +151,8 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 	
 	if (blacklist_ip.contains(client->GetIP()))
 		return false;
+
+	connectionStatus.insert({client->connectionID, ConnectionStatus()});
 
 	return true;
 }
@@ -182,14 +184,6 @@ void Server::onEvent(std::string message) {
 //on message from specific given client
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
-
-	static bool makeNoise = false;
-
-	//debug
-	/*if (makeNoise)
-		std::cout << "\a\n";
-	if (!makeNoise && msg.header.id == NetMsgType::GridChange)
-		makeNoise = true;*/
 
 	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 
@@ -226,8 +220,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		case NetMsgType::IDCorrection : {
 				static struct IDPartition backupIDParition(BAD_ID+1, STD_PARTITION_SIZE - 1, 0);
 
-
-				IDCorrection corr = {};
+				auto corr = IDCorrection();
 				msg >> corr;
 
 				corr.newId = backupIDParition.getNext();
@@ -248,10 +241,19 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				connectionStatus.insert({ client->connectionID, cs });
 			}break;
-		case NetMsgType::GridCreation: {
+		case NetMsgType::GridRequest: {
+				auto gr = GridRequest();
+				msg >> gr;
+
+				std::shared_ptr<Grid> grid;
+				if (gr.pos.isBad()) {
+					//get random grid
+
+				} else 
+					grid = gameMap.getGrid(gr.pos);
 				
-			}break;
-		case NetMsgType::GridChange: {
+				msg.body.clear();
+				msg.header.id = NetMsgType::GameObjectUpdate;
 
 			}break;
 
@@ -261,5 +263,5 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 }
 
 void Server::primeGameMap() {
-	gameMap.makeGrid({ 0,0 });
+	gameMap.getGrid({ 0,0 });
 }
