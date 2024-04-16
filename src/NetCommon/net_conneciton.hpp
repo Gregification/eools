@@ -136,7 +136,6 @@ namespace net {
 
 						m_msgBuffIn.body.resize(m_msgBuffIn.header.size);
 						if (m_msgBuffIn.header.size > 0) {
-
 							ReadBody();
 						} else {
 							AddToIncomingMessageQueue();

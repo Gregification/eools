@@ -30,7 +30,8 @@ public:
 	void run(ScreenInteractive& screen) override;
 
 public:
-	float fps = 0;
+	float fps = -1;
+	
 	id_t currentGrid_id = 0;
 
 protected:

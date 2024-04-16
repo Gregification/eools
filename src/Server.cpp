@@ -115,28 +115,42 @@ void Server::run(ScreenInteractive& screen) {
 	for (size_t n = 0;; n = Update()) {
 
 		if (n < 1)
-			Sleep(50);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
 		else {
-			Sleep(20);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			screen.Post(Event::Custom);
+
+			using namespace std::chrono;
+			
+			static time_point 
+				start = steady_clock::now(),
+				now = start;
+		
+			now = steady_clock::now();
+			long long dt = duration_cast<milliseconds>(now - start).count();
+			start = now;
+
+			if (dt > 1000) {
+				Ping ping = Ping();
+				ping.tag();
+
+				net::message<NetMsgType> msg;
+				msg.header.id = NetMsgType::Ping;
+				msg << ping;
+
+				MessageAllClients(msg);
+			}
 		}
 	}
 }
 
-//returns true/accept or false/decline regarding the connection. think Swing predicate filters
+//returns true/accept or false/decline regarding the connection. predicate filters
 bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 	std::lock_guard lk(renderMutex);
 	
 	if (blacklist_ip.contains(client->GetIP()))
 		return false;
-
-	net::message<NetMsgType> msg;
-	msg.header.id = NetMsgType::Ping;
-	Ping ping = Ping();
-	ping.tag();
-	msg << ping;
-
-	client->Send(msg);
 
 	return true;
 }
@@ -160,6 +174,14 @@ void Server::onEvent(std::string message) {
 //on message from specific given client
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
+
+	static bool makeNoise = false;
+
+	//debug
+	if (makeNoise)
+		std::cout << "\a\n";
+	if (!makeNoise && msg.header.id == NetMsgType::GridChange)
+		makeNoise = true;
 
 	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 
@@ -194,7 +216,8 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 			} break;
 		case NetMsgType::IDCorrection : {
 				static struct IDPartition backupIDParition(BAD_ID+1, STD_PARTITION_SIZE - 1, 0);
-				
+
+
 				IDCorrection corr = {};
 				msg >> corr;
 

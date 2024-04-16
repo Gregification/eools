@@ -1,4 +1,4 @@
-#include "Grid.hpp"
+#include "Game/Grid.hpp"
 
 class Camera {
 public:

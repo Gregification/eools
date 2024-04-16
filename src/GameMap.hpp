@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "Grid.hpp"
+#include "Game/Grid.hpp"
 
 /**
 * map of everything. servers copy should have all there is to be.

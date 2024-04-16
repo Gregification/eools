@@ -26,13 +26,15 @@ void Client::run(ScreenInteractive& screen) {
 	//ui rendering
 	float avgPackets = 0;
 	auto clientStats = Renderer([&] {
-			return text(std::format("| ~PKTs:{:3.0f} | fps:{:2.0f} |", avgPackets, fps));
+			return text(std::format("| ~PKTs:{:3.0f} | fps:{:2.0f} | ping:", avgPackets, fps) 
+				+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION")
+				+ " |");
 		});
 	std::vector<std::string> tab_entries(4);
-	tab_entries[CLIENT_TAB::CONTROL]	= "control";
-	tab_entries[CLIENT_TAB::MAP]		= "map";
-	tab_entries[CLIENT_TAB::CARGO]		= "cargo";
-	tab_entries[CLIENT_TAB::EXPANSIONS] = "expansions";
+		tab_entries[CLIENT_TAB::CONTROL]	= "control";
+		tab_entries[CLIENT_TAB::MAP]		= "map";
+		tab_entries[CLIENT_TAB::CARGO]		= "cargo";
+		tab_entries[CLIENT_TAB::EXPANSIONS] = "expansions";
 		
 	auto tab_selection = Menu(&tab_entries, &client_tab, MenuOption::HorizontalAnimated());
 	auto tab_content = Container::Tab({

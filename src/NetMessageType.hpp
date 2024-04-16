@@ -57,6 +57,7 @@ void unpackArray(
 	){
 	static_assert(std::is_standard_layout<T>::value);
 	size_t len = 0;
+
 	msg >> len;
 
 	arr.reserve(len + arr.size());

@@ -65,20 +65,16 @@ class GameObjectFactory {
 
 			InstanceConstructor initFunc = []() { return std::make_shared<T>(); };
 
-			ClassList = std::unordered_map<cid_t, InstanceConstructor>();
-			nextIdx = BAD_ID + 1;
-
-			ClassList.insert(std::map<cid_t, InstanceConstructor>::value_type(
-				class_id,
+			ClassList.push_back(
 				initFunc
-			));
+			);
 		}
 
-		static std::unordered_map<cid_t, InstanceConstructor> ClassList;
+		static std::vector<InstanceConstructor> ClassList;
 		static cid_t nextIdx;
 
 		static std::shared_ptr<GameObject> getInstance(cid_t id) {
-			return std::move((ClassList.find(id)->second)());
+			return std::move(ClassList[id]());
 		}
 
 		const cid_t class_id;

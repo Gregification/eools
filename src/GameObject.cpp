@@ -1,7 +1,7 @@
 #include "GameObject.hpp"
 
-std::unordered_map<cid_t, GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList{};
-cid_t GameObjectFactory::nextIdx{ BAD_ID + 1 };
+std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList = std::vector<GameObjectFactory::InstanceConstructor>(4);
+cid_t GameObjectFactory::nextIdx = 0;
 
 void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
 	Vec2 pos = transform.position;
