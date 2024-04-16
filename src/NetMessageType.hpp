@@ -132,13 +132,15 @@ struct Ping {
 
 	bool isComplete()	{ return sent > 0 && received > 0; }
 	long long getTime()	{ return received - sent; }
-	void tag() { 
+	long long tag() { 
 		using namespace std::chrono;
 		long long rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		if (sent <= 0)
 			sent = rn;
 		else
 			received = rn;
+
+		return getTime();
 	}
 };
 static_assert(std::is_standard_layout<struct Ping>::value);

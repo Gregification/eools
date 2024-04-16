@@ -111,13 +111,13 @@ void Client::run(ScreenInteractive& screen) {
 void Client::OnMessage(net::message<NetMsgType> msg) {
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
-				Ping ping = Ping();
+				auto ping = Ping();
 				msg >> ping;
 
 				if (ping.isComplete()) {
 					m_connection->pingTime = ping.getTime();
 				} else {
-					ping.tag();
+					m_connection->pingTime = ping.tag();
 
 					msg << ping;
 					Send(msg);

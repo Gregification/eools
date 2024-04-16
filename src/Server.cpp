@@ -129,9 +129,9 @@ void Server::run(ScreenInteractive& screen) {
 		
 			now = steady_clock::now();
 			long long dt = duration_cast<milliseconds>(now - start).count();
-			start = now;
 
 			if (dt > 1000) {
+				start = now;
 				Ping ping = Ping();
 				ping.tag();
 
@@ -156,7 +156,15 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 }
 
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
+	std::lock_guard lk(renderMutex);
 
+	messages.push_back(text(
+		std::format("[EVENT][DISCONNECT] lost {}, {}",
+			client->connectionID, 
+			connectionStatus.find(client->connectionID)->second.isQueue ? "Q" : "C"
+		)));
+
+	connectionStatus.erase(client->connectionID);
 }
 
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
@@ -178,10 +186,10 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 	static bool makeNoise = false;
 
 	//debug
-	if (makeNoise)
+	/*if (makeNoise)
 		std::cout << "\a\n";
 	if (!makeNoise && msg.header.id == NetMsgType::GridChange)
-		makeNoise = true;
+		makeNoise = true;*/
 
 	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
 
@@ -192,12 +200,13 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				if (ping.isComplete()) {
 					client->pingTime = ping.getTime();
-					break;
+				} else {
+					client->pingTime = ping.tag();
+
+					msg << ping;
+					MessageClient(client, msg);
 				}
 				
-				ping.tag();
-				msg << ping;
-				MessageClient(client, msg);
 			} break;
 		case NetMsgType::IDPartition: {
 				static int partitionCounter = 1; //0'th reserved for server
@@ -227,16 +236,26 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-				MessageAllClients(msg);
 				gameMap.processMessage(
 					msg,
 					[&](const net::message<NetMsgType>& m) -> void { MessageAllClients(m, client); }
 				);
+				MessageAllClients(msg);
 			} break;
-		default: {
-			//broadcast to all clients excluding source client
-			MessageAllClients(msg, client);
-		} break;
+		case NetMsgType::ConnectionStatus: {
+				auto cs = ConnectionStatus();
+				msg >> cs;
+
+				connectionStatus.insert({ client->connectionID, cs });
+			}break;
+		case NetMsgType::GridCreation: {
+				
+			}break;
+		case NetMsgType::GridChange: {
+
+			}break;
+
+		default: {}
 	}
 
 }
