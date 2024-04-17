@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../GameObject.hpp"
+#include "../NetGameObject.hpp"
 
-class Ship : public GameObject {
+class Ship : public NetGameObject<Ship> {
 	public:
-		const static GameObjectFactory gof;
-
-		Ship() : Ship(BAD_ID) {}
-		Ship(id_t id) : GameObject(id) {
+		Ship(id_t nid) : Ship() {
+			id = nid;
+		}
+		Ship() {
 			body = { Vec2(0,5), Vec2(-5,-5), Vec2(5,-5), Vec2(0,5)};
 		}
 		~Ship() {}

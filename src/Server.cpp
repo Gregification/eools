@@ -4,8 +4,8 @@
 
 void Server::run(ScreenInteractive& screen) {
 	//debug
-	messages.push_back(text("grid gof id:" + std::to_string(Grid::gof.class_id)));
-	messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.class_id)));
+	messages.push_back(text("grid gof id:" + std::to_string(Grid::staticGetGOF().class_id)));
+	//messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.class_id)));
 
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
@@ -114,7 +114,7 @@ void Server::run(ScreenInteractive& screen) {
 
 	for (size_t n = 0;; n = Update()) {
 
-		if (n < 1)
+		if (n == 0)
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 		else {

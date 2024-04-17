@@ -9,75 +9,50 @@
 #include "GameStructs.hpp"
 #include "Game_common.hpp"
 #include "Body.hpp"
+#include "GameObjectFactory.hpp"
 
 using namespace gs;
 using namespace ftxui;
 
 class GameObject : virtual public Body {
-	public:
-		GameObject(id_t id) :
-			Body(),
-			id(id),
-			needNetUpdate(false)
-		{
-			
-		}
-		virtual ~GameObject() = default;
+public:
+	GameObject(id_t id) :
+		Body(),
+		id(id),
+		needNetUpdate(false)
+	{
 
-	public:
-		id_t id;
-		bool needNetUpdate;
+	}
+	virtual ~GameObject() = default;
 
-	public:
-		virtual void Update(float dt)	{}
+public:
+	id_t id;
+	bool needNetUpdate;
 
-		virtual void PhysUpdate(float dt) {
-			transform.PhysUpdate(dt);
-		}
+public:
+	virtual void Update(float dt) {}
 
-		virtual void Draw(Canvas& c, Transformation_2D& transform) const;
-		
-		//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
-		virtual void packMessage(net::message<NetMsgType>& msg) { 
-			msg << transform;
-		}
+	virtual void PhysUpdate(float dt) {
+		transform.PhysUpdate(dt);
+	}
 
-		//UNPACK SUPER CLASS FIRST
-		virtual void unpackMessage(net::message<NetMsgType>& msg) {
-			msg >> transform;
-		}
+	virtual void Draw(Canvas& c, Transformation_2D& transform) const;
 
-		virtual std::string GetDescription() const;
-		
-		virtual ID getID() const;
+	//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
+	virtual void packMessage(net::message<NetMsgType>& msg) {
+		msg << transform;
+	}
 
-		virtual bool NeedNetUpdate();
-};
+	//UNPACK SUPER CLASS FIRST
+	virtual void unpackMessage(net::message<NetMsgType>& msg) {
+		msg >> transform;
+	}
 
-class GameObjectFactory {
-	using InstanceConstructor = std::function<std::shared_ptr<GameObject>()>;
-	public:
-		template<class T>
-		GameObjectFactory(T* dummy) :
-			class_id(nextIdx++)
-		{
-			static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
+	virtual std::string GetDescription() const;
 
-			InstanceConstructor initFunc = []() { return std::make_shared<T>(); };
+	virtual bool NeedNetUpdate();
 
-			ClassList.push_back(
-				initFunc
-			);
-		}
-
-		static std::vector<InstanceConstructor> ClassList;
-		static cid_t nextIdx;
-
-		static std::shared_ptr<GameObject> getInstance(cid_t id) {
-			return std::move(ClassList[id]());
-		}
-
-		const cid_t class_id;
-
-		inline cid_t classCount() { return nextIdx; }
+	//GameObjectFactory stuff
+	virtual GameObjectFactory getGOF()	const = 0;
+	virtual ID getID()					const = 0;
 };

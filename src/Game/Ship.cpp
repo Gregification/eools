@@ -2,8 +2,6 @@
 
 #include "Ship.hpp"
 
-const GameObjectFactory Ship::gof(static_cast<Ship*>(nullptr));
-
 void Ship::Update(float dt) {
 
 }

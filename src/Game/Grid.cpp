@@ -2,8 +2,6 @@
 
 #include "Grid.hpp"
 
-const GameObjectFactory Grid::gof(static_cast<Grid*>(nullptr));
-
 void Grid::Update(float dt) {
 	for (auto& [id, go] : gameObjects) {
 		if (go)

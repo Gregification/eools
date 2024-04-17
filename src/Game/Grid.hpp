@@ -3,14 +3,13 @@
 #include <vector>
 #include <set>
 
-#include "../GameObject.hpp"
+#include "../NetGameObject.hpp"
 
-class Grid : public GameObject {
+class Grid : public NetGameObject<Grid> {
 	friend class GameMap;
 	public:
-		const static GameObjectFactory gof;
 
-		Grid() : GameObject(BAD_ID), gridPos(0,0) {}
+		Grid() : gridPos(0,0) {}
 		~Grid() = default;
 
 

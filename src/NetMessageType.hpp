@@ -110,7 +110,7 @@ struct IDPartition {
 	}
 };
 static_assert(std::is_standard_layout<IDPartition>::value);
-static struct IDPartition LOCAL_PARITION;
+static IDPartition LOCAL_PARITION = IDPartition();
 
 struct ConnectionStatus {
 	id_t clientId;
