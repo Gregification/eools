@@ -1,10 +1,9 @@
 #pragma once
 
 #include "GameObject.hpp"
+#include "GameObjectFactory.hpp"
 
-//CRTP design
-
-template<class T>
+template<class T> //CRTP
 class NetGameObject : public GameObject {
 public:
 	NetGameObject() : GameObject(BAD_ID) 

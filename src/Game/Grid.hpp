@@ -5,7 +5,7 @@
 
 #include "../NetGameObject.hpp"
 
-class Grid : public NetGameObject<Grid> {
+class Grid : virtual public NetGameObject<Grid> {
 	friend class GameMap;
 	public:
 

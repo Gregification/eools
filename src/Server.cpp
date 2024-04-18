@@ -5,7 +5,7 @@
 void Server::run(ScreenInteractive& screen) {
 	//debug
 	messages.push_back(text("grid gof id:" + std::to_string(Grid::staticGetGOF().class_id)));
-	//messages.push_back(text("ship gof id:" + std::to_string(Ship::gof.class_id)));
+	messages.push_back(text("ship gof id:" + std::to_string(Ship::staticGetGOF().class_id)));
 
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {

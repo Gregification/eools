@@ -9,7 +9,8 @@
 #include "GameStructs.hpp"
 #include "Game_common.hpp"
 #include "Body.hpp"
-#include "GameObjectFactory.hpp"
+
+class GameObjectFactory;
 
 using namespace gs;
 using namespace ftxui;

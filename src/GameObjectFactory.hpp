@@ -1,5 +1,12 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <vector>
+
+#include "Game_common.hpp"
+#include "Game/Grid.hpp"
+
 class GameObject;
 
 class GameObjectFactory {
@@ -25,6 +32,4 @@ public:
 	static std::shared_ptr<GameObject> getInstance(cid_t id);
 
 	const cid_t class_id;
-
-	inline cid_t classCount() { return nextIdx; }
 };
