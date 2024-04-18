@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Grid.hpp"
+#include "../GameObject.hpp"
 
 void Grid::Update(float dt) {
 	for (auto& [id, go] : gameObjects) {
@@ -9,10 +10,10 @@ void Grid::Update(float dt) {
 	}
 }
 
-void Grid::Draw(Canvas& c, Transformation_2D& transform) const {
+void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
 	for (auto& [id, go] : gameObjects) {
 		if(go)
-			go->Draw(c, transform);
+			go->Draw(c, trf);
 	}
 }
 

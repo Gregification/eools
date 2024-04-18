@@ -2,7 +2,6 @@
 
 #include <set>
 #include "NetCommon/eol_net.hpp"
-
 #include "App.hpp"
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"

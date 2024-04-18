@@ -170,6 +170,6 @@ static_assert(std::is_standard_layout<GridRequest>::value);
 
 struct GameObjectUpdate {
 	ID objectID;
-	bool transformOnly; //the most common & frequent update
+	bool transformOnly = true; //the most common & frequent update
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);

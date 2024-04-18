@@ -4,10 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "Game_common.hpp"
-#include "Game/Grid.hpp"
-
-class GameObject;
+#include "GameObject.hpp"
 
 class GameObjectFactory {
 	using InstanceConstructor = std::function<std::shared_ptr<GameObject>()>;

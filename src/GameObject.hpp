@@ -37,7 +37,7 @@ public:
 		transform.PhysUpdate(dt);
 	}
 
-	virtual void Draw(Canvas& c, Transformation_2D& transform) const;
+	virtual void Draw(Canvas&, Transformation_2D&) const;
 
 	//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
 	virtual void packMessage(net::message<NetMsgType>& msg) {

@@ -2,29 +2,20 @@
 
 #include "GameObject.hpp"
 #include "GameObjectFactory.hpp"
+#include "GameStructs.hpp"	`q1
 
 template<class T> //CRTP
 class NetGameObject : public GameObject {
 public:
-	NetGameObject() : GameObject(BAD_ID) 
-		{}
+	NetGameObject() : GameObject(BAD_ID) {}
+	NetGameObject(id_t nid) : GameObject(nid) {}
 
 	const static GameObjectFactory gof;
 
-	GameObjectFactory getGOF() const override {
-		return gof;
-	}
+	GameObjectFactory getGOF() const override;
 
 	//yeah
-	static GameObjectFactory staticGetGOF() {
-		return gof;
-	}
+	static GameObjectFactory staticGetGOF();
 
-	ID getID() const override {
-		auto idee = ID();
-			idee.classId = gof.class_id;
-			idee.instanceId = id;
-
-		return idee;
-	}
+	ID getID() const override;
 };

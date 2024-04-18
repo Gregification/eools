@@ -5,13 +5,13 @@
 
 #include "../NetGameObject.hpp"
 
+class GameMap;
+
 class Grid : virtual public NetGameObject<Grid> {
 	friend class GameMap;
 	public:
-
 		Grid() : gridPos(0,0) {}
 		~Grid() = default;
-
 
 		id_t gridId = BAD_ID;
 		Vec2 gridPos;
@@ -20,7 +20,7 @@ class Grid : virtual public NetGameObject<Grid> {
 
 		void Update(float dt) override;
 
-		void Draw(Canvas& c, Transformation_2D& transform) const override;
+		void Draw(Canvas& c, Transformation_2D& trf) const override;
 
 		void packMessage(net::message<NetMsgType>& msg) override;
 
