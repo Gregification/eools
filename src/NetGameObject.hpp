@@ -12,10 +12,23 @@ public:
 
 	const static GameObjectFactory gof;
 
-	GameObjectFactory getGOF() const override;
+	GameObjectFactory getGOF() const override {
+		return gof;
+	}
 
 	//yeah
-	static GameObjectFactory staticGetGOF();
+	static GameObjectFactory staticGetGOF() {
+		return gof;
+	}
 
-	ID getID() const override;
+	ID getID() const override {
+		auto idee = ID();
+		idee.classId = gof.class_id;
+		idee.instanceId = id;
+
+		return idee;
+	}
 };
+
+template<class T>
+const GameObjectFactory NetGameObject<T>::gof = GameObjectFactory((static_cast<T*>(nullptr)));
