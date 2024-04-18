@@ -3,8 +3,8 @@
 #include "NetGameObject.hpp"
 
 //DO NOT USE THIS FILE
-//some thing during the build (cmake i suspect) recoginizes this file 
-//	however it fails during linking.
+// these functions *should* be correct but some thing during the build (maybe cmake)
+//	recoginizes this file but fails in linking it by the header.
 
 //template<class T>
 //const GameObjectFactory NetGameObject<T>::gof = GameObjectFactory((static_cast<T*>(nullptr)));

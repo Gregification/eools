@@ -45,7 +45,7 @@ void Client::run(ScreenInteractive& screen) {
 		&client_tab);
 	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
 			onInput(std::move(e));
-			return false;
+			return true;
 		});
 	auto main_container = Container::Vertical({
 			Container::Horizontal({
@@ -75,11 +75,11 @@ void Client::run(ScreenInteractive& screen) {
 			now		= start,
 			lastPhysTime = start;
 
-		const long long target = 1000 / 60;
+		const long long target = 1000 / 30;
 		long long dt;
 
-		float avgElapse = 1000 / target;
-		const float weight = 10 ;
+		float avgElapse = target;
+		const float weight = 5;
 
 		while (!loop.HasQuitted()) {		//game loop	
 			start = steady_clock::now();
@@ -95,12 +95,12 @@ void Client::run(ScreenInteractive& screen) {
 			now = steady_clock::now();
 			dt = duration_cast<milliseconds>(now - start).count();
 
-			if (dt*2 < target)
-				std::this_thread::sleep_for(milliseconds(target - dt*2));
+			if (dt < target)
+				std::this_thread::sleep_for(milliseconds(target));
 
-			fps = 1000 / avgElapse;
 			avgElapse = avgElapse - (avgElapse / weight) + dt   / weight;
 			avgPackets= avgPackets- (avgPackets/ weight) +numPkt/ weight;
+			fps = 1000.0 / avgElapse;
 
 			screen.PostEvent(Event::Custom);
 		}
