@@ -82,21 +82,19 @@ void Client::run(ScreenInteractive& screen) {
 		const float weight = 5;
 
 		while (!loop.HasQuitted()) {		//game loop	
-			start = steady_clock::now();
+			start = high_resolution_clock::now();
 
 			loop.RunOnce();
 			float numPkt = Update();
 
-			now = steady_clock::now();
-			dt = duration_cast<milliseconds>(now - start).count();
+			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 			
-			ship->PhysUpdate(dt / 1000.0);
+			//ship->PhysUpdate(dt / 1000.0);
 
-			now = steady_clock::now();
-			dt = duration_cast<milliseconds>(now - start).count();
+			//dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
 			if (dt < target)
-				std::this_thread::sleep_for(milliseconds(target));
+				std::this_thread::sleep_for(milliseconds(target - dt));
 
 			avgElapse = avgElapse - (avgElapse / weight) + dt   / weight;
 			avgPackets= avgPackets- (avgPackets/ weight) +numPkt/ weight;

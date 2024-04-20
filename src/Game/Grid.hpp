@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <set>
+#include <vulkan/vulkan.hpp>
 
 #include "../NetGameObject.hpp"
 

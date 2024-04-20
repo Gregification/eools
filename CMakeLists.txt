@@ -15,6 +15,13 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Include Vulkan
+# if using vcpkg manager copy the file path from "vcpkg integrate install" into VSS "cmake toolchain" (manage configurations under debug)
+find_package(vulkan REQUIRED)
+# must include vulkan includes manually
+include_directories(D:/vcpackage/vcpkg/packages/vulkan-headers_x64-windows/include)
+
+
 # Include FTXUI
 include(FetchContent)
 
@@ -38,6 +45,8 @@ FetchContent_Declare(asio-cmake
 set(ASIO_CMAKE_ASIO_TAG asio-1-28-0)
 FetchContent_MakeAvailable(asio-cmake)
 
+
+# src
 file(GLOB SOURCES
     src/*.cpp
     src/Game/*.cpp
@@ -51,4 +60,5 @@ target_link_libraries(${PROJECT_NAME}
     ftxui::dom
     ftxui::component
     asio
+    ${VULKAN_LIBRARIES}
 )

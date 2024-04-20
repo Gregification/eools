@@ -112,35 +112,45 @@ void Server::run(ScreenInteractive& screen) {
 
 	Start();
 
-	for (size_t n = 0;; n = Update()) {
+	//main
+	{
+		using namespace std::chrono;
 
-		if (n == 0)
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		time_point
+			start = steady_clock::now(),
+			now = start;
 
-		else {
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-			screen.Post(Event::Custom);
+		long long dt;
+		const long long
+			pingTarget		= 1000 / 1,
+			syncTarget		= 1000 / 2;
 
-			using namespace std::chrono;
-			
-			static time_point 
-				start = steady_clock::now(),
-				now = start;
-		
-			now = steady_clock::now();
-			long long dt = duration_cast<milliseconds>(now - start).count();
+		int pkts;
 
-			if (dt > 2000) {
-				start = now;
-				Ping ping = Ping();
-				ping.tag();
+		for (;;) {
+			start = steady_clock::now();
+
+			pkts = Update();
+
+			//huh
+			//https://www.nvidia.com/content/gtc/documents/1077_gtc09.pdf
+
+			static auto lastPingTime = high_resolution_clock::now();
+			if (duration_cast<milliseconds>(lastPingTime - start).count() > pingTarget) {
+				lastPingTime = start;
+
+				auto ping = Ping();
+					ping.tag();
 
 				net::message<NetMsgType> msg;
 				msg.header.id = NetMsgType::Ping;
 				msg << ping;
 
 				MessageAllClients(msg);
+
+				screen.Post(Event::Custom);
 			}
+
 		}
 	}
 }
