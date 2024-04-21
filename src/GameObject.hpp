@@ -16,8 +16,9 @@ using namespace gs;
 using namespace ftxui;
 
 class GameObject : virtual public Body {
+	
 public:
-	GameObject(id_t id) :
+	GameObject(inst_id id) :
 		Body(),
 		id(id),
 		needNetUpdate(false)
@@ -27,7 +28,7 @@ public:
 	virtual ~GameObject() = default;
 
 public:
-	id_t id;
+	inst_id id;
 	bool needNetUpdate;
 
 public:
@@ -42,10 +43,13 @@ public:
 	//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
 	virtual void packMessage(net::message<NetMsgType>& msg) {
 		msg << transform;
+		msg << mass;
+
 	}
 
 	//UNPACK SUPER CLASS FIRST
 	virtual void unpackMessage(net::message<NetMsgType>& msg) {
+		msg >> mass;
 		msg >> transform;
 	}
 

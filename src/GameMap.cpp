@@ -15,7 +15,7 @@ std::shared_ptr<Grid> GameMap::getGrid(Vec2 pos) {
 	return grid;
 }
 
-std::shared_ptr<Grid> GameMap::getGrid(id_t id) {
+std::shared_ptr<Grid> GameMap::getGrid(inst_id id) {
 	if (id == BAD_ID || grids.find(id) == grids.end())
 		return std::shared_ptr<Grid>(nullptr);
 

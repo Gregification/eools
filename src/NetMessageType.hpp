@@ -85,23 +85,23 @@ struct ID {
 	}
 
 	ID_TYPE targetType;
-	id_t gridId;
-	id_t instanceId;
-	cid_t classId;
+	inst_id gridId;
+	inst_id instanceId;
+	class_id classId;
 };
 static_assert(std::is_standard_layout<ID>::value);
 
 struct IDPartition {
-	id_t min, max, nxt;
+	inst_id min, max, nxt;
 	
 	IDPartition() : IDPartition(0,0,-1) {}
-	IDPartition(id_t mi, id_t mx, id_t nx) : min(mi), max(mx), nxt(nx) {}
+	IDPartition(inst_id mi, inst_id mx, inst_id nx) : min(mi), max(mx), nxt(nx) {}
 
-	id_t getNext() {
+	inst_id getNext() {
 		return nxt++;
 	}
 
-	bool withinRange(id_t num) {
+	bool withinRange(inst_id num) {
 		return num >= min && num <= max;
 	}
 
@@ -113,27 +113,27 @@ static_assert(std::is_standard_layout<IDPartition>::value);
 static IDPartition LOCAL_PARITION = IDPartition();
 
 struct ConnectionStatus {
-	id_t clientId;
+	inst_id clientId;
 	bool isQueue;
 	ConnectionStatus() : isQueue(false), clientId(getIdFromPartition(LOCAL_PARITION)) {}
 
-	static id_t getIdFromPartition(const IDPartition& part) {
+	static inst_id getIdFromPartition(const IDPartition& part) {
 		return part.min / STD_PARTITION_SIZE;
 	}
 };
 static_assert(std::is_standard_layout<ConnectionStatus>::value);
 
 struct Ping {
-	long long sent, received;
+	go_time sent, received;
 	
-	Ping() : sent(-1), received(-1) {}
+	Ping() {}
 
 	bool isComplete()	{ return sent > 0 && received > 0; }
-	long long getTime()	{ return received - sent; }
+	long long getTime()	{ return (received - sent).value; }
 	long long tag() { 
 		using namespace std::chrono;
 		long long rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		if (sent <= 0)
+		if (sent.value <= 0)
 			sent = rn;
 		else
 			received = rn;
@@ -145,7 +145,7 @@ static_assert(std::is_standard_layout<Ping>::value);
 
 struct IDCorrection {
 	ID formerID;
-	id_t newId;
+	inst_id newId;
 };
 static_assert(std::is_standard_layout<IDCorrection>::value);
 

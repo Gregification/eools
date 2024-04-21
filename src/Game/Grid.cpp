@@ -28,7 +28,7 @@ void Grid::packMessage(net::message<NetMsgType>& msg) {
 }
 
 void Grid::unpackMessage(net::message<NetMsgType>& msg) {
-	id_t msg_id;
+	inst_id msg_id;
 	msg >> msg_id;
 	msg >> gridPos;
 
@@ -41,7 +41,7 @@ void Grid::unpackMessage(net::message<NetMsgType>& msg) {
 	size_t l;
 	msg >> l;
 	for (int i = 0; i < l; i++) {
-		id_t id;
+		inst_id id;
 		msg >> id;
 
 		if (!msg_id) { //if NOT baselining from server
@@ -68,7 +68,7 @@ void Grid::addGameObject(std::shared_ptr<GameObject>& go) {
 	gameObjects.insert({ go->id, go });
 }
 
-std::shared_ptr<GameObject> Grid::getObject(id_t id) {
+std::shared_ptr<GameObject> Grid::getObject(inst_id id) {
 	auto ret = gameObjects.find(id);
 
 	if (ret == gameObjects.end())
@@ -77,7 +77,7 @@ std::shared_ptr<GameObject> Grid::getObject(id_t id) {
 		return ret->second;
 }
 
-std::shared_ptr<GameObject> Grid::removeObject(id_t id) {
+std::shared_ptr<GameObject> Grid::removeObject(inst_id id) {
 	auto it = gameObjects.find(id);
 	if(it == gameObjects.end())
 		return std::shared_ptr<GameObject>(nullptr);

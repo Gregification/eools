@@ -14,6 +14,9 @@ public:
 	virtual ~Body() = default;
 
 public:
+	go_time lastUpdate;
+	float mass = INFINITY;
+
 	gs::Transform transform;
 	float completeScale = 1;
 	std::vector<gs::Vec2> verticies;//no concave, plz. i beg

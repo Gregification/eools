@@ -20,7 +20,7 @@ public:
 
 public:
 	std::shared_ptr<Grid> getGrid(Vec2);
-	std::shared_ptr<Grid> getGrid(id_t);
+	std::shared_ptr<Grid> getGrid(inst_id);
 
 	Grid mapGrid;
 
@@ -32,6 +32,6 @@ public:
 	void processMessage(net::message<NetMsgType>, std::function<void(const net::message<NetMsgType>&)> Send);
 
 public:
-	std::unordered_map<id_t, std::shared_ptr<Grid>> grids;
+	std::unordered_map<inst_id, std::shared_ptr<Grid>> grids;
 
 };

@@ -138,24 +138,21 @@ namespace gs {
 				{{0,1,0}},
 				{{0,0,1}}	//Z = 1
 			}};
-		static constexpr Mat3x3 clear = { {
+		static constexpr Mat3x3 clear = {{
 				{{0,0,0}},
 				{{0,0,0}},
 				{{0,0,1}}	//for consistency
-			} };
+			}};
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
 	struct Transform {
-		float mass;
-
 		float rotation;//radians
 		float angularVelocity, angularAcceleration;
 
 		Vec2 position, velocity, acceleration;
 
 		Transform() :
-			mass(1),
 			rotation(0),
 			angularVelocity(0),
 			angularAcceleration(0),

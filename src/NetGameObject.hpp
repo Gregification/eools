@@ -8,7 +8,7 @@ template<class T> //CRTP
 class NetGameObject : public GameObject {
 public:
 	NetGameObject() : GameObject(BAD_ID) {}
-	NetGameObject(id_t nid) : GameObject(nid) {}
+	NetGameObject(inst_id nid) : GameObject(nid) {}
 
 	const static GameObjectFactory gof;
 

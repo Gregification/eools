@@ -24,9 +24,11 @@ public:
 	}
 
 	static std::vector<InstanceConstructor> ClassList;
-	static cid_t nextIdx;
+	static class_id nextIdx;
 
-	static std::shared_ptr<GameObject> getInstance(cid_t id);
+	static std::shared_ptr<GameObject> getInstance(class_id id) {
+		return std::move(ClassList[id]());
+	}
 
-	const cid_t class_id;
+	const class_id class_id;
 };

@@ -1,6 +1,12 @@
 #pragma once
 
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/component_base.hpp>
+#include <ftxui/dom/elements.hpp>
+
 #include "Server.hpp"
+
+bool logCommonEvents = false;
 
 void Server::run(ScreenInteractive& screen) {
 	//debug
@@ -18,7 +24,7 @@ void Server::run(ScreenInteractive& screen) {
 						try {
 							if (!sptr->isConnected()) continue;
 
-							id_t id = sptr->connectionID;
+							inst_id id = sptr->connectionID;
 
 							eles.push_back(text(
 									std::format("{:3} RTping:{:6} {}",
@@ -84,7 +90,7 @@ void Server::run(ScreenInteractive& screen) {
 							std::lock_guard lk(renderMutex);
 							messages.clear();
 						}, ButtonOption::Ascii()),
-					
+					Checkbox("log common messages", &logCommonEvents)
 				});
 
 			auto bannedPane = Renderer([&]() {
@@ -116,19 +122,15 @@ void Server::run(ScreenInteractive& screen) {
 	{
 		using namespace std::chrono;
 
-		time_point
-			start = steady_clock::now(),
-			now = start;
-
 		long long dt;
 		const long long
-			pingTarget		= 1000 / 1,
+			pingTarget		= 1000 * 2,
 			syncTarget		= 1000 / 2;
 
 		int pkts;
 
 		for (;;) {
-			start = steady_clock::now();
+			time_point start = high_resolution_clock::now();
 
 			pkts = Update();
 
@@ -136,7 +138,7 @@ void Server::run(ScreenInteractive& screen) {
 			//https://www.nvidia.com/content/gtc/documents/1077_gtc09.pdf
 
 			static auto lastPingTime = high_resolution_clock::now();
-			if (duration_cast<milliseconds>(lastPingTime - start).count() > pingTarget) {
+			if (duration_cast<milliseconds>(start - lastPingTime).count() > pingTarget) {
 				lastPingTime = start;
 
 				auto ping = Ping();
@@ -144,6 +146,7 @@ void Server::run(ScreenInteractive& screen) {
 
 				net::message<NetMsgType> msg;
 				msg.header.id = NetMsgType::Ping;
+
 				msg << ping;
 
 				MessageAllClients(msg);
@@ -151,6 +154,10 @@ void Server::run(ScreenInteractive& screen) {
 				screen.Post(Event::Custom);
 			}
 
+			static auto lastSyncTime = high_resolution_clock::now();
+			if (duration_cast<milliseconds>(start - lastSyncTime).count() > syncTarget) {
+				lastSyncTime = start;
+			}
 		}
 	}
 }
@@ -195,7 +202,21 @@ void Server::onEvent(std::string message) {
 void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) {
 	std::lock_guard lk(renderMutex);
 
-	messages.push_back(text(std::format("[received message] ordinal: {}", static_cast<int>(msg.header.id))));
+	switch (msg.header.id) {
+		case NetMsgType::Ping:
+		case NetMsgType::GridRequest:
+			if (!logCommonEvents) break;
+
+		case NetMsgType::ConnectionStatus:
+		case NetMsgType::IDCorrection:
+		case NetMsgType::IDPartition:
+		case NetMsgType::RequestById:
+			messages.push_back(text(std::format("[received] ordinal: {}", static_cast<int>(msg.header.id))));
+			break;
+
+		case NetMsgType::GameObjectUpdate:
+		default:;
+	}
 
 	switch (msg.header.id) {
 		case NetMsgType::Ping : {

@@ -4,7 +4,7 @@
 
 class Ship : public NetGameObject<Ship> {
 	public:
-		Ship(id_t nid) : NetGameObject(nid) {
+		Ship(inst_id nid) : NetGameObject(nid) {
 		}
 		Ship() : NetGameObject() {
 			body = { Vec2(0,5), Vec2(-5,-5), Vec2(5,-5), Vec2(0,5)};

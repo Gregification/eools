@@ -14,7 +14,7 @@ class Grid : virtual public NetGameObject<Grid> {
 		Grid() : gridPos(0,0) {}
 		~Grid() = default;
 
-		id_t gridId = BAD_ID;
+		inst_id gridId = BAD_ID;
 		Vec2 gridPos;
 
 	public:
@@ -30,9 +30,9 @@ class Grid : virtual public NetGameObject<Grid> {
 		virtual bool NeedNetUpdate() override;
 
 		void addGameObject(std::shared_ptr<GameObject>& go);
-		std::shared_ptr<GameObject> getObject(id_t);
-		std::shared_ptr<GameObject> removeObject(id_t);
+		std::shared_ptr<GameObject> getObject(inst_id);
+		std::shared_ptr<GameObject> removeObject(inst_id);
 
 	private:
-		std::unordered_map<id_t, std::shared_ptr<GameObject>> gameObjects;
+		std::unordered_map<inst_id, std::shared_ptr<GameObject>> gameObjects;
 };

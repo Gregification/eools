@@ -32,7 +32,7 @@ public:
 public:
 	float fps = -1;
 	
-	id_t currentGrid_id = 0;
+	inst_id currentGrid_id = 0;
 
 protected:
 	void OnMessage(net::message<NetMsgType> msg) override;
