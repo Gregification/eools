@@ -21,10 +21,10 @@ public:
 		return gof;
 	}
 
-	ID getID() const override {
+	ID inline getID() override {
 		auto idee = ID();
 		idee.classId = gof.class_id;
-		idee.instanceId = id;
+		idee.instanceId = GameObject::id();
 
 		return idee;
 	}

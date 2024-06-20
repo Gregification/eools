@@ -5,7 +5,7 @@
 #include "App.hpp"
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"
-#include "Game/Ship.hpp"
+#include "GameObjects/Ship.hpp"
 
 //off brand dollar store singleton pattern supported with certified trust-me-bro design
 class Server : public App, public net::server_interface<NetMsgType> {

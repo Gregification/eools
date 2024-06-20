@@ -8,27 +8,30 @@
 #include "Game_common.hpp"
 #include "GameStructs.hpp"
 
+//basically server api
+//the enum is used to map to its corrosponding struct. "corrospoonding" as in the names match(very closely at least).
+
 enum class NetMsgType : uint16_t {
 	Ping,
 	
 	//is it someone in the queue? or ready to start?
 	ConnectionStatus,
 
-	//request a GameObject id partition
+	//2. request a GameObject id partition
 	IDPartition,
 
 	//correction to resolve id collision. 
 	//broadcast
 	IDCorrection,
 
-	//request resource by id. grid and object id supprted
+	//4. request resource by id. grid and object id supprted
 	RequestById,
 
 	//user tries to make a new grid at a location. if location is 
 	// not allowed server corrects grid id to effectively rerout the user
 	GridRequest,
 
-	//game object update event. 
+	//6. game object update event. 
 	GameObjectUpdate
 };
 
@@ -124,16 +127,16 @@ struct ConnectionStatus {
 static_assert(std::is_standard_layout<ConnectionStatus>::value);
 
 struct Ping {
-	go_time sent, received;
+	time_t sent = -1, received = -1;
 	
 	Ping() {}
 
 	bool isComplete()	{ return sent > 0 && received > 0; }
-	long long getTime()	{ return (received - sent).value; }
+	time_t getTime()	{ return received - sent; }
 	long long tag() { 
 		using namespace std::chrono;
-		long long rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		if (sent.value <= 0)
+		time_t rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		if (sent <= 0)
 			sent = rn;
 		else
 			received = rn;

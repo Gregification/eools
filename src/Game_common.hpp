@@ -4,45 +4,23 @@
 
 #define SERVER_PORT 60000
 
-#define STD_PARTITION_SIZE 100'000'000 //100 mill => ~20 unique parts
+#define STD_PARTITION_SIZE 10'000'000 //100 mill => ~200 unique parts
 
-//GameObject time units. pardon the nameing, i got tired of discovering naming conflicts.
-//seems like to get millisecond accuracy to the week requires 32 (31.78) bits
-//though using 32 bits exactly suggests that the server will massively desync every ~1+ week?
-//honestly just use 64 bits. stuffs basically free
-struct go_time {
-	uint32_t value = 0;
-
-    go_time() : go_time(0) {}
-    go_time(uint32_t val) : value(val) {}
-
-    //the only special opeartor
-    //copies the last 32 bits
-	go_time& operator=(const long long& ll) {
-		value = static_cast<uint32_t>(ll & 0xFF'FF'FF'FF);//copy the last 32 bits
-		return *this;
-	}
-
-    //i have no idea how else to get go_time to behave like a normal number
-    //normal mathmatical, compairson, and bitise operators
-    go_time operator+   (const go_time& other)  const { return go_time(value + other.value); }
-    go_time operator-   (const go_time& other)  const { return go_time(value - other.value); }
-    go_time operator*   (const go_time& other)  const { return go_time(value * other.value); }
-    go_time operator/   (const go_time& other)  const { return go_time(value / other.value); }
-    go_time operator%   (const go_time& other)  const { return go_time(value % other.value); }
-    go_time operator&   (const go_time& other)  const { return go_time(value & other.value); }
-    go_time operator|   (const go_time& other)  const { return go_time(value | other.value); }
-    go_time operator^   (const go_time& other)  const { return go_time(value ^ other.value); }
-    go_time operator<<  (const int      shift)  const { return go_time(value << shift); }
-    go_time operator>>  (const int      shift)  const { return go_time(value >> shift); }
-    bool    operator==  (const go_time& other)  const { return value == other.value; }
-    bool    operator!=  (const go_time& other)  const { return value != other.value; }
-    bool    operator<   (const go_time& other)  const { return value < other.value; }
-    bool    operator>   (const go_time& other)  const { return value > other.value; }
-    bool    operator<=  (const go_time& other)  const { return value <= other.value; }
-    bool    operator>=  (const go_time& other)  const { return value >= other.value; }
-};
-static_assert(std::is_standard_layout<go_time>::value);
+//UPDATE: this is not it
+//GameObject time units. i got tired of discovering naming conflicts.
+//32 bits gets accuracy to 7.1 weeks
+//union go_time {
+//	uint32_t b32;
+//	uint64_t b64;
+//
+//    //void setBy32(const long long& ll) {
+//	//	this.b32 = static_cast<uint32_t>(ll & 0xFF'FF'FF'FF);
+//	//}
+//
+//	uint32_t getUint32() {
+//		return b32;
+//	}
+//};
 
 //should be -1. GameObjectFactory uses BAD+1 as index.
 //since it wasent working with hash maps it uses a vector that requires it starts at 0 ... spaghettie code

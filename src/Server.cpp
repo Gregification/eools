@@ -118,14 +118,14 @@ void Server::run(ScreenInteractive& screen) {
 
 	Start();
 
-	//main
+	//control loop
 	{
 		using namespace std::chrono;
 
 		long long dt;
-		const long long
-			pingTarget		= 1000 * 2,
-			syncTarget		= 1000 / 2;
+		const long long //milliseconds
+			pingTarget		= 1000 * 3, 
+			syncTarget		= 1000 / 2; 
 
 		int pkts;
 
@@ -134,8 +134,7 @@ void Server::run(ScreenInteractive& screen) {
 
 			pkts = Update();
 
-			//huh
-			//https://www.nvidia.com/content/gtc/documents/1077_gtc09.pdf
+			//huh https://www.nvidia.com/content/gtc/documents/1077_gtc09.pdf
 
 			static auto lastPingTime = high_resolution_clock::now();
 			if (duration_cast<milliseconds>(start - lastPingTime).count() > pingTarget) {
@@ -203,10 +202,13 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 	std::lock_guard lk(renderMutex);
 
 	switch (msg.header.id) {
+		//common
 		case NetMsgType::Ping:
-		case NetMsgType::GridRequest:
 			if (!logCommonEvents) break;
 
+		case NetMsgType::GridRequest:
+
+		//relivent
 		case NetMsgType::ConnectionStatus:
 		case NetMsgType::IDCorrection:
 		case NetMsgType::IDPartition:

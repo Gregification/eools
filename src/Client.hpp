@@ -8,7 +8,7 @@
 #include "App.hpp"
 #include "NetMessageType.hpp"
 #include "GameMap.hpp"
-#include "Game/Ship.hpp"
+#include "GameObjects/Ship.hpp"
 #include "Camera.hpp"
 
 enum CLIENT_TAB : int {
@@ -20,6 +20,7 @@ enum CLIENT_TAB : int {
 
 class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
+
 public:
 	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())){
 
@@ -35,12 +36,10 @@ public:
 	inst_id currentGrid_id = 0;
 
 protected:
-	void OnMessage(net::message<NetMsgType> msg) override;
-
-protected:
-	//game
 	GameMap gameMap;
 	std::shared_ptr<Ship> ship;
+
+	void OnMessage(net::message<NetMsgType> msg) override;
 
 private:
 	bool gridIsReady = false;

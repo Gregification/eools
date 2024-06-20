@@ -1,0 +1,7 @@
+#include "KeyBinds.hpp"
+
+CONTROLLS_PLAY::NEW_WINDOW("new window");
+CONTROLLS_PLAY::ALIGN_TO("align to");
+CONTROLLS_PLAY::TOGGLE_MOVEMENT_OVERLAY("toggle movement overlay");
+CONTROLLS_PLAY::MOVEMENT_INCREASE_THROTTLE("increase throttle");
+CONTROLLS_PLAY::MOVEMENT_DECREASE_THROTTLE("decerase throttle");

@@ -3,6 +3,9 @@
 #include "Grid.hpp"
 #include "../GameObject.hpp"
 
+//gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
+//https://www.youtube.com/watch?v=mD3cbXu3ZBE
+
 void Grid::Update(float dt) {
 	for (auto& [id, go] : gameObjects) {
 		if (go)
@@ -62,10 +65,10 @@ bool Grid::NeedNetUpdate() {
 }
 
 void Grid::addGameObject(std::shared_ptr<GameObject>& go) {
-	if (go->id == BAD_ID)
-		go->id = LOCAL_PARITION.getNext();
+	if (go->id() == BAD_ID)
+		go->setId(LOCAL_PARITION.getNext());
 
-	gameObjects.insert({ go->id, go });
+	gameObjects.insert({ go->id(), go});
 }
 
 std::shared_ptr<GameObject> Grid::getObject(inst_id id) {

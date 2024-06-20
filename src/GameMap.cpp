@@ -11,7 +11,7 @@ std::shared_ptr<Grid> GameMap::getGrid(Vec2 pos) {
 
 	std::shared_ptr<Grid> grid(new Grid);
 	grid->transform.position = pos;
-	grid->id = LOCAL_PARITION.getNext();
+	grid->setId(LOCAL_PARITION.getNext());
 	return grid;
 }
 

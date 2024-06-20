@@ -15,23 +15,30 @@ class GameObjectFactory;
 using namespace gs;
 using namespace ftxui;
 
+/*
+* networked game object.
+* physics & game-stat related details are in the Body subclass
+*/
 class GameObject : virtual public Body {
-	
 public:
 	GameObject(inst_id id) :
 		Body(),
-		id(id),
 		needNetUpdate(false)
 	{
-
+		setId(id);
 	}
 	virtual ~GameObject() = default;
 
 public:
-	inst_id id;
 	bool needNetUpdate;
+	
+	void setDisplayName(std::string);
+	std::string getDisplayId();
+	std::string getDisplayName();
 
-public:
+	void setId(inst_id newId);
+	inst_id id() { return instId; }
+
 	virtual void Update(float dt) {}
 
 	virtual void PhysUpdate(float dt) {
@@ -58,6 +65,11 @@ public:
 	virtual bool NeedNetUpdate();
 
 	//GameObjectFactory stuff
-	virtual GameObjectFactory getGOF()	const = 0;
-	virtual ID getID()					const = 0;
+	virtual inline GameObjectFactory getGOF()	const = 0;
+	virtual inline ID getID()					 = 0;
+
+private:
+	inst_id instId;
+	std::string displayName;
+	std::string displayId;
 };

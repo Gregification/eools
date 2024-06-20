@@ -11,7 +11,7 @@ class GameMap;
 class Grid : virtual public NetGameObject<Grid> {
 	friend class GameMap;
 	public:
-		Grid() : gridPos(0,0) {}
+		Grid() : gridPos(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()) {}
 		~Grid() = default;
 
 		inst_id gridId = BAD_ID;

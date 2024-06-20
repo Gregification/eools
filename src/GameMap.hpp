@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "Game/Grid.hpp"
+#include "GameObjects/Grid.hpp"
 
 /**
 * map of everything. servers copy should have all there is to be.
@@ -16,7 +16,7 @@ public:
 	}
 	~GameMap() {}
 	
-	inline static const float MIN_GRID_SEPERATION_SQUARED =  std::pow(5'000'000.0f, 2);
+	inline static const double MIN_GRID_SEPERATION_SQUARED =  std::pow(5'000'000.0f, 2);
 
 public:
 	std::shared_ptr<Grid> getGrid(Vec2);

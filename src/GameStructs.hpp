@@ -148,24 +148,20 @@ namespace gs {
 
 	struct Transform {
 		float rotation;//radians
-		float angularVelocity, angularAcceleration;
+		float angularVelocity;
 
-		Vec2 position, velocity, acceleration;
+		Vec2 position, velocity;
 
 		Transform() :
 			rotation(0),
 			angularVelocity(0),
-			angularAcceleration(0),
 			position(0, 0),
-			velocity(0, 0),
-			acceleration(0, 0)
+			velocity(0, 0)
 		{}
 
 		void PhysUpdate(float dt) {
-			angularVelocity += dt * angularAcceleration;
 			rotation += dt * angularVelocity;
 
-			velocity += acceleration * dt;
 			position += velocity * dt;
 		}
 

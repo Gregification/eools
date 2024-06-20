@@ -3,14 +3,11 @@ cmake_minimum_required(VERSION 3.22.1)
 project(EOOLS 
     LANGUAGES CXX
     VERSION 0.0.0
-    DESCRIPTION "Server-Client terminal template."
+    DESCRIPTION "terminal game."
 )
 
-option(EOOLS_O3 "Set to ON to build for speed" OFF)
 
-if(EOOLS_03)
-    target_compile_options(${PROJECT_NAME} PRIVATE -O3)
-endif()
+#target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -47,12 +44,11 @@ FetchContent_MakeAvailable(asio-cmake)
 
 
 # src
-file(GLOB SOURCES
+file(GLOB_RECURSE SRCS
     src/*.cpp
-    src/Game/*.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SRCS})
 
 target_link_libraries(${PROJECT_NAME} 
   PRIVATE

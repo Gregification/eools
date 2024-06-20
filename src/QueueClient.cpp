@@ -27,19 +27,24 @@ void QueueClient::run(ScreenInteractive& screen) {
 	screenThread = std::thread([&]() {
 		screen.Loop(epicwaitingscreen);
 	});
-
-	//request a id partition
-	if(LOCAL_PARITION.isBad()) {
-		net::message<NetMsgType> msg;
-		msg.header.id = NetMsgType::IDPartition;
-		Send(msg);
-
-		std::lock_guard lk(renderMutex);
-		messages.push_back(text("requesting id partition..."));
-	}
+	
+	int delay = 50;
+	int cyl_lim = 5000 / delay, cyl_count = cyl_lim;
 
 	while (!isReady) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		//request a id partition
+		if (cyl_count % cyl_lim == 0 && LOCAL_PARITION.isBad()) {
+
+			net::message<NetMsgType> msg;
+			msg.header.id = NetMsgType::IDPartition;
+			Send(msg);
+
+			std::lock_guard lk(renderMutex);
+			messages.push_back(text("waiting for id partition..."));
+		}
+		cyl_count++;
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 		Update();
 	}
 

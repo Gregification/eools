@@ -1,7 +1,20 @@
 #include "Client.hpp"
 
+#include "Game/Interfaces/IFInspector.hpp"
+#include "Game/KeyBinds.hpp"
+
+// naming conflict with a window api macro and ftxui canvas draw text method
+#pragma pop_macro("DrawText")
+#undef DrawText
+
+/*
+	handles 
+		- network connection.
+		- user controlls.
+
+*/
 void Client::run(ScreenInteractive& screen) {
-	//update connection state
+	//update connection status
 	{
 		auto stat = ConnectionStatus();
 		stat.isQueue = false;
@@ -25,7 +38,7 @@ void Client::run(ScreenInteractive& screen) {
 	//ui rendering
 	float avgPackets = 0;
 	auto clientStats = Renderer([&] {
-			return text(std::format("| ~PKTs:{:2.0f} | fps:{:3.0f} | ping:", avgPackets, fps) 
+			return text(std::format("| ~pkts:{:3.0f} | ref rate:{:3.0f} | ping:", avgPackets, fps) 
 				+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION")
 				+ " |");
 		});
@@ -185,6 +198,7 @@ void Client::Draw(Canvas& c) {//play renderer
 	if (gridIsReady)
 		gameCam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
 	else {
+		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
 		static time_point
 			start = steady_clock::now(),

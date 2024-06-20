@@ -10,6 +10,8 @@ namespace net {
 	/*
 	* responsible for setting up connection and asio.
 	* acts as client to server interface
+	* 
+	* tcp because it was simpiler to use though udp is better suited for this
 	*/
 	template <typename T>
 	class client_interface {

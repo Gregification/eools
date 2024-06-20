@@ -4,6 +4,7 @@
 
 #include "GameStructs.hpp"
 
+//physics & game-stat related aspects of a gameobject
 class Body {
 public:
 	Body() :transform(),
@@ -14,7 +15,7 @@ public:
 	virtual ~Body() = default;
 
 public:
-	go_time lastUpdate;
+	long long lastUpdate;
 	float mass = INFINITY;
 
 	gs::Transform transform;
@@ -27,6 +28,8 @@ public:
 public:
 	void updateCoverage();
 	gs::Transformation_2D effectiveTransformation();
+
+	bool isDetected() { return true; }
 
 private:
 	float rotation_cached;
