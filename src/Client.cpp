@@ -1,10 +1,9 @@
 #include "Client.hpp"
 
 #include "Game/Interfaces/IFInspector.hpp"
-#include "Game/KeyBinds.hpp"
 
 // naming conflict with a window api macro and ftxui canvas draw text method
-#pragma pop_macro("DrawText")
+#pragma push_macro("DrawText")
 #undef DrawText
 
 /*
@@ -265,3 +264,5 @@ void Client::onInput(Event e) {
 		}
 	}
 }
+
+#pragma pop_macro("DrawText")

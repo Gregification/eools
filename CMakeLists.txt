@@ -43,6 +43,15 @@ set(ASIO_CMAKE_ASIO_TAG asio-1-28-0)
 FetchContent_MakeAvailable(asio-cmake)
 
 
+# Include Catch2
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+
+FetchContent_MakeAvailable(Catch2)
+
 # src
 file(GLOB_RECURSE SRCS
     src/*.cpp
@@ -57,4 +66,5 @@ target_link_libraries(${PROJECT_NAME}
     ftxui::component
     asio
     ${VULKAN_LIBRARIES}
+    Catch2::Catch2
 )
