@@ -6,6 +6,8 @@ project(EOOLS
     DESCRIPTION "terminal game."
 )
 
+set(TEST_EXE_NAME "test")
+set(PROJECT_MAIN "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
@@ -17,7 +19,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(vulkan REQUIRED)
 # must include vulkan includes manually
 include_directories(D:/vcpackage/vcpkg/packages/vulkan-headers_x64-windows/include)
-
 
 # Include FTXUI
 include(FetchContent)
@@ -52,15 +53,23 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-# src
+# files
 file(GLOB_RECURSE SRCS
     src/*.cpp
 )
+list(REMOVE_ITEM SRCS ${PROJECT_MAIN})
 
-add_executable(${PROJECT_NAME} ${SRCS})
+file(GLOB_RECURSE TESTS
+    tests/*.cpp
+)
 
-target_link_libraries(${PROJECT_NAME} 
-  PRIVATE
+message("srcs : ${SRCS}")
+message("tests : ${TESTS}")
+
+add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN})
+add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} )
+
+set(LIBS 
     ftxui::screen
     ftxui::dom
     ftxui::component
@@ -68,3 +77,6 @@ target_link_libraries(${PROJECT_NAME}
     ${VULKAN_LIBRARIES}
     Catch2::Catch2
 )
+
+target_link_libraries(${PROJECT_NAME}   PRIVATE ${LIBS})
+target_link_libraries(${TEST_EXE_NAME}  PRIVATE ${LIBS})

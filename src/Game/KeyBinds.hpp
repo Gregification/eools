@@ -67,7 +67,7 @@ namespace KeyBinds { //class becuase its easier to read
 
 	extern const ControlGroup2ContolEvents& getControls();
 	extern const Controls2Function& getControlRegistryMap();
-	extern const Control2StringPair& getInfoMap(const CONTROLS&);
+	extern const Control2StringPair& getInfoMap();
 
 	extern const Control2StringPair infoMap;
 	extern ControlGroup2ContolEvents controls;

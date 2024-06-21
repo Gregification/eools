@@ -74,9 +74,9 @@ bool KeyBinds::RemoveControlCall(CONTROLS::_enumerated cs, ControlCall cc) {
 	return false;
 }
 
-const KeyBinds::ControlGroup2ContolEvents& getControls() { return KeyBinds::controls; }
-const KeyBinds::Controls2Function& getControlRegistryMap() { return KeyBinds::controlRegistry; }
-const KeyBinds::Control2StringPair& getInfoMap(const KeyBinds::CONTROLS& ctrl) { return KeyBinds::infoMap; }
+const KeyBinds::ControlGroup2ContolEvents& KeyBinds::getControls() { return KeyBinds::controls; }
+const KeyBinds::Controls2Function& KeyBinds::getControlRegistryMap() { return KeyBinds::controlRegistry; }
+const KeyBinds::Control2StringPair& KeyBinds::getInfoMap() { return KeyBinds::infoMap; }
 
 Controls2Function KeyBinds::controlRegistry;
 
