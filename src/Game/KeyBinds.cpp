@@ -7,7 +7,8 @@ bool inline KeyBinds::isEventAllowed(const Event& e)  {
 	if (e.is_character()) return true;
 
 	if (
-		e == Event::F11
+		e == Event::Character('L')	//ftxui reserved
+		|| e == Event::F11
 		|| e == Event::F12
 		|| e == Event::Custom
 		)
@@ -16,87 +17,86 @@ bool inline KeyBinds::isEventAllowed(const Event& e)  {
 	return true;
 }
 
-bool KeyBinds::sendEvent(const CONTROL_MODE::_enumerated cm, const Event e) {
+/*returns same as KeyBinds::isEventAllowed
+*/
+bool KeyBinds::sendEvent(Event e) {
 	if (!isEventAllowed(e)) return false;
 
-	const auto& ce_ = controls.find(cm);
-	if (ce_ == controls.end()) return false;
+	for (const auto& v : key_to_controls[EventWrapper(e)])
+		for (const auto& j : control_to_subs[v])
+			j(e);
 
-	const ControlEvents& ce = ce_->second;
-
-	auto ctrl_ = ce.find(EventWrapper(e));
-
-	if (ctrl_ != ce.end()) {
-		auto call_ = controlRegistry.find(ctrl_->second);
-
-		if (call_ != controlRegistry.end())
-			for (auto& v : call_->second)
-				v(e);
-	}
+	return true;
 }
 
-/* returns true if the funciton was added, false if it already exists
-*/
-bool KeyBinds::AddControlCall(CONTROLS::_enumerated cs, ControlCall cc) {
-	auto ctrlR_ = controlRegistry.find(cs);
-	if (ctrlR_ == controlRegistry.end()) {
-		//register the command
-		controlRegistry.insert({cs, std::vector<ControlCall>{cc}});
-		return true;
-	}
+bool KeyBinds::SubToCtrlEvnt(CONTROL_EVENT::_enumerated cs, ControlCall cc) {
+	auto& subs = control_to_subs[cs];
 
-	for (auto& v : ctrlR_->second)
-		// if same funciton dont add it again
-		if (v.target<Event(*)>() == cc.target<Event(*)>())
-			return false;
+	subs.push_back(cc);
 
-	ctrlR_->second.push_back(cc);
-	return true;	
+	return subs.size() == 1;	
 }
 
-/*returns true if command was removed, false if it couldnt be found
-*/
-bool KeyBinds::RemoveControlCall(CONTROLS::_enumerated cs, ControlCall cc) {
-	auto ctrl_ = controlRegistry.find(cs);
+size_t KeyBinds::ClearSubsOfCtrlEvnt(CONTROL_EVENT::_enumerated ce) {
+	auto &arr = control_to_subs[ce];
+	size_t ret = arr.size();;
+	arr.clear();
+	return ret;
+}
 
-	if (ctrl_ == controlRegistry.end())//command not linked to anything! (no implimentation???)
+bool KeyBinds::SubCtrlEvntToKeyEvnt(Event e, CONTROL_EVENT::_enumerated ce){
+	auto& arr = key_to_controls[EventWrapper(std::move(e))];
+
+	//if already exists
+	if (arr.size() != 0 && std::find(arr.begin(), arr.end(), ce) != arr.end())
 		return false;
+	else
+		arr.push_back(ce);
 
-	for (size_t i = 0; i < ctrl_->second.size(); i++)
-		if (ctrl_->second[i].target<Event(*)>() == cc.target<Event(*)>()) {
-			if (ctrl_->second.size() == 1)//remove everything about ht ecommand if its the only call left
-				controlRegistry.erase(cs);
-			else
-				ctrl_->second.erase(ctrl_->second.begin() + i); //remove just the specific call;
-			return true;
-		}
-
-	return false;
+	return true;
 }
 
-const KeyBinds::ControlGroup2ContolEvents& KeyBinds::getControls() { return KeyBinds::controls; }
-const KeyBinds::Controls2Function& KeyBinds::getControlRegistryMap() { return KeyBinds::controlRegistry; }
-const KeyBinds::Control2StringPair& KeyBinds::getInfoMap() { return KeyBinds::infoMap; }
+bool KeyBinds::UnsubCtrlEvntToKeyEvnt(Event e, CONTROL_EVENT::_enumerated ce){
+	auto& arr = key_to_controls[EventWrapper(std::move(e))];
 
-Controls2Function KeyBinds::controlRegistry;
+	//if already exists
+	auto it = std::find(arr.begin(), arr.end(), ce);
 
-ControlGroup2ContolEvents KeyBinds::controls = {
-		{CONTROL_MODE::PLAY, {
-				{EventWrapper(Event::Character('n')), CONTROLS::DISPLAY_NEW_WINDOW  },
-				{EventWrapper(Event::Character('q')), CONTROLS::MOVEMENT_ALIGN_TO  },
-				{EventWrapper(Event::Character('m')), CONTROLS::DISPLAY_TOGGLE_MOVEMENT_OVERLAY  },
-				{EventWrapper(Event::Character('s')), CONTROLS::ENGR_INCREASE_PSU  },
-				{EventWrapper(Event::Character('x')), CONTROLS::ENGR_DECREASE_PSU  },
-				{EventWrapper(Event::Character('a')), CONTROLS::MOVEMENT_INCREASE_DRIVE  },
-				{EventWrapper(Event::Character('z')), CONTROLS::MOVEMENT_DECREASE_DRIVE  }
-			}}
+	if (it == arr.end())
+		return false;
+	
+	arr.erase(it);
+	return true;
+}
+
+size_t KeyBinds::ClearCtrlEvntsOfKeyEvnt(Event e) {
+	auto& arr = key_to_controls[EventWrapper(e)];
+	size_t ret = arr.size();;
+	arr.clear();
+	return ret;
+}
+
+const KeyBinds::KeyEvent2ControlEvent& KeyBinds::getKeyEvnt2CtrlEvntMap()	{ return KeyBinds::key_to_controls; }
+const KeyBinds::Controls2Functions& KeyBinds::getCtrlEvnt2SubsMap()			{ return KeyBinds::control_to_subs; }
+const KeyBinds::Control2StringPairs& KeyBinds::getInfoMap() { return KeyBinds::infoMap; }
+
+Controls2Functions KeyBinds::control_to_subs;
+
+KeyEvent2ControlEvent KeyBinds::key_to_controls = {
+	{EventWrapper(Event::Character('n')), {CONTROL_EVENT::DISPLAY_NEW_WINDOW}  },
+	{EventWrapper(Event::Character('q')), {CONTROL_EVENT::MOVEMENT_ALIGN_TO}  },
+	{EventWrapper(Event::Character('m')), {CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY}  },
+	{EventWrapper(Event::Character('s')), {CONTROL_EVENT::ENGR_INCREASE_PSU}  },
+	{EventWrapper(Event::Character('x')), {CONTROL_EVENT::ENGR_DECREASE_PSU}  },
+	{EventWrapper(Event::Character('a')), {CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE}  },
+	{EventWrapper(Event::Character('z')), {CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE}  }
 };
-const Control2StringPair KeyBinds::infoMap = {
-			{CONTROLS::DISPLAY_NEW_WINDOW, {"open new window", "shows windows avalible to open"}},
-			{CONTROLS::DISPLAY_TOGGLE_MOVEMENT_OVERLAY, {"toggle movement overlay", "shows directional vectors of the specified object"}},
-			{CONTROLS::ENGR_INCREASE_PSU, {"increase psu output",""}},
-			{CONTROLS::ENGR_DECREASE_PSU, {"decrease psu output",""}},
-			{CONTROLS::MOVEMENT_ALIGN_TO, {"align to","points ship towards specified position"}},
-			{CONTROLS::MOVEMENT_INCREASE_DRIVE, {"increase drive output",""}},
-			{CONTROLS::MOVEMENT_DECREASE_DRIVE, {"decrease drive output",""}}
+const Control2StringPairs KeyBinds::infoMap = {
+			{CONTROL_EVENT::DISPLAY_NEW_WINDOW, {"open new window", "shows windows avalible to open"}},
+			{CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY, {"toggle movement overlay", "shows directional vectors of the specified object"}},
+			{CONTROL_EVENT::ENGR_INCREASE_PSU, {"increase psu output",""}},
+			{CONTROL_EVENT::ENGR_DECREASE_PSU, {"decrease psu output",""}},
+			{CONTROL_EVENT::MOVEMENT_ALIGN_TO, {"align to","points ship towards specified position"}},
+			{CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE, {"increase drive output",""}},
+			{CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE, {"decrease drive output",""}}
 };
