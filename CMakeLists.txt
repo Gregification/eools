@@ -63,9 +63,6 @@ file(GLOB_RECURSE TESTS
     tests/*.cpp
 )
 
-message("srcs : ${SRCS}")
-message("tests : ${TESTS}")
-
 add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN})
 add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} )
 

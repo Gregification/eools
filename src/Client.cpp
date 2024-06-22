@@ -10,9 +10,9 @@
 	handles 
 		- network connection.
 		- user controlls.
-
 */
 void Client::run(ScreenInteractive& screen) {
+	
 	//update connection status
 	{
 		auto stat = ConnectionStatus();
@@ -37,9 +37,9 @@ void Client::run(ScreenInteractive& screen) {
 	//ui rendering
 	float avgPackets = 0;
 	auto clientStats = Renderer([&] {
-			return text(std::format("| ~pkts:{:3.0f} | ref rate:{:3.0f} | ping:", avgPackets, fps) 
-				+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION")
-				+ " |");
+		return text(std::format("| ~pkts:{:3.0f} | ref rate:{:3.0f} | ping:", avgPackets, fps)
+			+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION") //this line alone unironically drops the fps by ~4...
+			+ " |");
 		});
 	std::vector<std::string> tab_entries(4);
 		tab_entries[CLIENT_TAB::CONTROL]	= "control";
@@ -47,7 +47,6 @@ void Client::run(ScreenInteractive& screen) {
 		tab_entries[CLIENT_TAB::CARGO]		= "cargo";
 		tab_entries[CLIENT_TAB::EXPANSIONS] = "expansions";
 		
-	auto tab_selection = Menu(&tab_entries, &client_tab, MenuOption::HorizontalAnimated());
 	auto tab_content = Container::Tab({
 			Renderer_play(),
 			Renderer_map(),
@@ -55,30 +54,31 @@ void Client::run(ScreenInteractive& screen) {
 			Renderer_upgrades()
 		},
 		&client_tab);
-	auto tab_with_mouse = CatchEvent(tab_content, [&](Event e) {
-			onInput(std::move(e));
-			return true;
-		});
 	auto main_container = Container::Vertical({
 			Container::Horizontal({
-				tab_selection,
+				Menu(&tab_entries, &client_tab, MenuOption::HorizontalAnimated()),
 				clientStats
 			}),
-			tab_with_mouse
-		});
-	auto main_renderer = Renderer(main_container, [&] {
-		return vbox({
-				hbox({
-					tab_selection->Render(),
-					clientStats->Render()
-				}),
-				tab_with_mouse->Render() | flex
-			});
+			tab_content | flex
 		});
 
-	Loop loop(&screen, main_renderer);
+	main_container |= CatchEvent([&](Event e) {
+			if (e.is_mouse()) {
+				onInput(e);
+				return true;
+			} else if (e.is_character()) {
+				//std::cout << "\a" << std::endl;
+				KeyBinds::sendEvent(std::move(e));
+				return true;
+			}
+
+			return false;
+		});
+
+	Loop loop(&screen, main_container);
 
 	//main
+	//TODO:bruh, this is ccavrearted. fix it :(
 	{
 		using namespace std::chrono;
 
@@ -91,24 +91,23 @@ void Client::run(ScreenInteractive& screen) {
 		long long dt;
 
 		float avgElapse = target;
-		const float weight = 10;
+		const float weight = 1.0f/10;
 
-		while (!loop.HasQuitted()) {		//game loop	
+		while (!loop.HasQuitted()) {		
 			start = high_resolution_clock::now();
 
+			
 			loop.RunOnce();
 			float numPkt = Update();
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-			
-			//ship->PhysUpdate(dt / 1000.0);
 
-			if (dt < target)
-				std::this_thread::sleep_for(milliseconds(target - dt));
+			//if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-			avgElapse = avgElapse + (dt - avgElapse) / weight;
-			avgPackets= avgPackets+ (numPkt - avgPackets) / weight;
+
+			avgElapse = avgElapse + (dt - avgElapse) * weight;
+			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
 			fps = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
 
 			screen.PostEvent(Event::Custom);

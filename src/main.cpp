@@ -58,5 +58,14 @@ void prepScene() {
             }) | center | borderLight;
         });
 
+   /* renderer |= CatchEvent([](Event e) {
+            if (e.is_character()) {
+                std::cout << "\a" << std::endl;
+                return true;
+            }
+
+            return false;
+        });*/
+
     screen.Loop(renderer);
 }

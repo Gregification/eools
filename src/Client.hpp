@@ -10,13 +10,15 @@
 #include "GameMap.hpp"
 #include "GameObjects/Ship.hpp"
 #include "Camera.hpp"
+#include "Game/KeyBinds.hpp"
+#include "better-enums/enum.h"
 
-enum CLIENT_TAB : int {
-	CONTROL = 0,
+BETTER_ENUM(CLIENT_TAB, int,
+	CONTROL,
 	MAP,
 	CARGO,
 	EXPANSIONS
-};
+);
 
 class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
@@ -28,12 +30,12 @@ public:
 
 	~Client() = default;
 
-	void run(ScreenInteractive& screen) override;
-
-public:
 	float fps = -1;
-	
+
 	inst_id currentGrid_id = 0;
+
+
+	void run(ScreenInteractive& screen) override;
 
 protected:
 	GameMap gameMap;
@@ -46,16 +48,16 @@ private:
 
 	Vec2 mouse;
 
-	int client_tab = CLIENT_TAB::CONTROL;
 	Camera gameCam, mapCam;
 
 	Component Renderer_play();
 	Component Renderer_map();
 	Component Renderer_upgrades();
 	Component Renderer_inventory();
+	int client_tab = CLIENT_TAB::CONTROL;
 
 	void onInput(Event e);
 
 	void Draw(Canvas& c);
-
+	
 };

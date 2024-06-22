@@ -124,7 +124,7 @@ void Server::run(ScreenInteractive& screen) {
 
 		long long dt;
 		const long long //milliseconds
-			pingTarget		= 1000 * 3, 
+			pingTarget		= 1000 * 2, 
 			syncTarget		= 1000 / 2; 
 
 		int pkts;

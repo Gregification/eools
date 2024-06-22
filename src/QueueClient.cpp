@@ -70,6 +70,8 @@ void QueueClient::startGame(ScreenInteractive& screen) {
 	client->Connect(strip, port);
 
 	if (client->isConnected()) {
+		//TODO: somehow signal the server to resuse this clients id partition since its unused
+
 		this->Disconnect();
 		client->run(screen);
 	}
