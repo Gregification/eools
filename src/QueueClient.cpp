@@ -73,6 +73,9 @@ void QueueClient::startGame(ScreenInteractive& screen) {
 		//TODO: somehow signal the server to resuse this clients id partition since its unused
 
 		this->Disconnect();
+
+		screen.Exit();
+		screen.Clear();
 		client->run(screen);
 	}
 

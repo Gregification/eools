@@ -37,37 +37,23 @@ void Client::run(ScreenInteractive& screen) {
 	//ui rendering
 	float avgPackets = 0;
 	auto clientStats = Renderer([&] {
-		return text(std::format("| ~pkts:{:3.0f} | ref rate:{:3.0f} | ping:", avgPackets, fps)
-			+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime.load()) : "LOST CONNECTION") //this line alone unironically drops the fps by ~4...
+		return text(std::format("~pkts:{:3.0f} | rps:{:3.0f} | ping:", avgPackets, refreshesPS)
+			+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime) : "LOST CONNECTION")
 			+ " |");
 		});
-	std::vector<std::string> tab_entries(4);
-		tab_entries[CLIENT_TAB::CONTROL]	= "control";
-		tab_entries[CLIENT_TAB::MAP]		= "map";
-		tab_entries[CLIENT_TAB::CARGO]		= "cargo";
-		tab_entries[CLIENT_TAB::EXPANSIONS] = "expansions";
-		
-	auto tab_content = Container::Tab({
-			Renderer_play(),
-			Renderer_map(),
-			Renderer_inventory(),
-			Renderer_upgrades()
-		},
-		&client_tab);
-	auto main_container = Container::Vertical({
-			Container::Horizontal({
-				Menu(&tab_entries, &client_tab, MenuOption::HorizontalAnimated()),
-				clientStats
-			}),
-			tab_content | flex
+
+	main_container = Container::Stacked({
+			clientStats,
+			Container::Stacked({ Window({.title = "inited with"}) }),
+			Renderer_play() | flex
 		});
 
+	auto winder = main_container->ChildAt(1);
+	winder->Add(Window({ .title = "before loop" }));
+
 	main_container |= CatchEvent([&](Event e) {
-			if (e.is_mouse()) {
-				onInput(e);
-				return true;
-			} else if (e.is_character()) {
-				//std::cout << "\a" << std::endl;
+
+			if (e.is_character()) {
 				KeyBinds::sendEvent(std::move(e));
 				return true;
 			}
@@ -76,6 +62,16 @@ void Client::run(ScreenInteractive& screen) {
 		});
 
 	Loop loop(&screen, main_container);
+
+	KeyBinds::ControlCall noise_cc = [](Event) { std::cout << "\a" << std::endl; };
+	KeyBinds::ControlCall newWindowDialig = [&](Event) {			
+			static int a = 0; 
+			auto b = Window({ .title = "on call" + std::to_string(a++)});
+			winder->Add(b);
+		};
+
+	//KeyBinds::SubToCtrlEvnt(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, noise_cc);
+	KeyBinds::SubToCtrlEvnt(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, newWindowDialig);
 
 	//main
 	//TODO:bruh, this is ccavrearted. fix it :(
@@ -93,11 +89,12 @@ void Client::run(ScreenInteractive& screen) {
 		float avgElapse = target;
 		const float weight = 1.0f/10;
 
-		while (!loop.HasQuitted()) {		
+		for(;;) {		
 			start = high_resolution_clock::now();
 
-			
-			loop.RunOnce();
+			if (!loop.HasQuitted())
+				loop.RunOnce();
+
 			float numPkt = Update();
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
@@ -108,7 +105,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			avgElapse = avgElapse + (dt - avgElapse) * weight;
 			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
-			fps = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
+			refreshesPS = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
 
 			screen.PostEvent(Event::Custom);
 		}
@@ -166,6 +163,7 @@ Component Client::Renderer_play() {
 			Draw(c);
 		});
 	});
+		//Container::Stacked({Window({.title = "renderer_play"})})
 }
 
 Component Client::Renderer_map() {

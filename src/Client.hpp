@@ -30,7 +30,7 @@ public:
 
 	~Client() = default;
 
-	float fps = -1;
+	float refreshesPS = -1;
 
 	inst_id currentGrid_id = 0;
 
@@ -43,20 +43,21 @@ protected:
 
 	void OnMessage(net::message<NetMsgType> msg) override;
 
-private:
-	bool gridIsReady = false;
-
+	Camera gameCam, mapCam;
 	Vec2 mouse;
 
-	Camera gameCam, mapCam;
+private:
+	bool gridIsReady = false;
+	int client_tab	= CLIENT_TAB::CONTROL;
+
+	void onInput(Event e);
+
+	Component main_container;
 
 	Component Renderer_play();
 	Component Renderer_map();
 	Component Renderer_upgrades();
-	Component Renderer_inventory();
-	int client_tab = CLIENT_TAB::CONTROL;
-
-	void onInput(Event e);
+	Component Renderer_inventory();	
 
 	void Draw(Canvas& c);
 	

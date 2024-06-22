@@ -54,6 +54,8 @@ namespace KeyBinds { //class becuase its easier to read
 		Control2StringPairs;
 
 	extern bool inline isEventAllowed(const Event&);
+
+	/*returns true if a control is associated with the key*/
 	extern bool sendEvent(Event);
 
 	/* returns true if it's the only funciton registered*/

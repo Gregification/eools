@@ -3,6 +3,6 @@
 
 #include "../src/Client.hpp"
 
-TEST_CASE("client interface", "[ui][client]") {
-
-}
+//TEST_CASE("client interface", "[ui][client]") {
+//
+//}

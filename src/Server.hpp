@@ -19,7 +19,7 @@ public:
 		LOCAL_PARITION.max = STD_PARTITION_SIZE;
 	}
 
-    void run(ScreenInteractive& screen) override;
+    void run(ScreenInteractive&) override;
 protected:
 	//returns true/accept or false/decline regarding the connection. Swing predicate filters
 	virtual bool onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) override;

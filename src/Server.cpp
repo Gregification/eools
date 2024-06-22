@@ -29,7 +29,7 @@ void Server::run(ScreenInteractive& screen) {
 							eles.push_back(text(
 									std::format("{:3} RTping:{:6} {}",
 										std::to_string(id),
-										std::to_string(sptr->pingTime.load()),
+										std::to_string(sptr->pingTime),
 										sptr->ToString())
 								) | bold
 							);

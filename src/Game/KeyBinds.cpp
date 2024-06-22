@@ -22,11 +22,17 @@ bool inline KeyBinds::isEventAllowed(const Event& e)  {
 bool KeyBinds::sendEvent(Event e) {
 	if (!isEventAllowed(e)) return false;
 
-	for (const auto& v : key_to_controls[EventWrapper(e)])
-		for (const auto& j : control_to_subs[v])
-			j(e);
+	auto ew = EventWrapper(std::move(e));
 
-	return true;
+	if (key_to_controls.contains(ew)) {
+		for (const auto& v : key_to_controls[ew])
+			for (const auto& j : control_to_subs[v])
+				j(e);
+
+		return true;
+	} 
+	
+	return false;
 }
 
 bool KeyBinds::SubToCtrlEvnt(CONTROL_EVENT::_enumerated cs, ControlCall cc) {

@@ -8,7 +8,7 @@ namespace net {
 	template <typename T>
 	class connection : public std::enable_shared_from_this<connection<T>> {
 	public:
-		std::atomic<time_t> pingTime = -1;
+		volatile time_t pingTime = -1;
 		int connectionID;
 
 		enum class owner {
