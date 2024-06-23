@@ -49,7 +49,7 @@ private:
 
 	void initControls();
 
-	void OpenNewWindowDialogue();
+	void SetNewWindowDialogue(bool);
 	void OnMouse(Event e);
 
 	Component mainContainer;

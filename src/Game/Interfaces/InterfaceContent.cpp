@@ -2,6 +2,6 @@
 
 #include "InterfaceInclude.hpp"
 
-InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces = { {
-	{"a","b"}
+const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces = { {
+	{"interfaceName", "interfaceDescription"}
 } };

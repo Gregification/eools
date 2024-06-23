@@ -63,6 +63,15 @@ TEST_CASE("keybinds are setup properly", "[keybinds][ui]") {
 			testNum = 1;
 			KeyBinds::sendEvent(keyA);
 			REQUIRE(testNum == 1);
+
+			//mutiple keybinds should be called
+			REQUIRE(KeyBinds::SubToCtrlEvnt(ctrl, funcA));
+			REQUIRE(!KeyBinds::SubToCtrlEvnt(ctrl, funcB));
+			testNum = 1;
+			KeyBinds::sendEvent(keyA); //n+1 *2
+			REQUIRE(testNum == 4);
+
+			REQUIRE(KeyBinds::ClearSubsOfCtrlEvnt(ctrl) == 2);
 		}
 
 		SECTION("key-to-control binds can be added and removed as expected") {

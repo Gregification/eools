@@ -12,37 +12,6 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 	{
 		windowContainer = Container::Stacked({});
 
-		//init  modal
-		{
-			Component list = Container::Vertical({});
-			auto list_states = std::array<bool, InterfaceContent::publicInterfaces.size()>();
-
-			for (int i = 0; i < InterfaceContent::publicInterfaces.size(); i++) {
-				list->Add(Checkbox("Checkbox" + std::to_string(i), &list_states[i]));
-			}
-
-			const auto closeModal = [&] { showNewWindowModal = false; };
-			const auto clearModal = [&] {};
-			const auto confirmSelection = [&] {};
-
-			/*Component modal = Container::Vertical({
-				list,
-				Container::Horizontal({
-					Button("confirm",	[&] { confirmSelection();  closeModal(); }),
-					Button("clear",		[&] { clearModal(); }),
-					Button("cancel",	[&] { closeModal();	clearModal(); })
-				})
-				}) | Renderer([&](Element content) {
-					return vbox({
-						text("select windows to open together"),
-						separator(),
-						content
-						});
-					});*/
-
-			windowContainer |= Modal(list, &showNewWindowModal);
-		}
-
 		clientStats = Renderer([&] {
 			static Element buffer = text("pester your cat");
 			static int i = 0;
@@ -62,10 +31,39 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 			return false;
 				});
 
+		//init  modal
+		Component modalContainer = Container::Stacked({});
+		{
+			Component list = Container::Vertical({});
+			auto list_states = std::array<bool, InterfaceContent::publicInterfaces.size()>();
+
+			for (int i = 0; i < InterfaceContent::publicInterfaces.size(); i++) {
+				list->Add(Checkbox(std::to_string(i) + ": " + InterfaceContent::publicInterfaces[i].first, &list_states[i]));//C28020, "by design" apparently
+			}
+
+			Component modal = Container::Vertical({
+				list,
+				Container::Horizontal({
+						Button("confirm",	[&] { SetNewWindowDialogue(false); windowContainer->Add(Window({})); }),
+						Button("clear",		[&] { for (bool& v : list_states) v = false; }),
+						Button("cancel",	[&] { SetNewWindowDialogue(false);	for (bool& v : list_states) v = false; })
+					})
+				}) | Renderer([&](Element content) {
+					return vbox({
+						text("select windows to open together"),
+						separator(),
+						content
+						});
+					}) | borderHeavy | bgcolor(Color::Blue);
+
+					modalContainer |= Modal(modal, &showNewWindowModal);
+		}
+
 		mainContainer = Container::Stacked({
 				clientStats,
+				modalContainer,
 				windowContainer,
-				rend
+				rend,
 			}) | CatchEvent([&](Event e) {
 				if (e.is_character()) {
 					KeyBinds::sendEvent(std::move(e));
@@ -73,7 +71,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 				}
 
 				return false;
-				});
+			});
 	}
 }
 
@@ -84,7 +82,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 */
 void Client::run(ScreenInteractive& screen) {
 	initControls();
-	
+
 	//update connection status
 	{
 		auto stat = ConnectionStatus();
@@ -261,8 +259,8 @@ void Client::Draw(Canvas& c) {//play renderer
 	}
 }
 
-void Client::OpenNewWindowDialogue() {
-	showNewWindowModal = true;
+void Client::SetNewWindowDialogue(bool c) {
+	showNewWindowModal = c;
 }
 
 void Client::OnMouse(Event e) {
@@ -319,7 +317,8 @@ void Client::initControls() {
 		};
 
 	ControlCall open_new_window_dialogue = [&](Event) {
-		OpenNewWindowDialogue();
+			//OpenNewWindowDialogue();
+			showNewWindowModal = !showNewWindowModal;
 		};
 
 	/***********************************************************************************************************
@@ -332,7 +331,8 @@ void Client::initControls() {
 	* bindings
 	***********************************************************************************************************/
 
-	SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	//SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	//SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
 	SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 }
 

@@ -4,14 +4,14 @@ void IFOpenWindow::OnConfirmSelection() {
 
 }
 
-void IFOpenWindow::Refresh() override {
+void IFOpenWindow::Refresh() {
 
 }
 
-void IFOpenWindow::OnDelete() override {
+void IFOpenWindow::OnDelete() {
 
 }
 
-void IFOpenWindow::OnHide() override {
+void IFOpenWindow::OnHide() {
 
 }
