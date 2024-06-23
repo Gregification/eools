@@ -1,10 +1,81 @@
 #include "Client.hpp"
 
-#include "Game/Interfaces/IFInspector.hpp"
+#include "Game/Interfaces/InterfaceContent.hpp"
+#include <ftxui/component/component.hpp>
 
 // naming conflict with a window api macro and ftxui canvas draw text method
 #pragma push_macro("DrawText")
 #undef DrawText
+
+Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
+	//init ui
+	{
+		windowContainer = Container::Stacked({});
+
+		//init  modal
+		{
+			Component list = Container::Vertical({});
+			auto list_states = std::array<bool, InterfaceContent::publicInterfaces.size()>();
+
+			for (int i = 0; i < InterfaceContent::publicInterfaces.size(); i++) {
+				list->Add(Checkbox("Checkbox" + std::to_string(i), &list_states[i]));
+			}
+
+			const auto closeModal = [&] { showNewWindowModal = false; };
+			const auto clearModal = [&] {};
+			const auto confirmSelection = [&] {};
+
+			/*Component modal = Container::Vertical({
+				list,
+				Container::Horizontal({
+					Button("confirm",	[&] { confirmSelection();  closeModal(); }),
+					Button("clear",		[&] { clearModal(); }),
+					Button("cancel",	[&] { closeModal();	clearModal(); })
+				})
+				}) | Renderer([&](Element content) {
+					return vbox({
+						text("select windows to open together"),
+						separator(),
+						content
+						});
+					});*/
+
+			windowContainer |= Modal(list, &showNewWindowModal);
+		}
+
+		clientStats = Renderer([&] {
+			static Element buffer = text("pester your cat");
+			static int i = 0;
+			if (i++ % 100 == 0)//less visually distracting if its not jittering all the time. used a arbitrary #.
+				buffer = text(std::format(" ~pkts:{:3.0f} | rps:{:3.0f} | ping:", avgPackets, refreshesPS)
+					+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime) : "LOST CONNECTION"));
+
+			return buffer;
+			});
+
+		auto rend = Renderer_play() | flex
+			| CatchEvent([&](Event e) {
+			if (e.is_mouse()) {
+				OnMouse(std::move(e));
+				return true;
+			};
+			return false;
+				});
+
+		mainContainer = Container::Stacked({
+				clientStats,
+				windowContainer,
+				rend
+			}) | CatchEvent([&](Event e) {
+				if (e.is_character()) {
+					KeyBinds::sendEvent(std::move(e));
+					return true;
+				}
+
+				return false;
+				});
+	}
+}
 
 /*
 	handles 
@@ -12,6 +83,7 @@
 		- user controlls.
 */
 void Client::run(ScreenInteractive& screen) {
+	initControls();
 	
 	//update connection status
 	{
@@ -34,49 +106,12 @@ void Client::run(ScreenInteractive& screen) {
 		Send(msg);
 	}
 
-	//ui rendering
-	float avgPackets = 0;
-	auto clientStats = Renderer([&] {
-		return text(std::format("~pkts:{:3.0f} | rps:{:3.0f} | ping:", avgPackets, refreshesPS)
-			+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime) : "LOST CONNECTION")
-			+ " |");
-		});
-
-	main_container = Container::Stacked({
-			clientStats,
-			Container::Stacked({ Window({.title = "inited with"}) }),
-			Renderer_play() | flex
-		});
-
-	auto winder = main_container->ChildAt(1);
-	winder->Add(Window({ .title = "before loop" }));
-
-	main_container |= CatchEvent([&](Event e) {
-
-			if (e.is_character()) {
-				KeyBinds::sendEvent(std::move(e));
-				return true;
-			}
-
-			return false;
-		});
-
-	Loop loop(&screen, main_container);
-
-	KeyBinds::ControlCall noise_cc = [](Event) { std::cout << "\a" << std::endl; };
-	KeyBinds::ControlCall newWindowDialig = [&](Event) {			
-			static int a = 0; 
-			auto b = Window({ .title = "on call" + std::to_string(a++)});
-			winder->Add(b);
-		};
-
-	//KeyBinds::SubToCtrlEvnt(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, noise_cc);
-	KeyBinds::SubToCtrlEvnt(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, newWindowDialig);
-
 	//main
-	//TODO:bruh, this is ccavrearted. fix it :(
+	//TODO: fix it :(
 	{
 		using namespace std::chrono;
+
+		Loop loop(&screen, mainContainer);
 
 		time_point
 			start	= steady_clock::now(),
@@ -192,7 +227,7 @@ Component Client::Renderer_inventory() {
 
 void Client::Draw(Canvas& c) {//play renderer
 	if (gridIsReady)
-		gameCam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
+		cam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
 	else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
@@ -226,20 +261,16 @@ void Client::Draw(Canvas& c) {//play renderer
 	}
 }
 
-void Client::onInput(Event e) {
+void Client::OpenNewWindowDialogue() {
+	showNewWindowModal = true;
+}
+
+void Client::OnMouse(Event e) {
 	if (e.is_mouse()) {
 		Vec2 dm(0,0);
 			dm.x = (e.mouse().x - 1) * 2 - mouse.x;
 			dm.y = (e.mouse().y - 1) * 4 - mouse.y;
 		mouse += dm;
-
-		bool isGameControl = false;
-		Camera& cam = client_tab == CLIENT_TAB::MAP ? mapCam : gameCam;
-		switch (client_tab) {
-			case CLIENT_TAB::CONTROL:
-			case CLIENT_TAB::MAP: 
-				isGameControl = true;
-		}
 
 		switch (e.mouse().button) {
 			case Mouse::Left:
@@ -247,19 +278,62 @@ void Client::onInput(Event e) {
 			case Mouse::Middle:
 				break;
 			case Mouse::Right:
-				if(isGameControl) 
 					cam.offset += dm;
 				break;
 			case Mouse::WheelUp:
-				if (isGameControl)
 					cam.scale += 1 + cam.scale * 1.2;
 				break;
 			case Mouse::WheelDown:
-				if (isGameControl)
 					cam.scale -= 1 + cam.scale * 1.2;
 				break;
 		}
 	}
+}
+
+void Client::initControls() {
+	using namespace KeyBinds;
+	/***********************************************************************************************************
+	* rules
+	* - no inline keybinds (for readability)
+	* - idc length of the lambda names, make it intutively descriptive
+	* - under_score_naming_scheme
+	* - debugging funcitons must have a name that starts with "DEBUG_" 
+	***********************************************************************************************************/
+
+
+	/***********************************************************************************************************
+	* audio
+	***********************************************************************************************************/
+
+	ControlCall DEBUG_beep = [](Event) { std::cout << "\a" << std::endl; };
+
+
+	/***********************************************************************************************************
+	* ui
+	***********************************************************************************************************/
+
+	ControlCall DEBUG_add_new_demo_window = [&](Event) {
+			static int a = 0;
+			auto b = Window({ .title = "on call" + std::to_string(a++) });
+			windowContainer->Add(b);
+		};
+
+	ControlCall open_new_window_dialogue = [&](Event) {
+		OpenNewWindowDialogue();
+		};
+
+	/***********************************************************************************************************
+	* game
+	***********************************************************************************************************/
+
+
+
+	/***********************************************************************************************************
+	* bindings
+	***********************************************************************************************************/
+
+	SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 }
 
 #pragma pop_macro("DrawText")

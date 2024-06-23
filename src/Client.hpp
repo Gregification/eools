@@ -24,16 +24,12 @@ class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
 
 public:
-	Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())){
-
-	}
-
+	Client();
 	~Client() = default;
 
 	float refreshesPS = -1;
 
 	inst_id currentGrid_id = 0;
-
 
 	void run(ScreenInteractive& screen) override;
 
@@ -43,16 +39,22 @@ protected:
 
 	void OnMessage(net::message<NetMsgType> msg) override;
 
-	Camera gameCam, mapCam;
+	Camera cam;
 	Vec2 mouse;
 
 private:
 	bool gridIsReady = false;
-	int client_tab	= CLIENT_TAB::CONTROL;
+	bool showNewWindowModal = false;
+	float avgPackets = 0;
 
-	void onInput(Event e);
+	void initControls();
 
-	Component main_container;
+	void OpenNewWindowDialogue();
+	void OnMouse(Event e);
+
+	Component mainContainer;
+	Component windowContainer;
+	Component clientStats;
 
 	Component Renderer_play();
 	Component Renderer_map();
