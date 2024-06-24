@@ -321,22 +321,22 @@ void Client::initControls() {
 	* audio
 	***********************************************************************************************************/
 
-	Listener DEBUG_beep = [] { std::cout << "\a" << std::endl; };
+//	Listener DEBUG_beep = [] { std::cout << "\a" << std::endl; };
 
 	/***********************************************************************************************************
 	* ui
 	***********************************************************************************************************/
 
-	Listener DEBUG_add_new_demo_window = [&] {
+	/*Listener DEBUG_add_new_demo_window = [&] {
 			static int a = 0;
 			auto b = Window({ .title = "on call" + std::to_string(a++) });
 			windowContainer->Add(b);
-		};
+		};*/
 
-	Listener open_new_window_dialogue = [&] {
-			//OpenNewWindowDialogue();
-			showNewWindowModal = !showNewWindowModal;
-		};
+	//Listener open_new_window_dialogue = [&] {
+	//		//OpenNewWindowDialogue();
+	//		showNewWindowModal = !showNewWindowModal;
+	//	};
 
 	/***********************************************************************************************************
 	* game
@@ -350,7 +350,7 @@ void Client::initControls() {
 
 	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
 	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
-	KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 }
 
 #pragma pop_macro("DrawText")

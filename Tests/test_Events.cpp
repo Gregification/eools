@@ -20,8 +20,9 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 	//these are not a exaustive test. just to ensure its not total gribrish
 
 	int testNum = 1;
-	const auto la = [&] { testNum++; };
-	const auto lb = [&] { testNum *= 2; };
+	Events::Listener<>
+		la([&]{ testNum++; }),
+		lb([&]{ testNum *= 2; });
 	Events::Observer<_ENUM::_enumerated> obs{ {} };
 	
 	REQUIRE(obs.AddListenerToEvent(_ENUM::_enumerated::A, la));
@@ -52,7 +53,7 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 
 	SECTION("events all have name and description") {
 		using namespace Events::KeyBinds;
-		auto& infoMap = CtrlObserver.event_name_and_description;
+		auto& infoMap = observer.event_name_and_description;
 
 		SECTION("entries should exist") {
 			for (int i = 0; i < BE_CONTROL_EVENT::_size(); i++)

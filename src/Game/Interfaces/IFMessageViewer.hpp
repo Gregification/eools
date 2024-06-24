@@ -5,10 +5,8 @@
 class IFMessageViewer : public InterfaceContent {
 	public:
 		IFMessageViewer();
-
-		int messageBufferSize = 20;
-		
-		void PostMessage(ftxui::Element&&);
+				
+		void PostMessage(std::string);
 			
 		void Refresh() override;
 		void OnDelete() override;
