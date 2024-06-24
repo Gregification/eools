@@ -1,29 +1,34 @@
 #include "IFMessageViewer.hpp"
 
-using namespace IFMessageViewer;
+IFMessageViewer::IFMessageViewer() {
+	content = ftxui::Container::Vertical({});
 
-void MessageViewer::PostMessage(MESSAGE_TAG::_enumerated, std::string) {
+	PostMessage(ftxui::text("messages appear here"));
 
+	Add(content);
 }
 
-void MessageViewer::SetTabSelected(MESSAGE_TAG) {
+void IFMessageViewer::PostMessage(ftxui::Element && line) {
+	static bool toggle;
 
+	if (messageBufferSize >= content->ChildCount())
+		content->ChildAt(0)->Detach();
+
+	auto r = ftxui::Renderer([element = move(line)] { return element; });
+	if(toggle = !toggle) r |= ftxui::bgcolor(ftxui::Color::GrayLight);
+
+	content->Add(move(r));
 }
 
-MESSAGE_TAG MessageViewer::GetTabSelected() const {
-	return MESSAGE_TAG::_from_index(tab_selected);
-}
-
-
-void MessageViewer::Refresh() {
+void IFMessageViewer::Refresh() {
 	
 }
 
-void MessageViewer::OnDelete() {
+void IFMessageViewer::OnDelete() {
 	
 }
 
-void MessageViewer::OnHide() {
+void IFMessageViewer::OnHide() {
 	
 
 }

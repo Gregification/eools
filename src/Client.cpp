@@ -44,7 +44,24 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 			Component modal = Container::Vertical({
 				list,
 				Container::Horizontal({
-						Button("confirm",	[&] { SetNewWindowDialogue(false); windowContainer->Add(Window({})); }),
+						Button("confirm",	[&] { 
+							SetNewWindowDialogue(false);
+							
+							//inst selected windows
+							for(int i = 0; i < list_states.size(); i++)
+								if (list_states[i]) {
+									auto const &cont = InterfaceContent::publicInterfaces[i];
+
+									windowContainer->Add(Window({
+											.inner = cont.second(),
+											.title = cont.first,
+											.left = 0,
+											.top = 1,
+										}));
+
+									break;
+								}
+						}),
 						Button("clear",		[&] { for (bool& v : list_states) v = false; }),
 						Button("cancel",	[&] { SetNewWindowDialogue(false);	for (bool& v : list_states) v = false; })
 					})
@@ -54,9 +71,9 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 						separator(),
 						content
 						});
-					}) | borderHeavy | bgcolor(Color::Blue);
+				}) | borderHeavy | bgcolor(Color::Blue);
 
-					modalContainer |= Modal(modal, &showNewWindowModal);
+			modalContainer |= Modal(modal, &showNewWindowModal);
 		}
 
 		mainContainer = Container::Stacked({
@@ -66,7 +83,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 				rend,
 			}) | CatchEvent([&](Event e) {
 				if (e.is_character()) {
-					KeyBinds::sendEvent(std::move(e));
+					Events::KeyBinds::sendKey(std::move(e));
 					return true;
 				}
 
@@ -79,6 +96,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 	handles 
 		- network connection.
 		- user controlls.
+		- ui
 */
 void Client::run(ScreenInteractive& screen) {
 	initControls();
@@ -289,7 +307,7 @@ void Client::OnMouse(Event e) {
 }
 
 void Client::initControls() {
-	using namespace KeyBinds;
+	using namespace Events;
 	/***********************************************************************************************************
 	* rules
 	* - no inline keybinds (for readability)
@@ -303,20 +321,19 @@ void Client::initControls() {
 	* audio
 	***********************************************************************************************************/
 
-	ControlCall DEBUG_beep = [](Event) { std::cout << "\a" << std::endl; };
-
+	Listener DEBUG_beep = [] { std::cout << "\a" << std::endl; };
 
 	/***********************************************************************************************************
 	* ui
 	***********************************************************************************************************/
 
-	ControlCall DEBUG_add_new_demo_window = [&](Event) {
+	Listener DEBUG_add_new_demo_window = [&] {
 			static int a = 0;
 			auto b = Window({ .title = "on call" + std::to_string(a++) });
 			windowContainer->Add(b);
 		};
 
-	ControlCall open_new_window_dialogue = [&](Event) {
+	Listener open_new_window_dialogue = [&] {
 			//OpenNewWindowDialogue();
 			showNewWindowModal = !showNewWindowModal;
 		};
@@ -331,9 +348,9 @@ void Client::initControls() {
 	* bindings
 	***********************************************************************************************************/
 
-	//SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
-	//SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
-	SubToCtrlEvnt(CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
+	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
+	KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 }
 
 #pragma pop_macro("DrawText")

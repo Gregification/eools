@@ -3,5 +3,7 @@
 #include "InterfaceInclude.hpp"
 
 const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces = { {
-	{"interfaceName", "interfaceDescription"}
-} };
+	{"Message Viewer",[]() {
+		return ftxui::Make<IFMessageViewer>();
+	}},
+}};

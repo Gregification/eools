@@ -10,7 +10,7 @@
 #include "GameMap.hpp"
 #include "GameObjects/Ship.hpp"
 #include "Camera.hpp"
-#include "Game/KeyBinds.hpp"
+#include "Game/Events/Events.hpp"
 #include "better-enums/enum.h"
 
 BETTER_ENUM(CLIENT_TAB, int,

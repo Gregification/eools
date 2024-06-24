@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(EOOLS 
     LANGUAGES CXX
     VERSION 0.0.0
-    DESCRIPTION "terminal game."
+    DESCRIPTION "terminal game"
 )
 
 set(TEST_EXE_NAME "test")
