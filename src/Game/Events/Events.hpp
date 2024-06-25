@@ -14,25 +14,28 @@ namespace Events {
 	template<typename T = _DEFAULT_TYPE>
 	struct WrappedArgument {
 		T value;
-		using Type = T;
 	};
 
 	template<typename ARG = _DEFAULT_TYPE>
 	struct Listener {
 		typedef WrappedArgument<ARG> WrappedArg;
+		typedef std::function<void(WrappedArg&)> wrappedFunc;//THIS MUST BE A REFRENCE
 
 	public:
-		Listener(std::function<void()> callback) :
-			_callback([=](WrappedArg&) { callback(); })
+		Listener(std::function<void()> callback) 
+			 : _callback([=](WrappedArg&) { callback(); })
 		{}
-		Listener(std::function<void(ARG)> callback) :
-			_callback([=](WrappedArg& arg) { callback(arg.value); })
+		Listener(std::function<void(ARG)> callback)
+			// : _callback([=](WrappedArg& arg) { callback(arg.value); })
 		{}
 
-		void Run(WrappedArg& arg) { _callback(arg); }
+		void Run(WrappedArg& arg) {
+		//	_callback(arg);
+		}
 	private:
-		std::function<void(WrappedArg)> _callback;
+		wrappedFunc _callback;
 	};
+
 
 	template<typename EVENT> //should be enum. DO NOT USE BETTER_ENUM
 	class Observer {
