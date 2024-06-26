@@ -20,10 +20,14 @@ namespace Events {
 		typedef std::function<void(std::any)> WrappedFunc;
 		WrappedFunc _callback;
 	
-		Listener(std::function<void()> callback) : _callback([=](std::any) { callback(); }){}
+		Listener(std::function<void()> callback) 
+			: _callback([=](std::any) { callback(); })
+		{}
 
-		template<typename FuncOnly>
-		Listener(FuncOnly&& callback) : _callback(callback)	{}
+		Listener(WrappedFunc callback) 
+			: _callback([=](std::any arg) { callback(std::move(arg)); })
+		{}
+
 		void Run(std::any arg) { _callback(std::move(arg)); }
 	};
 

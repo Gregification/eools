@@ -77,7 +77,7 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 			std::string meow;
 		};
 
-		Events::Listener lint([&](int b){ testNum++; });
+		//Events::Listener lint([](std::string string) {});
 		//Events::Listener lstruct([&](demoStruct s) { testNum = s.val; });
 
 		SECTION("listeners associated to arguement type") {
