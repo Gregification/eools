@@ -3,49 +3,41 @@
 #include <unordered_map>
 #include <functional>
 #include <string>
+#include <variant>
+#include <any>
+#include <typeindex>
 
 #include <ftxui/component/event.hpp>
 #include "../../better-enums/enum.h"
 
 namespace Events {
-	//template jungle
-	typedef int _DEFAULT_TYPE;
 
-	template<typename T = _DEFAULT_TYPE>
-	struct WrappedArgument {
-		T value;
-	};
+	//cheesy way to have a void parameter
+	struct DiscountVoid{};
+	typedef DiscountVoid _DEFAULT_TYPE;
 
-	template<typename ARG = _DEFAULT_TYPE>
 	struct Listener {
-		typedef WrappedArgument<ARG> WrappedArg;
-		typedef std::function<void(WrappedArg&)> wrappedFunc;//THIS MUST BE A REFRENCE
+		typedef std::function<void(std::any)> WrappedFunc;
+		WrappedFunc _callback;
+	
+		Listener(std::function<void()> callback) : _callback([=](std::any) { callback(); }){}
 
-	public:
-		Listener(std::function<void()> callback) 
-			 : _callback([=](WrappedArg&) { callback(); })
-		{}
-		Listener(std::function<void(ARG)> callback)
-			// : _callback([=](WrappedArg& arg) { callback(arg.value); })
-		{}
-
-		void Run(WrappedArg& arg) {
-		//	_callback(arg);
-		}
-	private:
-		wrappedFunc _callback;
+		template<typename FuncOnly>
+		Listener(FuncOnly&& callback) : _callback(callback)	{}
+		void Run(std::any arg) { _callback(std::move(arg)); }
 	};
 
-
-	template<typename EVENT> //should be enum. DO NOT USE BETTER_ENUM
+	template<typename EVENT>
 	class Observer {
 	private:
-		typedef std::unordered_map<EVENT, std::vector<Listener<>>>
-			Event2Subs;
+		typedef std::unordered_map<std::type_index, std::vector<Listener>>
+			SubGroup2Listeners;
+		typedef std::unordered_map<EVENT, SubGroup2Listeners>
+			Event2SubGroup;
 		typedef std::unordered_map<EVENT, const std::pair< const std::string, const std::string>>
 			Event2StringPair;
 
-		Event2Subs event_to_subscribers;
+		Event2SubGroup event_to_subscribers;
 
 	public:
 		Observer(Event2StringPair e) : event_name_and_description(e) {}
@@ -53,39 +45,47 @@ namespace Events {
 
 		/*triggers a event if it's allowed. returns same as KeyBinds::isEventAllowed*/
 		template<typename ARG = _DEFAULT_TYPE>
-		bool invokeEvent(EVENT e, ARG arg = 0) {
+		bool invokeEvent(EVENT e, ARG arg = ARG()) {
 			if (!isEventAllowed(e)) return false;
 
-			forceInvokeEvent<ARG>(std::move(e), arg);
+			forceInvokeEvent<ARG>(std::move(e), std::move(arg));
 
 			return true;
 		}
-		/*guarentted to trigger events with matching arguemetns*/
+
+		/*guarentted to trigger events with matching arguemetns. returns # of triggered events*/
 		template<typename ARG = _DEFAULT_TYPE>
-		void forceInvokeEvent(EVENT e, ARG arg = NULL) {
+		size_t forceInvokeEvent(EVENT e, ARG arg = ARG()) {
+			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			auto& arr = subgroup[typeid(ARG)];
 
-			auto& listeners = event_to_subscribers[std::move(e)];
-			auto warg = WrappedArgument<ARG>{ arg };
+			for (Listener& func : arr)
+				func.Run(std::any{std::forward<ARG>(std::move(arg)) }); //dark magic casting from the depths of stack overlfow
 
-			for (auto& c : listeners) {
-				c.Run(warg);
-			}
+			return arr.size();
 		}
 		/*returns true if event is allowed*/
 		bool isEventAllowed(EVENT) { return true; }
 
 		/*adds subscriber to event. returns true if its the only subscriber*/
 		template<typename ARG = _DEFAULT_TYPE>
-		bool AddListenerToEvent(EVENT e, Listener<ARG> l) {
-			auto& subs = event_to_subscribers[e];
-			subs.push_back(l);
-			return subs.size() == 1;
+		bool AddListenerToEvent(EVENT e, Listener l) {
+			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			auto& arr = subgroup[typeid(ARG)];
+
+			arr.push_back(std::move(l));
+
+			return arr.size() == 1;
 		}
 		/*removes all subscribers to the event. returns the number of subscribers removed*/
+		template<typename ARG = _DEFAULT_TYPE>
 		size_t ClearListenersToEvent(EVENT e) {
-			auto& subs = event_to_subscribers[e];
-			size_t ret = subs.size();
-			subs.clear();
+			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			auto& arr = subgroup[typeid(ARG)];
+
+			size_t ret = arr.size();
+			arr.clear();
+
 			return ret;
 		}
 	};
