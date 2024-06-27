@@ -14,13 +14,11 @@ public:
 	//refresh content
 	virtual void Refresh() = 0;
 
-	//called once when selected
+	/*called once when selected*/
 	virtual void OnSelect() { Refresh(); }
-
-	//callled once when removed
+	/*callled once when removed*/
 	virtual void OnDelete() = 0;
-
-	//called once if it was just formerly the focoused tab
+	/*called once if it was just formerly the focoused tab*/
 	virtual void OnHide() = 0;
 
 	static const int NUM_INTERFACES = 1;//yeah

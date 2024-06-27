@@ -16,16 +16,14 @@ BETTER_ENUM(_ENUM, int,
 //	C
 //};
 
-void myFunctionPtr(int y) {
-	std::cout << "Function pointer called with: " << y << std::endl;
-}
+
 
 TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 	//these are not a exaustive test. just to ensure its not total gribrish
 
 	Events::Observer<_ENUM::_enumerated> obs{{}};
 
-	SECTION("events all have name and description") {
+	SECTION("all key binds have name and description") {
 		using namespace Events::KeyBinds;
 		auto& infoMap = observer.event_name_and_description;
 

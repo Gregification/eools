@@ -12,6 +12,9 @@
 #include "../../better-enums/enum.h"
 
 namespace Events {
+	/**********************************************************************************************************************************************
+	* boiler plate, scroll past for actual stuff
+	**********************************************************************************************************************************************/
 
 	//cheesy way to have a void parameter
 	struct DiscountVoid{};
@@ -34,11 +37,21 @@ namespace Events {
 		void Run(ARG arg) { _callback(std::move(arg)); }
 	};
 
+	//a cleaner way to setup listeners
+	template<typename T = DiscountVoid>
+	std::shared_ptr<Events::Listener<T>> MakeListener(std::function<void()> callback) {
+		return std::make_shared<Events::Listener<T>>(callback);
+	}
+	template<typename T = DiscountVoid>
+	std::shared_ptr<Events::Listener<T>> MakeListener(std::function<void(T)> callback) {
+		return std::make_shared<Events::Listener<T>>(callback);
+	}
+
 	template<typename EVENT>
 	class Observer {
 	private:
 
-		typedef std::unordered_map<std::type_index, std::vector<std::shared_ptr<ListenerBase>>>
+		typedef std::unordered_map<std::type_index, std::vector<std::weak_ptr<ListenerBase>>>
 			SubGroup2Listeners;
 		typedef std::unordered_map<EVENT, SubGroup2Listeners>
 			Event2SubGroup;
@@ -51,14 +64,12 @@ namespace Events {
 		Observer(Event2StringPair e) : event_name_and_description(e) {}
 		const Event2StringPair event_name_and_description;
 
-		/*triggers a event if it's allowed. returns same as KeyBinds::isEventAllowed*/
+		/*triggers a event if it's allowed. otherwise returns same as KeyBinds::forceInvokeEvent*/
 		template<typename ARG = _DEFAULT_TYPE>
 		bool invokeEvent(EVENT e, ARG arg = ARG()) {
 			if (!isEventAllowed(e)) return false;
 
-			forceInvokeEvent<ARG>(std::move(e), std::move(arg));
-
-			return true;
+			return forceInvokeEvent<ARG>(std::move(e), std::move(arg));
 		}
 
 		/*guarentted to trigger events with matching arguemetns. returns # of triggered events*/
@@ -67,10 +78,13 @@ namespace Events {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
 			auto& arr = subgroup[typeid(ARG)];
 
-			for (auto lb : arr) {
-				auto l = dynamic_pointer_cast<Listener<ARG>>(lb);
-
-				l->Run(arg); 
+			for (int i = 0; i < arr.size(); i++) {
+				std::shared_ptr<Listener<ARG>> l = dynamic_pointer_cast<Listener<ARG>>(arr[i].lock());
+				if (!l) {
+					arr.erase(arr.begin() + i);
+					i--;
+				} else 
+					l->Run(arg);
 			}
 
 			return arr.size();
@@ -84,7 +98,7 @@ namespace Events {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
 			auto& arr = subgroup[typeid(ARG)];
 
-			arr.push_back(std::move(l));
+			arr.push_back(std::weak_ptr<Listener<ARG>>(l));
 
 			return arr.size() == 1;
 		}
@@ -111,10 +125,15 @@ namespace Events {
 		}
 	};
 
+	/**********************************************************************************************************************************************
+	* actual stuff
+	**********************************************************************************************************************************************/
+
 	namespace KeyBinds {
 		BETTER_ENUM(BE_CONTROL_EVENT, int,
 			DISPLAY_NEW_WINDOW,
 			DISPLAY_TOGGLE_MOVEMENT_OVERLAY,
+			DISPLAY_REMOVE_WINDOW,
 			MOVEMENT_ALIGN_TO,
 			ENGR_INCREASE_PSU,
 			ENGR_DECREASE_PSU,

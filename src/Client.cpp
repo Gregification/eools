@@ -82,12 +82,9 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 				windowContainer,
 				rend,
 			}) | CatchEvent([&](Event e) {
-				if (e.is_character()) {
-					Events::KeyBinds::sendKey(std::move(e));
-					return true;
-				}
-
-				return false;
+				if (e.is_mouse()) return false;
+				Events::KeyBinds::sendKey(std::move(e));
+				return true;
 			});
 	}
 }
@@ -321,22 +318,52 @@ void Client::initControls() {
 	* audio
 	***********************************************************************************************************/
 
-//	Listener DEBUG_beep = [] { std::cout << "\a" << std::endl; };
+	auto DEBUG_beep = MakeListener<>([] { std::cout << "\a" << std::endl; });
+	listeners.push_back(DEBUG_beep);
 
 	/***********************************************************************************************************
 	* ui
 	***********************************************************************************************************/
 
-	/*Listener DEBUG_add_new_demo_window = [&] {
+	auto DEBUG_add_new_demo_window = MakeListener<>([&] {
 			static int a = 0;
 			auto b = Window({ .title = "on call" + std::to_string(a++) });
 			windowContainer->Add(b);
-		};*/
+		});
+	listeners.push_back(DEBUG_add_new_demo_window);
 
-	//Listener open_new_window_dialogue = [&] {
-	//		//OpenNewWindowDialogue();
-	//		showNewWindowModal = !showNewWindowModal;
-	//	};
+	auto DEBUG_message_event = MakeListener<>([&]() {
+			static int a = 0;
+			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, std::to_string(a++));
+		});
+	listeners.push_back(DEBUG_message_event);
+
+	auto open_new_window_dialogue = MakeListener([&] {
+			showNewWindowModal = !showNewWindowModal;
+		});
+	listeners.push_back(open_new_window_dialogue);
+
+	auto delete_selected_window = MakeListener([&] {
+			std::string message;
+
+			int count = windowContainer->ChildCount();
+
+			if (windowContainer->ChildCount() == 0) {
+				message = "no children of window";
+			} else {
+				auto ac = windowContainer->ActiveChild();
+				if (ac) {
+					message = "detached a window!";
+					ac->Detach();
+				}
+				else {
+					message = "no window selected! :(";
+				}
+			}
+
+			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, message);
+		});
+	listeners.push_back(delete_selected_window);
 
 	/***********************************************************************************************************
 	* game
@@ -348,9 +375,13 @@ void Client::initControls() {
 	* bindings
 	***********************************************************************************************************/
 
-	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
-	//KeyBinds::CtrlObserver.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
-	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_message_event);
+	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
+	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
+
 }
 
 #pragma pop_macro("DrawText")

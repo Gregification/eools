@@ -1,10 +1,17 @@
 #pragma once
 
+#include <iostream>
+
 #include "InterfaceContent.hpp"
+#include "../Events/Events.hpp"
 
 class IFMessageViewer : public InterfaceContent {
 	public:
 		IFMessageViewer();
+		~IFMessageViewer() {
+			std::cout << "\a" << std::endl;
+			
+		};
 				
 		void PostMessage(std::string);
 			
@@ -14,4 +21,8 @@ class IFMessageViewer : public InterfaceContent {
 
 	protected:
 		ftxui::Component content;
+
+	private:
+		bool toggle;
+		Events::Listener<std::string> listener;
 };
