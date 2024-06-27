@@ -16,6 +16,10 @@ BETTER_ENUM(_ENUM, int,
 //	C
 //};
 
+void myFunctionPtr(int y) {
+	std::cout << "Function pointer called with: " << y << std::endl;
+}
+
 TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 	//these are not a exaustive test. just to ensure its not total gribrish
 
@@ -36,9 +40,8 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 	SECTION("no type functions") {
 		
 		int testNum = 1;
-		Events::Listener
-			la([&] { testNum++; }),
-			lb([&] { testNum *= 2; });
+		auto la = std::make_shared<Events::Listener<>>([&] { testNum++; });
+		auto lb = std::make_shared<Events::Listener<>>([&] { testNum *= 2; });
 
 		REQUIRE(obs.AddListenerToEvent(_ENUM::_enumerated::A, la));
 		REQUIRE(!obs.AddListenerToEvent(_ENUM::_enumerated::A, la));
@@ -49,7 +52,7 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 
 		REQUIRE(obs.isEventAllowed(_ENUM::_enumerated::A) == obs.invokeEvent(_ENUM::_enumerated::A));
 
-		REQUIRE(obs.ClearListenersToEvent(_ENUM::_enumerated::A) == 2);
+		REQUIRE(obs.ClearListenersToEventOfType(_ENUM::_enumerated::A) == 2);
 
 		testNum = 1;
 		obs.forceInvokeEvent(_ENUM::A);
@@ -66,7 +69,7 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 		obs.forceInvokeEvent(_ENUM::_enumerated::A);
 		REQUIRE(testNum == 2);
 
-		REQUIRE(obs.ClearListenersToEvent(_ENUM::_enumerated::A) == 2);
+		REQUIRE(obs.ClearListenersToEventOfType(_ENUM::_enumerated::A) == 2);
 		
 	}
 
@@ -77,15 +80,19 @@ TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 			std::string meow;
 		};
 
-		//Events::Listener lint([](std::string string) {});
-		//Events::Listener lstruct([&](demoStruct s) { testNum = s.val; });
+		auto lint = std::make_shared<Events::Listener<int>>([&](int) { testNum++; });
+		auto lstruct = std::make_shared<Events::Listener<demoStruct>>([&](demoStruct s) { testNum = s.val; });
 
 		SECTION("listeners associated to arguement type") {
-			//REQUIRE(obs.AddListenerToEvent(_ENUM::_enumerated::A, [&](int b) { testNum++; }));
+			REQUIRE(obs.AddListenerToEvent(_ENUM::_enumerated::A, lint));
+			REQUIRE(obs.AddListenerToEvent(_ENUM::_enumerated::A, lstruct));
 
 			testNum = 1;
+			obs.forceInvokeEvent<int>(_ENUM::_enumerated::A);
+			REQUIRE(testNum == 2);
+
 			obs.forceInvokeEvent<demoStruct>(_ENUM::_enumerated::A);
-			//REQUIRE(testNum == 2);
+			REQUIRE(testNum == demoStruct{}.val);
 		}
 	 }
 };

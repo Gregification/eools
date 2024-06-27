@@ -6,6 +6,7 @@
 #include <variant>
 #include <any>
 #include <typeindex>
+#include <memory>
 
 #include <ftxui/component/event.hpp>
 #include "../../better-enums/enum.h"
@@ -16,25 +17,28 @@ namespace Events {
 	struct DiscountVoid{};
 	typedef DiscountVoid _DEFAULT_TYPE;
 
-	struct Listener {
-		typedef std::function<void(std::any)> WrappedFunc;
+	struct ListenerBase { virtual ~ListenerBase() = default; };
+
+	template<typename ARG = DiscountVoid>
+	struct Listener : ListenerBase {
+	public:
+		typedef std::function<void(ARG)> WrappedFunc;
 		WrappedFunc _callback;
-	
-		Listener(std::function<void()> callback) 
-			: _callback([=](std::any) { callback(); })
-		{}
 
-		Listener(WrappedFunc callback) 
-			: _callback([=](std::any arg) { callback(std::move(arg)); })
-		{}
+		Listener(std::function<void()> callback)
+			: _callback([=](ARG) { callback(); }) {}
+		Listener(WrappedFunc callback)
+			: _callback([=](ARG arg) { callback(std::move(arg)); }) {}
+		//cant figure out how to get some sort of dynmaic cast action, i give up
 
-		void Run(std::any arg) { _callback(std::move(arg)); }
+		void Run(ARG arg) { _callback(std::move(arg)); }
 	};
 
 	template<typename EVENT>
 	class Observer {
 	private:
-		typedef std::unordered_map<std::type_index, std::vector<Listener>>
+
+		typedef std::unordered_map<std::type_index, std::vector<std::shared_ptr<ListenerBase>>>
 			SubGroup2Listeners;
 		typedef std::unordered_map<EVENT, SubGroup2Listeners>
 			Event2SubGroup;
@@ -63,8 +67,11 @@ namespace Events {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
 			auto& arr = subgroup[typeid(ARG)];
 
-			for (Listener& func : arr)
-				func.Run(std::any{std::forward<ARG>(std::move(arg)) }); //dark magic casting from the depths of stack overlfow
+			for (auto lb : arr) {
+				auto l = dynamic_pointer_cast<Listener<ARG>>(lb);
+
+				l->Run(arg); 
+			}
 
 			return arr.size();
 		}
@@ -72,8 +79,8 @@ namespace Events {
 		bool isEventAllowed(EVENT) { return true; }
 
 		/*adds subscriber to event. returns true if its the only subscriber*/
-		template<typename ARG = _DEFAULT_TYPE>
-		bool AddListenerToEvent(EVENT e, Listener l) {
+		template<typename ARG>
+		bool AddListenerToEvent(EVENT e, std::shared_ptr<Listener<ARG>> l) {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
 			auto& arr = subgroup[typeid(ARG)];
 
@@ -83,12 +90,22 @@ namespace Events {
 		}
 		/*removes all subscribers to the event. returns the number of subscribers removed*/
 		template<typename ARG = _DEFAULT_TYPE>
-		size_t ClearListenersToEvent(EVENT e) {
+		size_t ClearListenersToEventOfType(EVENT e) {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
 			auto& arr = subgroup[typeid(ARG)];
 
 			size_t ret = arr.size();
 			arr.clear();
+
+			return ret;
+		}
+
+		/*returns # of types removed*/
+		size_t ClearListenersToEvent(EVENT e) {
+			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+
+			size_t ret = subgroup.count();
+			subgroup.clear();
 
 			return ret;
 		}
