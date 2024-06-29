@@ -32,7 +32,10 @@ enum class NetMsgType : uint16_t {
 	GridRequest,
 
 	//6. game object update event. 
-	GameObjectUpdate
+	GameObjectUpdate,
+
+	//game object creation event (has full description)
+	GameObjectPost,
 };
 
 template<typename ELE, typename TARG = ELE>
@@ -88,23 +91,23 @@ struct ID {
 	}
 
 	ID_TYPE targetType;
-	inst_id gridId;
-	inst_id instanceId;
-	class_id classId;
+	Instance_Id gridId;
+	Instance_Id instanceId;
+	Class_Id classId;
 };
 static_assert(std::is_standard_layout<ID>::value);
 
 struct IDPartition {
-	inst_id min, max, nxt;
+	Instance_Id min, max, nxt;
 	
 	IDPartition() : IDPartition(0,0,-1) {}
-	IDPartition(inst_id mi, inst_id mx, inst_id nx) : min(mi), max(mx), nxt(nx) {}
+	IDPartition(Instance_Id mi, Instance_Id mx, Instance_Id nx) : min(mi), max(mx), nxt(nx) {}
 
-	inst_id getNext() {
+	Instance_Id getNext() {
 		return nxt++;
 	}
 
-	bool withinRange(inst_id num) {
+	bool withinRange(Instance_Id num) {
 		return num >= min && num <= max;
 	}
 
@@ -116,11 +119,11 @@ static_assert(std::is_standard_layout<IDPartition>::value);
 static IDPartition LOCAL_PARITION = IDPartition();
 
 struct ConnectionStatus {
-	inst_id clientId;
+	Instance_Id clientId;
 	bool isQueue;
 	ConnectionStatus() : isQueue(false), clientId(getIdFromPartition(LOCAL_PARITION)) {}
 
-	static inst_id getIdFromPartition(const IDPartition& part) {
+	static Instance_Id getIdFromPartition(const IDPartition& part) {
 		return part.min / STD_PARTITION_SIZE;
 	}
 };
@@ -148,7 +151,7 @@ static_assert(std::is_standard_layout<Ping>::value);
 
 struct IDCorrection {
 	ID formerID;
-	inst_id newId;
+	Instance_Id newId;
 };
 static_assert(std::is_standard_layout<IDCorrection>::value);
 
@@ -172,7 +175,23 @@ static_assert(std::is_standard_layout<GridRequest>::value);
 //////////////////////////////////////////////////////////////////////////////
 
 struct GameObjectUpdate {
-	ID objectID;
-	bool transformOnly = true; //the most common & frequent update
+	Instance_Id grid_id;
+	Instance_Id inst_id;
+	time_t		time;
+
+	static struct Classes {
+		std::vector<Class_Id> as;
+	};
+
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);
+
+struct GameObjectPost {
+
+};
+static_assert(std::is_standard_layout<GameObjectPost>::value);
+
+struct GameObjectGridChange {
+
+};
+static_assert(std::is_standard_layout<GameObjectPost>::value);

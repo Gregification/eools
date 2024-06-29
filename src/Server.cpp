@@ -10,9 +10,11 @@ bool logCommonEvents = false;
 
 void Server::run(ScreenInteractive& screen) {
 	//debug
-	messages.push_back(text("grid gof id:" + std::to_string(Grid::staticGetGOF().class_id)));
-	messages.push_back(text("ship gof id:" + std::to_string(Ship::staticGetGOF().class_id)));
+	messages.push_back(text("grid gof id:" + std::to_string(IdGen<GameObject>::gof.class_id)));
+	messages.push_back(text("grid gof id:" + std::to_string(IdGen<Grid>::gof.class_id)));
+	messages.push_back(text("ship gof id:" + std::to_string(IdGen<Ship>::gof.class_id)));
 
+	//TODO: change to use ftxui::Loop, idk y I went with a thread that day
 	screenThread = std::thread([&]() {
 			auto userPane = Renderer([&]() {
 				std::lock_guard lk(renderMutex);
@@ -24,7 +26,7 @@ void Server::run(ScreenInteractive& screen) {
 						try {
 							if (!sptr->isConnected()) continue;
 
-							inst_id id = sptr->connectionID;
+							Instance_Id id = sptr->connectionID;
 
 							eles.push_back(text(
 									std::format("{:3} RTping:{:6} {}",

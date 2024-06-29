@@ -1,4 +1,6 @@
 #include "GameObject.hpp"
+#include "IdGen.hpp"
+#include "GameObjectFactory.hpp"
 
 void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
 	Vec2 pos = transform.position;
@@ -6,12 +8,26 @@ void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
 	c.DrawBlock(pos.x, pos.y, true);
 };
 
-bool GameObject::NeedNetUpdate() {
-	return needNetUpdate;
+Class_Id GameObject::GetClassId() const {
+	return IdGen<GameObject>::gof.class_id;
+}
+
+void GameObject::packMessage(net::message<NetMsgType>& msg) {
+	msg << transform;
+	msg << mass;
+}
+
+void GameObject::unpackMessage(net::message<NetMsgType>& msg) {
+	msg >> mass;
+	msg >> transform;
+}
+
+bool GameObject::NeedsNetUpdate() {
+	return true;
 }
 
 std::string GameObject::GetDescription() const {
-	return "gameobject description";
+	return "default gameobject description";
 }
 
 std::string GameObject::getDisplayId() {
@@ -22,7 +38,7 @@ std::string GameObject::getDisplayName() {
 	return displayName;
 }
 
-void GameObject::setId(inst_id newId) {
+void GameObject::setId(Instance_Id newId) {
 	instId = newId;
 
 	if (instId == BAD_ID) {

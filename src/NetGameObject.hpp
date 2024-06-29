@@ -1,34 +1,14 @@
 #pragma once
 
 #include "GameObject.hpp"
-#include "GameObjectFactory.hpp"
-#include "GameStructs.hpp"	`q1
 
-template<class T> //CRTP
-class NetGameObject : public GameObject {
+template<typename T>
+class NetGameObject : public IdGen<T>, public GameObject {
 public:
-	NetGameObject() : GameObject(BAD_ID) {}
-	NetGameObject(inst_id nid) : GameObject(nid) {}
+	GameObject::GameObject;
 
-	const static GameObjectFactory gof;
-
-	GameObjectFactory getGOF() const override {
-		return gof;
+	Class_Id GetClassId() const override {
+		return IdGen<T>::gof.class_id;
 	}
-
-	//yeah
-	static GameObjectFactory staticGetGOF() {
-		return gof;
-	}
-
-	ID inline getID() override {
-		auto idee = ID();
-		idee.classId = gof.class_id;
-		idee.instanceId = GameObject::id();
-
-		return idee;
-	}
+	
 };
-
-template<class T>
-const GameObjectFactory NetGameObject<T>::gof = GameObjectFactory((static_cast<T*>(nullptr)));

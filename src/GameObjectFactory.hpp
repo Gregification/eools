@@ -4,7 +4,10 @@
 #include <memory>
 #include <vector>
 
+#include "Game_common.hpp"
 #include "GameObject.hpp"
+
+class GameObject;
 
 class GameObjectFactory {
 	using InstanceConstructor = std::function<std::shared_ptr<GameObject>()>;
@@ -24,11 +27,12 @@ public:
 	}
 
 	static std::vector<InstanceConstructor> ClassList;
-	static class_id nextIdx;
+	static const Class_Id GameObjectId = 0;
+	static Class_Id nextIdx;
 
-	static std::shared_ptr<GameObject> getInstance(class_id id) {
+	static std::shared_ptr<GameObject> getInstance(Class_Id id) {
 		return std::move(ClassList[id]());
 	}
 
-	const class_id class_id;
+	const Class_Id class_id;
 };

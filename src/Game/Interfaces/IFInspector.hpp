@@ -13,7 +13,7 @@ public:
 			if (auto go = selectedObject.lock()) {
 				id		= go->getDisplayId();
 				name	= go->getDisplayName();
-				targType = static_cast<int>(go->getID().targetType);
+				targType = static_cast<int>(go->GetClassId());
 			} else {
 				id		= "N/A";
 				name	= "no selection";

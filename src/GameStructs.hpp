@@ -159,7 +159,7 @@ namespace gs {
 			velocity(0, 0)
 		{}
 
-		void PhysUpdate(float dt) {
+		void FixedUpdate(float dt) {
 			rotation += dt * angularVelocity;
 
 			position += velocity * dt;

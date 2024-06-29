@@ -96,7 +96,7 @@ namespace Events {
 		template<typename ARG>
 		bool AddListenerToEvent(EVENT e, std::shared_ptr<Listener<ARG>> l) {
 			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
-			auto& arr = subgroup[typeid(ARG)];
+			auto& arr = subgroup[typeid(ARG)];//…(????)
 
 			arr.push_back(std::weak_ptr<Listener<ARG>>(l));
 

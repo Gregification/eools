@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Grid.hpp"
-#include "../GameObject.hpp"
 
 //gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
@@ -31,7 +30,7 @@ void Grid::packMessage(net::message<NetMsgType>& msg) {
 }
 
 void Grid::unpackMessage(net::message<NetMsgType>& msg) {
-	inst_id msg_id;
+	Instance_Id msg_id;
 	msg >> msg_id;
 	msg >> gridPos;
 
@@ -44,7 +43,7 @@ void Grid::unpackMessage(net::message<NetMsgType>& msg) {
 	size_t l;
 	msg >> l;
 	for (int i = 0; i < l; i++) {
-		inst_id id;
+		Instance_Id id;
 		msg >> id;
 
 		if (!msg_id) { //if NOT baselining from server
@@ -54,14 +53,7 @@ void Grid::unpackMessage(net::message<NetMsgType>& msg) {
 		gameObjects.insert({id, std::shared_ptr<GameObject>(nullptr)});
 	}
 
-	needNetUpdate = false;
-
 	GameObject::unpackMessage(msg);
-}
-
-
-bool Grid::NeedNetUpdate() {
-	return GameObject::needNetUpdate;
 }
 
 void Grid::addGameObject(std::shared_ptr<GameObject>& go) {
@@ -71,7 +63,7 @@ void Grid::addGameObject(std::shared_ptr<GameObject>& go) {
 	gameObjects.insert({ go->id(), go});
 }
 
-std::shared_ptr<GameObject> Grid::getObject(inst_id id) {
+std::shared_ptr<GameObject> Grid::getObject(Instance_Id id) {
 	auto ret = gameObjects.find(id);
 
 	if (ret == gameObjects.end())
@@ -80,7 +72,7 @@ std::shared_ptr<GameObject> Grid::getObject(inst_id id) {
 		return ret->second;
 }
 
-std::shared_ptr<GameObject> Grid::removeObject(inst_id id) {
+std::shared_ptr<GameObject> Grid::removeObject(Instance_Id id) {
 	auto it = gameObjects.find(id);
 	if(it == gameObjects.end())
 		return std::shared_ptr<GameObject>(nullptr);

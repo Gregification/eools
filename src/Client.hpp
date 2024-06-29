@@ -29,7 +29,7 @@ public:
 
 	float refreshesPS = -1;
 
-	inst_id currentGrid_id = 0;
+	Instance_Id currentGrid_id = 0;
 
 	void run(ScreenInteractive& screen) override;
 

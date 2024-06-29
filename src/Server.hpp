@@ -45,6 +45,6 @@ protected:
 
 private:
 	GameMap gameMap;
-	std::unordered_map<class_id, inst_id> clientId_to_gridId_map;
-	std::unordered_map<class_id, ConnectionStatus> connectionStatus;
+	std::unordered_map<Class_Id, Instance_Id> clientId_to_gridId_map;
+	std::unordered_map<Class_Id, ConnectionStatus> connectionStatus;
 };

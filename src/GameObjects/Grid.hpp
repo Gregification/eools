@@ -5,16 +5,16 @@
 #include <vulkan/vulkan.hpp>
 
 #include "../NetGameObject.hpp"
+#include "../IdGen.hpp"
 
 class GameMap;
 
-class Grid : virtual public NetGameObject<Grid> {
+class Grid : public NetGameObject<Grid> {
 	friend class GameMap;
 	public:
-		Grid() : gridPos(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()) {}
-		~Grid() = default;
+		NetGameObject::NetGameObject;
 
-		inst_id gridId = BAD_ID;
+		Instance_Id gridId = BAD_ID;
 		Vec2 gridPos;
 
 	public:
@@ -27,12 +27,11 @@ class Grid : virtual public NetGameObject<Grid> {
 
 		void unpackMessage(net::message<NetMsgType>& msg) override;
 
-		virtual bool NeedNetUpdate() override;
-
 		void addGameObject(std::shared_ptr<GameObject>& go);
-		std::shared_ptr<GameObject> getObject(inst_id);
-		std::shared_ptr<GameObject> removeObject(inst_id);
+
+		std::shared_ptr<GameObject> getObject(Instance_Id);
+		std::shared_ptr<GameObject> removeObject(Instance_Id);
 
 	private:
-		std::unordered_map<inst_id, std::shared_ptr<GameObject>> gameObjects;
+		std::unordered_map<Instance_Id, std::shared_ptr<GameObject>> gameObjects;
 };
