@@ -5,12 +5,8 @@
 #include <vulkan/vulkan.hpp>
 
 #include "../NetGameObject.hpp"
-#include "../IdGen.hpp"
-
-class GameMap;
 
 class Grid : public NetGameObject<Grid> {
-	friend class GameMap;
 	public:
 		NetGameObject::NetGameObject;
 
@@ -29,9 +25,11 @@ class Grid : public NetGameObject<Grid> {
 
 		void addGameObject(std::shared_ptr<GameObject>& go);
 
-		std::shared_ptr<GameObject> getObject(Instance_Id);
-		std::shared_ptr<GameObject> removeObject(Instance_Id);
+		/*finds object using instance id, if it exists on grid*/
+		std::optional<std::shared_ptr<GameObject>> getObject(Instance_Id);
+		/*removes obj by id, returns the removed object if found*/
+		std::optional<std::shared_ptr<GameObject>> removeObject(Instance_Id);
 
 	private:
-		std::unordered_map<Instance_Id, std::shared_ptr<GameObject>> gameObjects;
+		std::vector<std::pair<Instance_Id, std::shared_ptr<GameObject>>> gameObjects;
 };

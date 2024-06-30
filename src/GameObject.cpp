@@ -2,6 +2,8 @@
 #include "IdGen.hpp"
 #include "GameObjectFactory.hpp"
 
+const Vec2 Vec2::BAD = Vec2(NAN, NAN);
+
 void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
 	Vec2 pos = transform.position;
 	trfmat.applyTo(pos);

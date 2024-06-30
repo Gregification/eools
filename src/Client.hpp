@@ -7,7 +7,6 @@
 #include "NetCommon/eol_net.hpp"
 #include "App.hpp"
 #include "NetMessageType.hpp"
-#include "GameMap.hpp"
 #include "GameObjects/Ship.hpp"
 #include "Camera.hpp"
 #include "Game/Events/Events.hpp"
@@ -34,7 +33,6 @@ public:
 	void run(ScreenInteractive& screen) override;
 
 protected:
-	GameMap gameMap;
 	std::shared_ptr<Ship> ship;
 
 	void OnMessage(net::message<NetMsgType> msg) override;
@@ -48,7 +46,7 @@ private:
 	float avgPackets = 0;
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it
 
-	void initControls();
+	void initEvents();
 
 	void SetNewWindowDialogue(bool);
 	void OnMouse(Event e);

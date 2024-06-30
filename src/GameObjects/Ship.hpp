@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../NetGameObject.hpp"
-#include "../IdGen.hpp"
 
 class Ship : public NetGameObject<Ship> {
 	public:

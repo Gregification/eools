@@ -9,7 +9,6 @@
 #include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
 
-
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
 
@@ -36,6 +35,8 @@ namespace gs {
 		Vec2(float x, float y) : x(x), y(y) {}
 		Vec2(const Vec2& other) : x(other.x), y(other.y) {}
 
+		static const Vec2 BAD;//(NAN,NAN)
+
 		static Vec2 UnitVec(const Vec2& other) {
 			Vec2 ret(other.x, other.y);
 			float ivsqrt = Q_inverseSqrt(other.magnitudeSquared());
@@ -51,7 +52,7 @@ namespace gs {
 			return Vec2(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
 		}
 
-		bool isBad() {
+		bool IsBad() {
 			return x == NAN || y == NAN;
 		}
 
@@ -121,7 +122,7 @@ namespace gs {
 			// | A B C |   | X |   | X |
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |
-			//  [this]      [vec]   [final]
+			//  [this]     [vec]  [final]
 			// ignore Z
 			const float vecz = 1;
 

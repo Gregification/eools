@@ -7,7 +7,6 @@
 
 #include "NetMessageType.hpp"
 #include "GameStructs.hpp"
-#include "Game_common.hpp"
 #include "Body.hpp"
 #include "IdGen.hpp"
 #include "GameObjectFactory.hpp"

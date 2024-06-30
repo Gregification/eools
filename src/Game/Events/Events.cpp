@@ -4,7 +4,7 @@ using namespace Events;
 
 size_t KeyBinds::sendKey(ftxui::Event e) {		
 	size_t ret = 0;
-	auto& arr = KeyMap[std::move(e)];
+	auto& arr = KeyMap[e];
 	for(auto& a : arr)
 		observer.invokeEvent(a);
 	return ret;
@@ -60,4 +60,8 @@ Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
 
 Observer<ClientEvent::CLIENT_EVENT> ClientEvent::observer = { {
 	{CLIENT_EVENT::EVENT_MESSAGE, {"messages to the user", "shows windows avalible to open"}},
+} };
+
+Observer<Network::NETWORK_EVENT> Network::observer = { {
+	{Network::NETWORK_EVENT::SEND_MESSAGE, {"passes message along connection", "implimentation dependent on client or server"}},
 } };

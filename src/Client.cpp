@@ -96,7 +96,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 		- ui
 */
 void Client::run(ScreenInteractive& screen) {
-	initControls();
+	initEvents();
 
 	//update connection status
 	{
@@ -111,10 +111,10 @@ void Client::run(ScreenInteractive& screen) {
 
 	//i'm lost, send me to a valid grid
 	{
-		auto gr = GridRequest();
+		auto gr = GridChange();
 
 		net::message<NetMsgType> msg;
-		msg.header.id = NetMsgType::GridRequest;
+		msg.header.id = NetMsgType::GridChange;
 		msg << gr;
 		Send(msg);
 	}
@@ -161,6 +161,9 @@ void Client::run(ScreenInteractive& screen) {
 }
 
 void Client::OnMessage(net::message<NetMsgType> msg) {
+	if(msg.header.id != NetMsgType::Ping)
+		Events::ClientEvent::observer.invokeEvent(Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, "received: " + std::to_string(static_cast<int>(msg.header.id)));
+
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
 				auto ping = Ping();
@@ -179,7 +182,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 		case NetMsgType::IDPartition: {
 				IDPartition idp = IDPartition();
 				msg >> idp;
-				if (!idp.isBad())
+				if (!idp.IsBad())
 					LOCAL_PARITION = idp;
 			}break;
 		case NetMsgType::ConnectionStatus: {
@@ -190,17 +193,14 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				msg << stat;
 				Send(msg);
 			}break;
-		case NetMsgType::GridRequest: {
-				auto gr = GridRequest();
+		case NetMsgType::GridChange: {
+				auto gr = GridChange();
 				msg >> gr;
 				
 
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-			gameMap.processMessage(
-				msg, 
-				[&](const net::message<NetMsgType>& m) -> void { Send(m); }
-			);
+			
 			}break;
 	}
 }
@@ -240,7 +240,7 @@ Component Client::Renderer_inventory() {
 
 void Client::Draw(Canvas& c) {//play renderer
 	if (gridIsReady)
-		cam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
+	{}//cam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
 	else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
@@ -303,16 +303,23 @@ void Client::OnMouse(Event e) {
 	}
 }
 
-void Client::initControls() {
+void Client::initEvents() {
 	using namespace Events;
 	/***********************************************************************************************************
 	* rules
-	* - no inline keybinds (for readability)
+	* - no inline Listeners (for readability)
 	* - idc length of the lambda names, make it intutively descriptive
 	* - under_score_naming_scheme
 	* - debugging funcitons must have a name that starts with "DEBUG_" 
+	* - must push to the listeners object because observer uses weak pointers
 	***********************************************************************************************************/
 
+	/***********************************************************************************************************
+	* network
+	***********************************************************************************************************/
+
+	auto network_send_message = MakeListener<net::message<NetMsgType>>([&](const net::message<NetMsgType>& m) { Send(m); });
+	listeners.push_back(network_send_message);
 
 	/***********************************************************************************************************
 	* audio
@@ -320,9 +327,11 @@ void Client::initControls() {
 
 	auto DEBUG_beep = MakeListener<>([] { std::cout << "\a" << std::endl; });
 	listeners.push_back(DEBUG_beep);
+	auto DEBUG_beep_string = MakeListener<std::string>([](std::string) { std::cout << "\a" << std::endl; });
+	listeners.push_back(DEBUG_beep_string);
 
 	/***********************************************************************************************************
-	* ui
+	* client event
 	***********************************************************************************************************/
 
 	auto DEBUG_add_new_demo_window = MakeListener<>([&] {
@@ -375,12 +384,14 @@ void Client::initControls() {
 	* bindings
 	***********************************************************************************************************/
 
-	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_beep);
+	//ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, DEBUG_beep_string);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_message_event);
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
+
+	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);
 
 }
 

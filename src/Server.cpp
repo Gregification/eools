@@ -1,18 +1,18 @@
-#pragma once
-
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/component_base.hpp>
 #include <ftxui/dom/elements.hpp>
 
 #include "Server.hpp"
+#include "SceneManager.hpp"
 
 bool logCommonEvents = false;
 
 void Server::run(ScreenInteractive& screen) {
 	//debug
-	messages.push_back(text("grid gof id:" + std::to_string(IdGen<GameObject>::gof.class_id)));
-	messages.push_back(text("grid gof id:" + std::to_string(IdGen<Grid>::gof.class_id)));
-	messages.push_back(text("ship gof id:" + std::to_string(IdGen<Ship>::gof.class_id)));
+	messageViewer->Post_Message("see NetMessageType.h for message types.");
+	messageViewer->Post_Message("gobj class id:" + std::to_string(IdGen<GameObject>::gof.class_id));
+	messageViewer->Post_Message("grid class id:" + std::to_string(IdGen<Grid>::gof.class_id));
+	messageViewer->Post_Message("ship class id:" + std::to_string(IdGen<Ship>::gof.class_id));
 
 	//TODO: change to use ftxui::Loop, idk y I went with a thread that day
 	screenThread = std::thread([&]() {
@@ -43,11 +43,6 @@ void Server::run(ScreenInteractive& screen) {
 				}
 
 				return window(text(std::format("users (hosted on port:{0})", std::to_string(listeningPort))), vbox(std::move(eles)));
-			});
-
-			auto messagePane = Renderer([&]() {
-				std::lock_guard lk(renderMutex);
-				return window(text("messages"), vbox(messages));
 			});
 
 			std::string usrSelected;
@@ -88,11 +83,7 @@ void Server::run(ScreenInteractive& screen) {
 							if (usrSelected.size() == 0) return;
 							blacklist_ip.erase(usrSelected);
 						}, ButtonOption::Ascii()),
-					Button("clear messages", [&] {
-							std::lock_guard lk(renderMutex);
-							messages.clear();
-						}, ButtonOption::Ascii()),
-					Checkbox("log common messages", &logCommonEvents)
+					Checkbox("log common messages", &logCommonEvents),
 				});
 
 			auto bannedPane = Renderer([&]() {
@@ -109,9 +100,8 @@ void Server::run(ScreenInteractive& screen) {
 			auto container = ResizableSplitLeft(controlPane, bannedPane, &ctrlPSizePref);
 			int usrSizePref = 10;
 			container = ResizableSplitBottom(container, userPane, &usrSizePref);
-			//auto container = ResizableSplitBottom(controlPane, userPane, &usrSizePref);
 			int msgSizePref = 50;
-			container = ResizableSplitLeft(messagePane, container, &msgSizePref);
+			container = ResizableSplitLeft(messageViewer, container, &msgSizePref);
 
 			screen.Loop(container);
 		});
@@ -178,11 +168,12 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 	std::lock_guard lk(renderMutex);
 
-	messages.push_back(text(
+	messageViewer->Post_Message((
 		std::format("[EVENT][DISCONNECT] lost {}, {}",
 			client->connectionID, 
 			connectionStatus.find(client->connectionID)->second.isQueue ? "Q" : "C"
-		)));
+		)),
+		ftxui::color(ftxui::Color::CyanLight));
 
 	connectionStatus.erase(client->connectionID);
 }
@@ -190,13 +181,13 @@ void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> cli
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
 void Server::onError(std::string message) {
 	std::lock_guard lk(renderMutex);
-	messages.push_back(text("[ERROR]" + message + "\n"));
+	messageViewer->Post_Message("[ERROR]" + message, ftxui::color(ftxui::Color::Red) | ftxui::underlined);
 }
 
 //on notable evets such as connection being denied, user joining and so on
 void Server::onEvent(std::string message) {
 	std::lock_guard lk(renderMutex);
-	messages.push_back(text("[EVENT]" + message + "\n") | blink);
+	messageViewer->Post_Message("[EVENT]" + message, ftxui::color(ftxui::Color::GrayLight));
 }
 
 //on message from specific given client
@@ -204,21 +195,23 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 	std::lock_guard lk(renderMutex);
 
 	switch (msg.header.id) {
-		//common
 		case NetMsgType::Ping:
 			if (!logCommonEvents) break;
 
-		case NetMsgType::GridRequest:
+		case NetMsgType::GridChange:
+		case NetMsgType::GameObjectUpdate:
 
-		//relivent
+		//the ones that should alwayse be visible
 		case NetMsgType::ConnectionStatus:
 		case NetMsgType::IDCorrection:
 		case NetMsgType::IDPartition:
 		case NetMsgType::RequestById:
-			messages.push_back(text(std::format("[received] ordinal: {}", static_cast<int>(msg.header.id))));
+			messageViewer->Post_Message(
+				std::format("[received] - {}", 
+					BE_NetMsgType::_from_index(msg.header.id)._to_string()),
+				ftxui::color(ftxui::Color::Yellow));
 			break;
 
-		case NetMsgType::GameObjectUpdate:
 		default:;
 	}
 
@@ -264,10 +257,10 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-				gameMap.processMessage(
+				/*gameMap.processMessage(
 					msg,
 					[&](const net::message<NetMsgType>& m) -> void { MessageAllClients(m, client); }
-				);
+				);*/
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::ConnectionStatus: {
@@ -276,16 +269,11 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				connectionStatus.insert({ client->connectionID, cs });
 			}break;
-		case NetMsgType::GridRequest: {
-				auto gr = GridRequest();
+		case NetMsgType::GridChange: {
+				auto gr = GridChange();
 				msg >> gr;
 
-				std::shared_ptr<Grid> grid;
-				if (gr.pos.isBad()) {
-					//get random grid
-
-				} else 
-					grid = gameMap.getGrid(gr.pos);
+				auto grid = SceneManager::getGrid(gr.pos);
 				
 				msg.body.clear();
 				msg.header.id = NetMsgType::GameObjectUpdate;
@@ -298,5 +286,5 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 }
 
 void Server::primeGameMap() {
-	gameMap.getGrid({ 0,0 });
+	//gameMap.getGrid({ 0,0 });
 }

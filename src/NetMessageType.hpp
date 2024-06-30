@@ -7,21 +7,37 @@
 #include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
 #include "GameStructs.hpp"
+#include "better-enums/enum.h"
 
 //basically server api
 //the enum is used to map to its corrosponding struct. "corrospoonding" as in the names match(very closely at least).
-
-enum class NetMsgType : uint16_t {
+//comments describe it form the receivers pov
+BETTER_ENUM(BE_NetMsgType, uint8_t,
+	
+	/*0.
+	* measures round trip time
+	* client & server: if complete record the elapsed time, otherwise respond back
+	*/
 	Ping,
 	
-	//is it someone in the queue? or ready to start?
-	ConnectionStatus,
+	/*1.
+	* this dosent do anything, too much work to remove ir
+	* server: 
+	* is it someone in the queue ? or ready to start ?
+	*/
+	ConnectionStatus, 
 
-	//2. request a GameObject id partition
+	/*2.
+	* request a GameObject id partition
+	* client: a new valid partition
+	* server: (not currently implimented) responds indicating a unused idpartition the server is free to reuse
+	*/
 	IDPartition,
 
-	//correction to resolve id collision. 
-	//broadcast
+	/*
+	* instructions to resolve id collision
+	* server & client: set the obj id to a new with the given id to 
+	*/
 	IDCorrection,
 
 	//4. request resource by id. grid and object id supprted
@@ -29,20 +45,22 @@ enum class NetMsgType : uint16_t {
 
 	//user tries to make a new grid at a location. if location is 
 	// not allowed server corrects grid id to effectively rerout the user
-	GridRequest,
+	GridChange,
 
 	//6. game object update event. 
 	GameObjectUpdate,
 
 	//game object creation event (has full description)
-	GameObjectPost,
-};
+	GameObjectPost
+);
+typedef BE_NetMsgType::_enumerated NetMsgType;
+
 
 template<typename ELE, typename TARG = ELE>
 void packArray(
 		net::message<NetMsgType>& msg,
 		std::vector<ELE>& vec,
-		TARG& (*getVal)(ELE&)
+		std::function<TARG(ELE&)> getVal
 	){
 	static_assert(std::is_standard_layout<TARG>::value);
 
@@ -57,7 +75,7 @@ template<typename T>
 void unpackArray(
 		net::message<NetMsgType>& msg,
 		std::vector<T>& arr,
-		T (*getVal)(net::message<NetMsgType>&)
+		std::function<T(net::message<NetMsgType>)> getVal
 	){
 	static_assert(std::is_standard_layout<T>::value);
 	size_t len = 0;
@@ -83,7 +101,7 @@ struct ID {
 	};
 	ID() : instanceId(BAD_ID), gridId(BAD_ID), targetType(BAD_TYPE), classId(BAD_CLASS_ID) {}
 
-	bool isBad() {
+	bool IsBad() {
 		return	ID_TYPE::BAD_TYPE == targetType
 			||	BAD_CLASS_ID == classId
 			||	BAD_ID == gridId
@@ -111,7 +129,7 @@ struct IDPartition {
 		return num >= min && num <= max;
 	}
 
-	bool isBad() {
+	bool IsBad() {
 		return nxt < min || nxt > max;
 	}
 };
@@ -161,13 +179,12 @@ struct RequestById {
 };
 static_assert(std::is_standard_layout<RequestById>::value);
 
-struct GridRequest {
-	GridRequest() : pos(0,0) {}
+struct GridChange {
+	GridChange() : pos(gs::Vec2::BAD) {}
 
 	gs::Vec2 pos;
 };
-static_assert(std::is_standard_layout<GridRequest>::value);
-
+static_assert(std::is_standard_layout<GridChange>::value);
 
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
@@ -180,18 +197,34 @@ struct GameObjectUpdate {
 	time_t		time;
 
 	static struct Classes {
-		std::vector<Class_Id> as;
-	};
+		std::vector<Class_Id> class_ids;
 
+		void pack(net::message<NetMsgType>& msg) {
+			packArray<Class_Id, Class_Id>(msg, class_ids, [](Class_Id cid) { return cid; });
+		}
+
+		void unpack(net::message<NetMsgType>& msg) {
+			unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType> msg) { Class_Id cid; msg >> cid; return cid; });
+		}
+
+		static Classes getClasses(net::message<NetMsgType>& msg) {
+			Classes ret;
+			ret.unpack(msg);
+			return ret;
+		}
+	};
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);
 
 struct GameObjectPost {
-
+	Instance_Id grid_id;
+	Instance_Id inst_id;
+	time_t		time;
+	Class_Id	parent;
 };
 static_assert(std::is_standard_layout<GameObjectPost>::value);
 
-struct GameObjectGridChange {
-
+struct GameObjectGridChange : GameObjectUpdate{
+	Instance_Id current_grid_id;
 };
 static_assert(std::is_standard_layout<GameObjectPost>::value);

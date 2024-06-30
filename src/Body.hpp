@@ -16,7 +16,7 @@ public:
 
 public:
 	long long lastUpdate;
-	float mass = INFINITY;
+	float mass = .01 * KT;
 
 	gs::Transform transform;
 	float completeScale = 1;

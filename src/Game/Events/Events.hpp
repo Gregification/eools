@@ -11,6 +11,9 @@
 #include <ftxui/component/event.hpp>
 #include "../../better-enums/enum.h"
 
+/*
+* global handler for events of what ever kind, it just maps a "event" to listener
+*/
 namespace Events {
 	/**********************************************************************************************************************************************
 	* boiler plate, scroll past for actual stuff
@@ -31,13 +34,10 @@ namespace Events {
 		Listener(std::function<void()> callback)
 			: _callback([=](ARG) { callback(); }) {}
 		Listener(WrappedFunc callback)
-			: _callback([=](ARG arg) { callback(std::move(arg)); }) {}
-		//cant figure out how to get some sort of dynmaic cast action, i give up
-
-		void Run(ARG arg) { _callback(std::move(arg)); }
+			: _callback(callback) {}
 	};
 
-	//a cleaner way to setup listeners
+	//a "cleaner" way to setup listeners (have fun writing std::shared_ptr... everywhere!)
 	template<typename T = DiscountVoid>
 	std::shared_ptr<Events::Listener<T>> MakeListener(std::function<void()> callback) {
 		return std::make_shared<Events::Listener<T>>(callback);
@@ -69,13 +69,13 @@ namespace Events {
 		bool invokeEvent(EVENT e, ARG arg = ARG()) {
 			if (!isEventAllowed(e)) return false;
 
-			return forceInvokeEvent<ARG>(std::move(e), std::move(arg));
+			return forceInvokeEvent<ARG>(e, arg);
 		}
 
 		/*guarentted to trigger events with matching arguemetns. returns # of triggered events*/
 		template<typename ARG = _DEFAULT_TYPE>
 		size_t forceInvokeEvent(EVENT e, ARG arg = ARG()) {
-			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			SubGroup2Listeners& subgroup = event_to_subscribers[e];
 			auto& arr = subgroup[typeid(ARG)];
 
 			for (int i = 0; i < arr.size(); i++) {
@@ -83,8 +83,9 @@ namespace Events {
 				if (!l) {
 					arr.erase(arr.begin() + i);
 					i--;
-				} else 
-					l->Run(arg);
+				}
+				else
+					l->_callback(arg);
 			}
 
 			return arr.size();
@@ -95,7 +96,7 @@ namespace Events {
 		/*adds subscriber to event. returns true if its the only subscriber*/
 		template<typename ARG>
 		bool AddListenerToEvent(EVENT e, std::shared_ptr<Listener<ARG>> l) {
-			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			SubGroup2Listeners& subgroup = event_to_subscribers[e];
 			auto& arr = subgroup[typeid(ARG)];//…(????)
 
 			arr.push_back(std::weak_ptr<Listener<ARG>>(l));
@@ -105,7 +106,7 @@ namespace Events {
 		/*removes all subscribers to the event. returns the number of subscribers removed*/
 		template<typename ARG = _DEFAULT_TYPE>
 		size_t ClearListenersToEventOfType(EVENT e) {
-			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			SubGroup2Listeners& subgroup = event_to_subscribers[e];
 			auto& arr = subgroup[typeid(ARG)];
 
 			size_t ret = arr.size();
@@ -116,7 +117,7 @@ namespace Events {
 
 		/*returns # of types removed*/
 		size_t ClearListenersToEvent(EVENT e) {
-			SubGroup2Listeners& subgroup = event_to_subscribers[std::move(e)];
+			SubGroup2Listeners& subgroup = event_to_subscribers[e];
 
 			size_t ret = subgroup.count();
 			subgroup.clear();
@@ -129,6 +130,7 @@ namespace Events {
 	* actual stuff
 	**********************************************************************************************************************************************/
 
+	/*keybinds*/
 	namespace KeyBinds {
 		BETTER_ENUM(BE_CONTROL_EVENT, int,
 			DISPLAY_NEW_WINDOW,
@@ -161,12 +163,23 @@ namespace Events {
 		extern Key2ControlEvents KeyMap;
 	}
 
+	/*game/ui/user events*/
 	namespace ClientEvent {
 		BETTER_ENUM(BE_CLIENT_EVENT, int, 
-			EVENT_MESSAGE	
+			EVENT_MESSAGE	//expected std::string
 		);
 		typedef BE_CLIENT_EVENT::_enumerated CLIENT_EVENT;
 
 		extern Observer<CLIENT_EVENT> observer;
+	}
+
+	/*network related events*/
+	namespace Network {
+		BETTER_ENUM(BE_NETWORK_EVENT, int,
+			SEND_MESSAGE		//expected std::message<NetMsgType>
+		);
+		typedef BE_NETWORK_EVENT::_enumerated NETWORK_EVENT;
+
+		extern Observer<NETWORK_EVENT> observer;
 	}
 };

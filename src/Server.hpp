@@ -1,20 +1,22 @@
 #pragma once
 
 #include <set>
+
 #include "NetCommon/eol_net.hpp"
 #include "App.hpp"
 #include "NetMessageType.hpp"
-#include "GameMap.hpp"
 #include "GameObjects/Ship.hpp"
+#include "Game/Interfaces/IFMessageViewer.hpp"
 
 //off brand dollar store singleton pattern supported with certified trust-me-bro design
 class Server : public App, public net::server_interface<NetMsgType> {
 public:
 	Server(uint16_t listeningPort)
-			: net::server_interface<NetMsgType>(listeningPort)
-		{
-		messages.push_back(text(std::format("see NetMessageType.h for message types.")) | color(Color::DarkSeaGreen3) | underlined);
-		
+		: net::server_interface<NetMsgType>(listeningPort),
+		messageViewer(ftxui::Make<IFMessageViewer>())
+	{
+		messageViewer->ToggleColor = false;
+
 		LOCAL_PARITION.nxt = LOCAL_PARITION.min = 0;
 		LOCAL_PARITION.max = STD_PARTITION_SIZE;
 	}
@@ -38,13 +40,12 @@ protected:
 protected:
 	ftxui::Component renderer;
 
-	ftxui::Elements messages;
+	std::shared_ptr<IFMessageViewer> messageViewer;
 	std::set<std::string> blacklist_ip;
 
 	void primeGameMap();
 
 private:
-	GameMap gameMap;
 	std::unordered_map<Class_Id, Instance_Id> clientId_to_gridId_map;
 	std::unordered_map<Class_Id, ConnectionStatus> connectionStatus;
 };
