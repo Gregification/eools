@@ -19,12 +19,14 @@ namespace SceneManager {
 
 	extern std::unordered_map<Instance_Id, std::shared_ptr<Grid>> grids;
 
-	std::shared_ptr<Grid> getGrid(Vec2);
-	std::shared_ptr<Grid> getGrid(Instance_Id);
+	/*gets grid at position, or makes one if couldnt be found*/
+	std::shared_ptr<Grid> GetGrid(Vec2);
+	/*gets gris at position, if it exists*/
+	std::optional<std::shared_ptr<Grid>> GridAt(Vec2);
 
 	std::optional<std::shared_ptr<GameObject>> find(Instance_Id);
 
 	void correctID(IDCorrection);
-	void processMessage(net::message<NetMsgType>, std::function<void(const net::message<NetMsgType>&)> Send);
-	
+	std::optional<net::message<NetMsgType>> processMessage(net::message<NetMsgType>, GameObjectUpdate);
+	std::optional<net::message<NetMsgType>> processMessage(net::message<NetMsgType>, GameObjectPost);
 };

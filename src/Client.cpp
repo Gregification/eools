@@ -111,10 +111,10 @@ void Client::run(ScreenInteractive& screen) {
 
 	//i'm lost, send me to a valid grid
 	{
-		auto gr = GridChange();
+		auto gr = GridRequest();
 
 		net::message<NetMsgType> msg;
-		msg.header.id = NetMsgType::GridChange;
+		msg.header.id = NetMsgType::GridRequest;
 		msg << gr;
 		Send(msg);
 	}
@@ -193,14 +193,21 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				msg << stat;
 				Send(msg);
 			}break;
-		case NetMsgType::GridChange: {
-				auto gr = GridChange();
-				msg >> gr;
+		case NetMsgType::GridRequest: {
 				
-
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-			
+				GameObjectUpdate gou;
+				msg >> gou;
+				auto res = SceneManager::processMessage(msg, gou);
+				if (res) Send(res.value());
+			}break;
+		case NetMsgType::GameObjectPost: {
+				GameObjectPost gop;
+				msg >> gop;
+				
+				auto res = SceneManager::processMessage(msg, gop);
+				if (res) Send(res.value());
 			}break;
 	}
 }

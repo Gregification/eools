@@ -10,9 +10,12 @@ bool logCommonEvents = false;
 void Server::run(ScreenInteractive& screen) {
 	//debug
 	messageViewer->Post_Message("see NetMessageType.h for message types.");
-	messageViewer->Post_Message("gobj class id:" + std::to_string(IdGen<GameObject>::gof.class_id));
-	messageViewer->Post_Message("grid class id:" + std::to_string(IdGen<Grid>::gof.class_id));
-	messageViewer->Post_Message("ship class id:" + std::to_string(IdGen<Ship>::gof.class_id));
+	messageViewer->Post_Message("gobj cid:" + std::to_string(IdGen<GameObject>::gof.class_id));
+	messageViewer->Post_Message("grid cid:" + std::to_string(IdGen<Grid>::gof.class_id));
+	messageViewer->Post_Message("ship cid:" + std::to_string(IdGen<Ship>::gof.class_id));
+	/*messageViewer->Post_Message("ship inst cid:" + std::to_string(Ship().GetClassId()));
+	messageViewer->Post_Message("ship inst cid:" + std::to_string(Ship().GetClassId()));
+	messageViewer->Post_Message("grid inst cid:" + std::to_string(Grid().GetClassId()));*/
 
 	//TODO: change to use ftxui::Loop, idk y I went with a thread that day
 	screenThread = std::thread([&]() {
@@ -198,7 +201,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		case NetMsgType::Ping:
 			if (!logCommonEvents) break;
 
-		case NetMsgType::GridChange:
+		case NetMsgType::GridRequest:
 		case NetMsgType::GameObjectUpdate:
 
 		//the ones that should alwayse be visible
@@ -269,15 +272,33 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				connectionStatus.insert({ client->connectionID, cs });
 			}break;
-		case NetMsgType::GridChange: {
-				auto gr = GridChange();
+		case NetMsgType::GridRequest: {
+				auto gr = GridRequest();
 				msg >> gr;
 
-				auto grid = SceneManager::getGrid(gr.pos);
+				auto grid = SceneManager::GetGrid(gr.pos);
 				
 				msg.body.clear();
-				msg.header.id = NetMsgType::GameObjectUpdate;
+				msg.header.id = NetMsgType::GameObjectPost;
 
+				//message packing
+				grid->packMessage(msg);
+				grid->GameObject::packMessage(msg);
+
+				Classes clas({
+					IdGen<Grid>::gof.class_id,
+					IdGen<GameObject>::gof.class_id,
+				});
+				clas.Pack(msg);
+
+				GameObjectPost package{
+					.isGrid = true,
+					.grid_id = grid->id(),
+					.time = GetTime(),
+				};
+				msg << package;
+
+				MessageClient(client, msg);
 			}break;
 
 		default: {}

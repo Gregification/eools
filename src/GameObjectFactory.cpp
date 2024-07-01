@@ -4,6 +4,5 @@
 
 #include "GameStructs.hpp"
 
-std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList = std::vector<GameObjectFactory::InstanceConstructor>(4);
-Class_Id GameObjectFactory::nextIdx = GameObjectFactory::GameObjectId+1;
-
+std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList{};
+Class_Id GameObjectFactory::nextIdx = 0;

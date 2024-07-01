@@ -50,7 +50,8 @@ namespace Events {
 	template<typename EVENT>
 	class Observer {
 	private:
-
+		/*because I cant figure out i/r values your stuck with passing copies only, no refrences or such*/
+		
 		typedef std::unordered_map<std::type_index, std::vector<std::weak_ptr<ListenerBase>>>
 			SubGroup2Listeners;
 		typedef std::unordered_map<EVENT, SubGroup2Listeners>
@@ -79,7 +80,8 @@ namespace Events {
 			auto& arr = subgroup[typeid(ARG)];
 
 			for (int i = 0; i < arr.size(); i++) {
-				std::shared_ptr<Listener<ARG>> l = dynamic_pointer_cast<Listener<ARG>>(arr[i].lock());
+				//cutting edge trust me bro tech
+				std::shared_ptr<Listener<ARG>> l = static_pointer_cast<Listener<ARG>>(arr[i].lock());
 				if (!l) {
 					arr.erase(arr.begin() + i);
 					i--;

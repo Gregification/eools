@@ -45,7 +45,7 @@ BETTER_ENUM(BE_NetMsgType, uint8_t,
 
 	//user tries to make a new grid at a location. if location is 
 	// not allowed server corrects grid id to effectively rerout the user
-	GridChange,
+	GridRequest,
 
 	//6. game object update event. 
 	GameObjectUpdate,
@@ -179,12 +179,12 @@ struct RequestById {
 };
 static_assert(std::is_standard_layout<RequestById>::value);
 
-struct GridChange {
-	GridChange() : pos(gs::Vec2::BAD) {}
+struct GridRequest {
+	GridRequest() : pos(gs::Vec2::BAD) {}
 
 	gs::Vec2 pos;
 };
-static_assert(std::is_standard_layout<GridChange>::value);
+static_assert(std::is_standard_layout<GridRequest>::value);
 
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
@@ -195,34 +195,42 @@ struct GameObjectUpdate {
 	Instance_Id grid_id;
 	Instance_Id inst_id;
 	time_t		time;
-
-	static struct Classes {
-		std::vector<Class_Id> class_ids;
-
-		void pack(net::message<NetMsgType>& msg) {
-			packArray<Class_Id, Class_Id>(msg, class_ids, [](Class_Id cid) { return cid; });
-		}
-
-		void unpack(net::message<NetMsgType>& msg) {
-			unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType> msg) { Class_Id cid; msg >> cid; return cid; });
-		}
-
-		static Classes getClasses(net::message<NetMsgType>& msg) {
-			Classes ret;
-			ret.unpack(msg);
-			return ret;
-		}
-	};
+	//[Classes]
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);
 
-struct GameObjectPost {
+struct GameObjectPost { //see server.cpp message handler for setup
+	bool isGrid;
 	Instance_Id grid_id;
 	Instance_Id inst_id;
 	time_t		time;
-	Class_Id	parent;
+	//[Classes]
 };
 static_assert(std::is_standard_layout<GameObjectPost>::value);
+
+struct Classes {
+	std::vector<Class_Id> class_ids;
+
+	Classes() = default;
+	Classes(std::vector<Class_Id> ids) : class_ids(ids) {}
+	Classes(net::message<NetMsgType> msg) {
+		Unpack(msg);
+	}
+
+	void Pack(net::message<NetMsgType>& msg) {
+		packArray<Class_Id, Class_Id>(msg, class_ids, [](Class_Id cid) { return cid; });
+	}
+
+	void Unpack(net::message<NetMsgType>& msg) {
+		unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType> msg) { Class_Id cid; msg >> cid; return cid; });
+	}
+
+	static Classes GetClasses(net::message<NetMsgType>& msg) {
+		Classes ret;
+		ret.Unpack(msg);
+		return ret;
+	}
+};
 
 struct GameObjectGridChange : GameObjectUpdate{
 	Instance_Id current_grid_id;

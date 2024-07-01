@@ -11,6 +11,7 @@
 #include "Camera.hpp"
 #include "Game/Events/Events.hpp"
 #include "better-enums/enum.h"
+#include "SceneManager.hpp"
 
 BETTER_ENUM(CLIENT_TAB, int,
 	CONTROL,
