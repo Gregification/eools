@@ -57,29 +57,28 @@ typedef BE_NetMsgType::_enumerated NetMsgType;
 
 
 template<typename ELE, typename TARG = ELE>
-void packArray(
+void inline packArray(
 		net::message<NetMsgType>& msg,
 		std::vector<ELE>& vec,
 		std::function<TARG(ELE&)> getVal
 	){
 	static_assert(std::is_standard_layout<TARG>::value);
+	
+	for (auto rit = vec.rbegin(); rit != vec.rend(); ++rit)
+		msg << getVal(*rit);
 
-	size_t len = vec.size();
-	for(size_t i = 0; i < len; i++)
-		msg << getVal(vec[i]);
-
-	msg << len;
+	msg << vec.size();
 }
 
 template<typename T>
-void unpackArray(
+void inline unpackArray(
 		net::message<NetMsgType>& msg,
 		std::vector<T>& arr,
-		std::function<T(net::message<NetMsgType>)> getVal
+		std::function<T(net::message<NetMsgType>&)> getVal
 	){
 	static_assert(std::is_standard_layout<T>::value);
-	size_t len = 0;
 
+	size_t len;
 	msg >> len;
 
 	arr.reserve(len + arr.size());
@@ -213,7 +212,7 @@ struct Classes {
 
 	Classes() = default;
 	Classes(std::vector<Class_Id> ids) : class_ids(ids) {}
-	Classes(net::message<NetMsgType> msg) {
+	Classes(net::message<NetMsgType>& msg) {
 		Unpack(msg);
 	}
 
@@ -222,7 +221,7 @@ struct Classes {
 	}
 
 	void Unpack(net::message<NetMsgType>& msg) {
-		unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType> msg) { Class_Id cid; msg >> cid; return cid; });
+		unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType>& msg) { Class_Id cid; msg >> cid; return cid; });
 	}
 
 	static Classes GetClasses(net::message<NetMsgType>& msg) {

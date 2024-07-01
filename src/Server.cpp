@@ -260,10 +260,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::GameObjectUpdate: {
-				/*gameMap.processMessage(
-					msg,
-					[&](const net::message<NetMsgType>& m) -> void { MessageAllClients(m, client); }
-				);*/
+
 				MessageAllClients(msg);
 			} break;
 		case NetMsgType::ConnectionStatus: {
@@ -284,6 +281,10 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				//message packing
 				grid->packMessage(msg);
 				grid->GameObject::packMessage(msg);
+
+				/*msg << IdGen<Grid>::gof.class_id;
+				msg << IdGen<GameObject>::gof.class_id;
+				msg << size_t(2);*/
 
 				Classes clas({
 					IdGen<Grid>::gof.class_id,
