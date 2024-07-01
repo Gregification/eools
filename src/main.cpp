@@ -3,10 +3,13 @@
 #include "Server.hpp"
 #include "QueueClient.hpp"
 #include "GameStructs.hpp"
+#include "Game/GOInit.hpp"
 
 using namespace ftxui;
 
 int main(int argc, char *argv[]) {
+    GOInit::init();
+
     App *app;
     uint16_t serverPort = SERVER_PORT;
     ScreenInteractive screen = ScreenInteractive::Fullscreen();

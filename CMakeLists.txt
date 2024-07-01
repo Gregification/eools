@@ -63,8 +63,8 @@ file(GLOB_RECURSE TESTS
     tests/*.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN})
-add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} )
+add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN} "src/Game/GOInit.cpp")
+add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS}  "src/Game/GOInit.cpp")
 
 set(LIBS 
     ftxui::screen
