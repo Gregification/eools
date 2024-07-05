@@ -5,14 +5,18 @@
 #include <unordered_map>
 #include <map>
 
+#include "Game_common.hpp"
 #include "NetMessageType.hpp"
 #include "GameStructs.hpp"
 #include "Body.hpp"
 #include "IdGen.hpp"
-#include "GameObjectFactory.hpp"
 
-using namespace gs;
 using namespace ftxui;
+using namespace gs;
+
+//should have added this earlier, most of the code dosent use it but anything new should
+class GameObject;
+typedef std::shared_ptr<GameObject> GameObjPtr;
 
 /*
 * physics & game-stat related details are in the Body subclass
@@ -32,21 +36,19 @@ public:
 	virtual std::string getDisplayName();
 
 	void setId(Instance_Id newId);
-	Instance_Id id() { return instId; }
+	Instance_Id inline id() { return instId; }
 
 	virtual void Update(float dt) {}
 
-	virtual void FixedUpdate(float dt) {
-		transform.FixedUpdate(dt);
-	}
+	virtual void FixedUpdate(float dt);
 
-	virtual void Draw(Canvas&, Transformation_2D&) const;
+	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D&) const;
 
 	//PACK CURRENT CLASS FIRST, SUPER CALSS LAST
-	virtual void packMessage(net::message<NetMsgType>& msg);
+	virtual void packMessage(Message& msg);
 
 	//UNPACK SUPER CLASS FIRST
-	virtual void unpackMessage(net::message<NetMsgType>& msg);
+	virtual void unpackMessage(Message& msg);
 
 	virtual std::string GetDescription() const;
 

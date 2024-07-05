@@ -1,6 +1,4 @@
-#include "NetGameObject.hpp"
+#include <cstdint>
+#include <chrono>
 
-//template<class T>
-//Class_Id NetGameObject<T>::GetClassId() override {
-//	return IdGen<T>::gof.class_id;
-//}
+#include "NetGameObject.hpp"

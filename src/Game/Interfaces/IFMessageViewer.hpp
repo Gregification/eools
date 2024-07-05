@@ -6,8 +6,8 @@
 #include "../Events/Events.hpp"
 
 //https://stackoverflow.com/questions/43207703/visual-studio-adding-capital-a-to-function-name-in-error-message
-#ifdef RegisterClass
-#undef RegisterClass
+#ifdef Register_Class
+#undef Register_Class
 #endif
 
 class IFMessageViewer : public InterfaceContent {

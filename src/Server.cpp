@@ -4,6 +4,7 @@
 
 #include "Server.hpp"
 #include "SceneManager.hpp"
+#include "GameObjectFactory.hpp"
 
 bool logCommonEvents = false;
 
@@ -270,7 +271,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				connectionStatus.insert({ client->connectionID, cs });
 			}break;
 		case NetMsgType::GridRequest: {
-				auto gr = GridRequest();
+				GridRequest gr;
 				msg >> gr;
 
 				auto grid = SceneManager::GetGrid(gr.pos);
@@ -282,21 +283,14 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				grid->packMessage(msg);
 				grid->GameObject::packMessage(msg);
 
-				/*msg << IdGen<Grid>::gof.class_id;
-				msg << IdGen<GameObject>::gof.class_id;
-				msg << size_t(2);*/
-
 				Classes clas({
 					IdGen<Grid>::gof.class_id,
-					IdGen<GameObject>::gof.class_id,
 				});
 				clas.Pack(msg);
 
-				GameObjectPost package{
-					.isGrid = true,
-					.grid_id = grid->id(),
-					.time = GetTime(),
-				};
+				GameObjectPost package;
+				package.id.grid_id = package.id.inst_id = grid->id();
+				package.time = GetTime();
 				msg << package;
 
 				MessageClient(client, msg);

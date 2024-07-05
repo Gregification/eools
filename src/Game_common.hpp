@@ -19,6 +19,11 @@ time_t inline GetTime() {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+//keep incase want to go back to 32 bit 
+float inline GetDT(time_t dt) {
+	return dt / 1000.0;
+}
+
 /******************************************************************************
 * game stuff
 ******************************************************************************/

@@ -205,7 +205,6 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 		case NetMsgType::GameObjectPost: {
 				GameObjectPost gop;
 				msg >> gop;
-				
 				auto res = SceneManager::processMessage(msg, gop);
 				if (res) Send(res.value());
 			}break;
@@ -246,7 +245,7 @@ Component Client::Renderer_inventory() {
 }
 
 void Client::Draw(Canvas& c) {//play renderer
-	if (gridIsReady)
+	if (false)
 	{}//cam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
 	else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");

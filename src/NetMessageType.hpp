@@ -1,13 +1,11 @@
 #pragma once
 
-#include <cstdint>
-#include <chrono>
 #include <functional>
 
 #include "NetCommon/eol_net.hpp"
-#include "Game_common.hpp"
 #include "GameStructs.hpp"
 #include "better-enums/enum.h"
+#include "Game_common.hpp"
 
 //basically server api
 //the enum is used to map to its corrosponding struct. "corrospoonding" as in the names match(very closely at least).
@@ -54,16 +52,16 @@ BETTER_ENUM(BE_NetMsgType, uint8_t,
 	GameObjectPost
 );
 typedef BE_NetMsgType::_enumerated NetMsgType;
-
+typedef net::message<NetMsgType> Message;
 
 template<typename ELE, typename TARG = ELE>
 void inline packArray(
-		net::message<NetMsgType>& msg,
-		std::vector<ELE>& vec,
-		std::function<TARG(ELE&)> getVal
-	){
+	Message& msg,
+	std::vector<ELE>& vec,
+	std::function<TARG(ELE&)> getVal
+) {
 	static_assert(std::is_standard_layout<TARG>::value);
-	
+
 	for (auto rit = vec.rbegin(); rit != vec.rend(); ++rit)
 		msg << getVal(*rit);
 
@@ -72,10 +70,10 @@ void inline packArray(
 
 template<typename T>
 void inline unpackArray(
-		net::message<NetMsgType>& msg,
-		std::vector<T>& arr,
-		std::function<T(net::message<NetMsgType>&)> getVal
-	){
+	Message& msg,
+	std::vector<T>& arr,
+	std::function<T(Message&)> getVal
+) {
 	static_assert(std::is_standard_layout<T>::value);
 
 	size_t len;
@@ -92,25 +90,12 @@ void inline unpackArray(
 //////////////////////////////////////////////////////////////////////////////
 
 struct ID {
-	enum ID_TYPE : uint8_t {
-		GRID,
-		PLAYER,
-		OBJECT,
-		BAD_TYPE
-	};
-	ID() : instanceId(BAD_ID), gridId(BAD_ID), targetType(BAD_TYPE), classId(BAD_CLASS_ID) {}
+	Instance_Id grid_id;
+	Instance_Id inst_id;
 
-	bool IsBad() {
-		return	ID_TYPE::BAD_TYPE == targetType
-			||	BAD_CLASS_ID == classId
-			||	BAD_ID == gridId
-			||	BAD_ID == instanceId;
+	bool IsGrid() {
+		return grid_id == inst_id;
 	}
-
-	ID_TYPE targetType;
-	Instance_Id gridId;
-	Instance_Id instanceId;
-	Class_Id classId;
 };
 static_assert(std::is_standard_layout<ID>::value);
 
@@ -138,11 +123,8 @@ static IDPartition LOCAL_PARITION = IDPartition();
 struct ConnectionStatus {
 	Instance_Id clientId;
 	bool isQueue;
-	ConnectionStatus() : isQueue(false), clientId(getIdFromPartition(LOCAL_PARITION)) {}
+	ConnectionStatus() : isQueue(false) {}
 
-	static Instance_Id getIdFromPartition(const IDPartition& part) {
-		return part.min / STD_PARTITION_SIZE;
-	}
 };
 static_assert(std::is_standard_layout<ConnectionStatus>::value);
 
@@ -153,16 +135,7 @@ struct Ping {
 
 	bool isComplete()	{ return sent > 0 && received > 0; }
 	time_t getTime()	{ return received - sent; }
-	long long tag() { 
-		using namespace std::chrono;
-		time_t rn = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		if (sent <= 0)
-			sent = rn;
-		else
-			received = rn;
-
-		return getTime();
-	}
+	time_t tag();
 };
 static_assert(std::is_standard_layout<Ping>::value);
 
@@ -173,8 +146,7 @@ struct IDCorrection {
 static_assert(std::is_standard_layout<IDCorrection>::value);
 
 struct RequestById {
-	ID targetID;
-	bool transformOnly;
+	ID id;
 };
 static_assert(std::is_standard_layout<RequestById>::value);
 
@@ -191,18 +163,15 @@ static_assert(std::is_standard_layout<GridRequest>::value);
 //////////////////////////////////////////////////////////////////////////////
 
 struct GameObjectUpdate {
-	Instance_Id grid_id;
-	Instance_Id inst_id;
-	time_t		time;
+	ID id;
+	time_t time;
 	//[Classes]
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);
 
 struct GameObjectPost { //see server.cpp message handler for setup
-	bool isGrid;
-	Instance_Id grid_id;
-	Instance_Id inst_id;
-	time_t		time;
+	ID id;
+	time_t	time;
 	//[Classes]
 };
 static_assert(std::is_standard_layout<GameObjectPost>::value);

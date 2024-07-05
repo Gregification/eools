@@ -5,17 +5,18 @@
 #include <vector>
 
 #include "Game_common.hpp"
-#include "GameObject.hpp"
 
 class GameObject;
 
 class GameObjectFactory {
-	using InstanceConstructor = std::function<std::shared_ptr<GameObject>()>;
-
 public:
+	typedef std::function<std::shared_ptr<GameObject>()>
+		InstanceConstructor;
+	typedef std::function<std::shared_ptr<GameObject>(const std::shared_ptr<GameObject>)>
+		CastFunction;
+
 	template<class T>
-	GameObjectFactory(T* dummy) 
-		: class_id(nextIdx++)
+	GameObjectFactory(T* dummy) : class_id(nextIdx++)
 	{
 		static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 
@@ -26,25 +27,20 @@ public:
 		/*ClassList.push_back([]() {
 			return std::make_shared<T>(); 
 		});*/
-
 	}
-
-	static Class_Id nextIdx;
 
 	const Class_Id class_id;
 
-	static std::shared_ptr<GameObject> getInstance(Class_Id id) {
-		return ClassList[id]();
-	}
+	static Class_Id nextIdx;
 
-	static void registerClass(Class_Id cid, InstanceConstructor ic) {
-		assert(cid < nextIdx);
-		if (ClassList.size() < nextIdx)
-			ClassList.resize(nextIdx);
+	static std::shared_ptr<GameObject> GetInstance(Class_Id id);
 
-		ClassList[cid] = ic;
-	}
+	static std::shared_ptr<GameObject> CastTo(std::shared_ptr<GameObject>&, Class_Id);
+
+	//named with underscore otherwise has naming conflict with windows api
+	static void Register_Class(Class_Id cid, InstanceConstructor ic, CastFunction cf);
 
 private:
 	static std::vector<InstanceConstructor> ClassList;
+	static std::vector<CastFunction> CastList;//if you know a better way to do this please email me, idc how long ago this code was written, github has my contacts. t
 };

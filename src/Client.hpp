@@ -42,10 +42,10 @@ protected:
 	Vec2 mouse;
 
 private:
-	bool gridIsReady = false;
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it
+	std::vector<std::function<bool(Client&)>> unresolvedEvents;
 
 	void initEvents();
 
@@ -62,5 +62,16 @@ private:
 	Component Renderer_inventory();	
 
 	void Draw(Canvas& c);
-	
+
+public:
+	/****************************************************************
+	* game controlls
+	*  > most of these already have a corrosponding event and so 
+	* dont actually need to be a defined method. done so anyways
+	* incase I need access for something later 
+	****************************************************************/
+
+	void GoToGrid(Vec2 mapPos, Vec2 gridPos) {
+
+	}
 };

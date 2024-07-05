@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 
+#include "NetGameObject.hpp"
 #include "GameObjects/Grid.hpp"
 
 #define MIN_GRID_SEPERATION 5'000'000.0
@@ -17,16 +18,27 @@
 namespace SceneManager {
 	using namespace gs;
 
+	extern time_t lastUpdate, lastUpdate_fixed;
+
 	extern std::unordered_map<Instance_Id, std::shared_ptr<Grid>> grids;
+
+	/****************************************************************
+	* game
+	****************************************************************/
 
 	/*gets grid at position, or makes one if couldnt be found*/
 	std::shared_ptr<Grid> GetGrid(Vec2);
-	/*gets gris at position, if it exists*/
+	/*gets grid at position, if it exists*/
 	std::optional<std::shared_ptr<Grid>> GridAt(Vec2);
 
-	std::optional<std::shared_ptr<GameObject>> find(Instance_Id);
+	std::optional<GameObjPtr> find(Instance_Id);
 
-	void correctID(IDCorrection);
-	std::optional<net::message<NetMsgType>> processMessage(net::message<NetMsgType>, GameObjectUpdate);
-	std::optional<net::message<NetMsgType>> processMessage(net::message<NetMsgType>, GameObjectPost);
+	/****************************************************************
+	* netowrk
+	****************************************************************/
+	void CorrectID(IDCorrection);
+	void ApplyClasses(GameObjPtr, Classes, Message);
+
+	std::optional<Message> processMessage(Message&, GameObjectUpdate);
+	std::optional<Message> processMessage(Message&, GameObjectPost);
 };

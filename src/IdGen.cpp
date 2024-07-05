@@ -1,5 +1,7 @@
 #include "IdGen.hpp"
 
+#include "GameObjectFactory.hpp"
+
 /*
 * im going to lose my mind.
 * defining gof in the header file & cpp file causes a redefinition error (expected)

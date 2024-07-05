@@ -4,6 +4,10 @@
 
 const Vec2 Vec2::BAD = Vec2(NAN, NAN);
 
+void GameObject::FixedUpdate(float dt) {
+	transform.FixedUpdate(dt);
+}
+
 void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
 	Vec2 pos = transform.position;
 	trfmat.applyTo(pos);
@@ -14,12 +18,12 @@ Class_Id GameObject::GetClassId() const {
 	return IdGen<GameObject>::gof.class_id;
 }
 
-void GameObject::packMessage(net::message<NetMsgType>& msg) {
+void GameObject::packMessage(Message& msg) {
 	msg << transform;
 	msg << mass;
 }
 
-void GameObject::unpackMessage(net::message<NetMsgType>& msg) {
+void GameObject::unpackMessage(Message& msg) {
 	msg >> mass;
 	msg >> transform;
 }

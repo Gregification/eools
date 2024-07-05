@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <set>
-#include <vulkan/vulkan.hpp>
 
 #include "../NetGameObject.hpp"
 
@@ -10,26 +9,36 @@ class Grid : public NetGameObject<Grid> {
 	public:
 		NetGameObject::NetGameObject;
 
-		Instance_Id gridId = BAD_ID;
 		Vec2 gridPos;
 
-	public:
+		struct GOObj {
+			Instance_Id id;
+			GameObjPtr go;
+		};
 
 		void Update(float dt) override;
 
 		void Draw(Canvas& c, Transformation_2D& trf) const override;
 
-		void packMessage(net::message<NetMsgType>& msg) override;
+		void packMessage(Message& msg) override;
+		void unpackMessage(Message& msg) override;
 
-		void unpackMessage(net::message<NetMsgType>& msg) override;
-
-		void addGameObject(std::shared_ptr<GameObject>& go);
+		void RemoveAllObjects();
+		
+		/*adds a object by id, overwrites existing if it exists. returns true of overwritten*/
+		void AddObject(GameObjPtr);
 
 		/*finds object using instance id, if it exists on grid*/
-		std::optional<std::shared_ptr<GameObject>> getObject(Instance_Id);
-		/*removes obj by id, returns the removed object if found*/
-		std::optional<std::shared_ptr<GameObject>> removeObject(Instance_Id);
+		std::optional<GameObjPtr> FindObject(Instance_Id);
+
+		/*removes obj by id, returns true if found*/
+		bool RemoveObject(Instance_Id);
 
 	private:
-		std::vector<std::pair<Instance_Id, std::shared_ptr<GameObject>>> gameObjects;
+		//hybrid approach, objs are stored in both a map and vector
+		//map : need fast look up capabilities for processing network packets
+		//vector: need fast itterations for rendering & game processes
+		// - yes it'll be massive but hardware skill issue or something
+		std::vector<GOObj> _go_vec;
+		std::unordered_map<Instance_Id, GameObjPtr> _go_map;
 };
