@@ -281,7 +281,6 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				//message packing
 				grid->packMessage(msg);
-				grid->GameObject::packMessage(msg);
 
 				Classes clas({
 					IdGen<Grid>::gof.class_id,

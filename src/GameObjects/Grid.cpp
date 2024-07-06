@@ -34,6 +34,7 @@ void Grid::unpackMessage(Message& msg) {
 		{ Instance_Id id; msg >> id; return id; }
 	);
 
+	int a = 9;
 }
 
 void Grid::RemoveAllObjects() {

@@ -74,12 +74,15 @@ void inline unpackArray(
 	std::vector<T>& arr,
 	std::function<T(Message&)> getVal
 ) {
-	static_assert(std::is_standard_layout<T>::value);
+	if (msg.size() < sizeof(size_t)) return;
 
 	size_t len;
 	msg >> len;
 
-	arr.reserve(len + arr.size());
+	//reserving ahead of time actually seems to give +~4 fps ... sad that its come to this...
+	int off = len - (arr.capacity() - arr.size());
+	if(off > 0)
+		arr.reserve(off);
 
 	for (size_t i = 0; i < len; i++)
 		arr.push_back(getVal(msg));
