@@ -274,6 +274,8 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				GridRequest gr;
 				msg >> gr;
 
+				if (gr.pos.IsBad())
+					gr.pos = { 0,0 };
 				auto grid = SceneManager::GetGrid(gr.pos);
 				
 				msg.body.clear();

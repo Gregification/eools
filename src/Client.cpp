@@ -3,10 +3,6 @@
 #include "Game/Interfaces/InterfaceContent.hpp"
 #include <ftxui/component/component.hpp>
 
-// naming conflict with a window api macro and ftxui canvas draw text method
-#pragma push_macro("DrawText")
-#undef DrawText
-
 Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 	//init ui
 	{
@@ -111,12 +107,22 @@ void Client::run(ScreenInteractive& screen) {
 
 	//i'm lost, send me to a valid grid
 	{
-		auto gr = GridRequest();
+		GridRequest gr({ 0,0 });
 
 		net::message<NetMsgType> msg;
 		msg.header.id = NetMsgType::GridRequest;
 		msg << gr;
 		Send(msg);
+
+		assert(!gr.pos.IsBad());
+		unresolvedResponder.push_back([pos = gr.pos, & currGrid = currentGrid](Client&)->bool {
+				auto g = SceneManager::GridAt(pos);
+				if (g) {
+					currGrid = g.value();
+					return true;
+				}
+				return false;
+			});
 	}
 
 	//main
@@ -131,8 +137,8 @@ void Client::run(ScreenInteractive& screen) {
 			now		= start,
 			lastPhysTime = start;
 
-		const long long target = 1000 / 30;
-		long long dt;
+		const time_t target = 1000 / 30;
+		time_t dt;
 
 		float avgElapse = target;
 		const float weight = 1.0f/10;
@@ -144,6 +150,13 @@ void Client::run(ScreenInteractive& screen) {
 				loop.RunOnce();
 
 			float numPkt = Update();
+
+			for (int i = 0; i < unresolvedResponder.size(); i++) {
+				if (unresolvedResponder[i](*this)) {
+					unresolvedResponder.erase(unresolvedResponder.begin() + i);
+					i--;
+				}
+			}
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
@@ -245,9 +258,11 @@ Component Client::Renderer_inventory() {
 }
 
 void Client::Draw(Canvas& c) {//play renderer
-	if (false)
-	{}//cam.Draw(c, std::move(gameMap.getGrid(currentGrid_id)));
-	else {
+	if (currentGrid){
+		Transformation_2D trans;
+		currentGrid->Draw(c, trans);
+		c.DrawText(10,10, "drawing current grid");
+	} else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
 		static time_point
@@ -400,5 +415,3 @@ void Client::initEvents() {
 	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);
 
 }
-
-#pragma pop_macro("DrawText")

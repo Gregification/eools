@@ -155,6 +155,7 @@ static_assert(std::is_standard_layout<RequestById>::value);
 
 struct GridRequest {
 	GridRequest() : pos(gs::Vec2::BAD) {}
+	GridRequest(gs::Vec2 p) : pos(p) {}
 
 	gs::Vec2 pos;
 };

@@ -1,5 +1,10 @@
 #pragma once
 
+// naming conflict with a window api macro and ftxui canvas draw text method
+#ifdef DrawText
+#undef DrawText
+#endif
+
 #include <cstdint>
 #include <chrono>
 

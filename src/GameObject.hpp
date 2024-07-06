@@ -36,7 +36,7 @@ public:
 	virtual std::string getDisplayName();
 
 	void setId(Instance_Id newId);
-	Instance_Id inline id() { return instId; }
+	Instance_Id inline id() const { return instId; }
 
 	virtual void Update(float dt) {}
 

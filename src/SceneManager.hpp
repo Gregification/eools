@@ -18,8 +18,6 @@
 namespace SceneManager {
 	using namespace gs;
 
-	extern time_t lastUpdate, lastUpdate_fixed;
-
 	extern std::unordered_map<Instance_Id, std::shared_ptr<Grid>> grids;
 
 	/****************************************************************

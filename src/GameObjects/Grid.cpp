@@ -3,6 +3,10 @@
 #include <span>
 #include "Grid.hpp"
 
+#ifdef DrawText
+#undef DrawText
+#endif
+
 //gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
@@ -11,7 +15,7 @@ void Grid::Update(float dt) {
 }
 
 void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
-	
+	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(id()));
 }
 
 void Grid::packMessage(Message& msg) {
@@ -33,8 +37,6 @@ void Grid::unpackMessage(Message& msg) {
 		[](net::message<NetMsgType>& msg)
 		{ Instance_Id id; msg >> id; return id; }
 	);
-
-	int a = 9;
 }
 
 void Grid::RemoveAllObjects() {

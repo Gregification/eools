@@ -9,6 +9,8 @@ class Grid : public NetGameObject<Grid> {
 	public:
 		NetGameObject::NetGameObject;
 
+		time_t lastUpdate, lastUpdate_fixed;
+
 		Vec2 gridPos;
 
 		struct GOObj {

@@ -3,8 +3,6 @@
 #include "GameObjectFactory.hpp"
 
 std::unordered_map<Instance_Id, std::shared_ptr<Grid>> SceneManager::grids;
-time_t SceneManager::lastUpdate = 0;
-time_t SceneManager::lastUpdate_fixed = 0;
 
 std::shared_ptr<Grid> SceneManager::GetGrid(Vec2 pos) {
 	auto g = GridAt(pos);
@@ -46,10 +44,16 @@ std::optional<Message>
 
 	std::shared_ptr<Grid> obj;
 
-	//if the target grid exists
 	auto it = grids.find(gou.id.grid_id);
-	if (it == grids.end()) {
-		gou.id.inst_id = gou.id.grid_id; //get entire grid
+	if (it == grids.end()) { //if the target grid dne
+
+		//to avoid spamming mutiple grid requests. does not account for mutiple grids
+		static time_t lastSent = 0;
+		time_t rn = GetTime();
+		if (lastSent - rn < 200) return std::nullopt;
+		lastSent = rn;
+
+		gou.id.inst_id = gou.id.grid_id; //get the grid instead of what ever the update was for
 		goto requestCompleteObject;
 	}
 
@@ -94,12 +98,10 @@ std::optional<Message>
 			obj = git->second;
 		}
 
+		obj->lastUpdate = obj->lastUpdate_fixed = GetTime();
+
 		ApplyClasses(obj, clas, msg);
 		
-		//can be non thread safe if async called 
-		//obj->Update(GetDT(lastUpdate - gop.time));
-		//obj->FixedUpdate(GetDT(lastUpdate_fixed - gop.time));
-
 		grids[gop.id.grid_id] = obj;
 
 		return std::nullopt;
@@ -123,6 +125,12 @@ std::optional<Message>
 		ApplyClasses(obj, clas, msg);
 
 		git->second->AddObject(obj);
+
+		//synch obj with local grid. 
+		//    - this is not thread safe <- update can potentially access other objs
+		//    - can result in negative time updates (oh well)
+		obj->Update(GetDT(gop.time - git->second->lastUpdate));
+		obj->FixedUpdate(GetDT(gop.time - git->second->lastUpdate_fixed));
 
 		return std::nullopt;
 	}
