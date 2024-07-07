@@ -17,25 +17,26 @@ public:
 	{
 		messageViewer->ToggleColor = false;
 
-		LOCAL_PARITION.nxt = LOCAL_PARITION.min = 0;
-		LOCAL_PARITION.max = STD_PARTITION_SIZE;
+		static_assert(BAD_ID == 0);
+		IDPartition::LOCAL_PARITION.nxt = IDPartition::LOCAL_PARITION.min = BAD_ID+1;
+		IDPartition::LOCAL_PARITION.max = STD_PARTITION_SIZE - 1;
 	}
 
     void run(ScreenInteractive&) override;
 protected:
 	//returns true/accept or false/decline regarding the connection. Swing predicate filters
-	virtual bool onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client) override;
+	virtual bool onClientConnect(std::shared_ptr<net::connection<NetMsgType>>) override;
 
-	virtual void onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) override;
+	virtual void onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>>) override;
 
 	//on message from specific given client
-	virtual void OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net::message<NetMsgType>& msg) override;
+	virtual void OnMessage(std::shared_ptr<net::connection<NetMsgType>>, net::message<NetMsgType>&) override;
 
 	//for user purposes, good luck tring to use this for anyhting otherwise. rip
-	virtual void onError(std::string message) override;
+	virtual void onError(std::string) override;
 
 	//on notable evets such as connection being denied, user joining and so on
-	virtual void onEvent(std::string message) override;	
+	virtual void onEvent(std::string) override;	
 
 protected:
 	ftxui::Component renderer;

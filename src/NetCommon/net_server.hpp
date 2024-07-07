@@ -101,12 +101,12 @@ namespace net {
 
 						if (client != pIgnoreClient)
 							client->Send(msg);
-						else { //contact failed, assume client is disconnected
-							invalidClientExists = true;
+					}
+					else {
+						invalidClientExists = true;
 
-							onClientDisconnect(client);
-							client.reset();
-						}
+						onClientDisconnect(client);
+						client.reset();
 					}
 				}
 
@@ -127,7 +127,7 @@ namespace net {
 					nMessageCount++;
 				}
 
-				return nMessageCount > 0;
+				return nMessageCount;
 			}
 
 		protected:

@@ -3,7 +3,7 @@
 #include "Game/Interfaces/InterfaceContent.hpp"
 #include <ftxui/component/component.hpp>
 
-Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
+Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())) {
 	//init ui
 	{
 		windowContainer = Container::Stacked({});
@@ -93,7 +93,7 @@ Client::Client() : ship(std::make_shared<Ship>(LOCAL_PARITION.getNext())) {
 */
 void Client::run(ScreenInteractive& screen) {
 	initEvents();
-
+	
 	//update connection status
 	{
 		auto stat = ConnectionStatus();
@@ -115,10 +115,30 @@ void Client::run(ScreenInteractive& screen) {
 		Send(msg);
 
 		assert(!gr.pos.IsBad());
-		unresolvedResponder.push_back([pos = gr.pos, & currGrid = currentGrid](Client&)->bool {
+		unresolvedResponder.push_back([pos = gr.pos, this](Client&)->bool {
 				auto g = SceneManager::GridAt(pos);
 				if (g) {
-					currGrid = g.value();
+					currentGrid = g.value();
+					
+					//add ship
+					currentGrid->AddObject(ship);
+
+					//send POST to server
+					GameObjectPost gop;
+						gop.time = currentGrid->lastUpdate;
+						gop.id.grid_id = currentGrid->id();
+						gop.id.inst_id = ship->id();
+					Classes clas{ {ship->GetClassId() }};
+					Message msg;
+
+					msg.header.id = NetMsgType::GameObjectPost;
+
+					ship->packMessage(msg);
+					clas.Pack(msg);
+					msg << gop;
+
+					Send(msg);
+
 					return true;
 				}
 				return false;
@@ -158,9 +178,34 @@ void Client::run(ScreenInteractive& screen) {
 				}
 			}
 
+			if (currentGrid) {
+				time_t rn = GetTime();
+				currentGrid->Update(rn - currentGrid->lastUpdate);
+				currentGrid->FixedUpdate(rn - currentGrid->lastUpdate_fixed);
+			}
+
+			//sync local player
+			if(currentGrid) {
+				static Message msg{ .header{.id = NetMsgType::GameObjectUpdate} };
+				static Classes cls{ { Ship::ClassId(), IdGen<GameObject>::gof.class_id } };
+
+				GameObjectUpdate gou{.time = currentGrid->lastUpdate };
+					gou.id.grid_id = currentGrid->id();
+					gou.id.inst_id = ship->id();
+
+				msg.body.clear();
+				
+				ship->packMessage(msg);
+				ship->GameObject::packMessage(msg);
+				cls.Pack(msg);
+				msg << gou;
+
+				Send(msg);
+			}
+
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
-			//if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
+			if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
@@ -193,10 +238,10 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 
 			}break;
 		case NetMsgType::IDPartition: {
-				IDPartition idp = IDPartition();
+				IDPartition idp;
 				msg >> idp;
 				if (!idp.IsBad())
-					LOCAL_PARITION = idp;
+					IDPartition::LOCAL_PARITION = idp;
 			}break;
 		case NetMsgType::ConnectionStatus: {
 				auto stat = ConnectionStatus();
@@ -207,7 +252,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				Send(msg);
 			}break;
 		case NetMsgType::GridRequest: {
-				
+				assert(false);//debug
 			} break;
 		case NetMsgType::GameObjectUpdate: {
 				GameObjectUpdate gou;
@@ -300,27 +345,33 @@ void Client::SetNewWindowDialogue(bool c) {
 }
 
 void Client::OnMouse(Event e) {
-	if (e.is_mouse()) {
-		Vec2 dm(0,0);
-			dm.x = (e.mouse().x - 1) * 2 - mouse.x;
-			dm.y = (e.mouse().y - 1) * 4 - mouse.y;
-		mouse += dm;
+	assert(e.is_mouse());
+	
+	//idk what the mouse pos is relative too but these offsets get it to 
+	//	where the cursor is
+	Vec2 pos = { (float)(e.mouse().x) * 2, (float)(e.mouse().y) * 4 };
 
-		switch (e.mouse().button) {
-			case Mouse::Left:
-				break;
-			case Mouse::Middle:
-				break;
-			case Mouse::Right:
-					cam.offset += dm;
-				break;
-			case Mouse::WheelUp:
-					cam.scale += 1 + cam.scale * 1.2;
-				break;
-			case Mouse::WheelDown:
-					cam.scale -= 1 + cam.scale * 1.2;
-				break;
-		}
+	ship->transform.position = pos;
+
+	Vec2 dm(0,0);
+		dm.x = (e.mouse().x - 1) * 2 - mouse.x;
+		dm.y = (e.mouse().y - 1) * 4 - mouse.y;
+	mouse += dm;
+
+	switch (e.mouse().button) {
+		case Mouse::Left:
+			break;
+		case Mouse::Middle:
+			break;
+		case Mouse::Right:
+				cam.offset += dm;
+			break;
+		case Mouse::WheelUp:
+				cam.scale += 1 + cam.scale * 1.2;
+			break;
+		case Mouse::WheelDown:
+				cam.scale -= 1 + cam.scale * 1.2;
+			break;
 	}
 }
 

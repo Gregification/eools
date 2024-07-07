@@ -33,7 +33,7 @@ void QueueClient::run(ScreenInteractive& screen) {
 
 	while (!isReady) {
 		//request a id partition
-		if (cyl_count % cyl_lim == 0 && LOCAL_PARITION.IsBad()) {
+		if (cyl_count % cyl_lim == 0 && IDPartition::LOCAL_PARITION.IsBad()) {
 
 			net::message<NetMsgType> msg;
 			msg.header.id = NetMsgType::IDPartition;
@@ -99,9 +99,7 @@ void QueueClient::OnMessage(net::message<NetMsgType> msg) {
 				Send(msg);
 			}break;
 		case NetMsgType::IDPartition: {
-				IDPartition idp = IDPartition();
-				msg >> idp;
-				LOCAL_PARITION = idp;
+				msg >> IDPartition::LOCAL_PARITION;
 				isReady = true;
 			}break;
 	}

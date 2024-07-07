@@ -27,6 +27,8 @@ void Server::run(ScreenInteractive& screen) {
 				{
 					std::lock_guard lk(m_mutexDeqConnections);
 					for (auto& sptr : m_deqConnections) {
+						if (!sptr) continue;
+
 						try {
 							if (!sptr->isConnected()) continue;
 
@@ -120,7 +122,7 @@ void Server::run(ScreenInteractive& screen) {
 
 		long long dt;
 		const long long //milliseconds
-			pingTarget		= 1000 * 2, 
+			pingTarget		= 1000 * 3, 
 			syncTarget		= 1000 / 2; 
 
 		int pkts;
@@ -132,6 +134,7 @@ void Server::run(ScreenInteractive& screen) {
 
 			//huh https://www.nvidia.com/content/gtc/documents/1077_gtc09.pdf
 
+			//automatic pings
 			static auto lastPingTime = high_resolution_clock::now();
 			if (duration_cast<milliseconds>(start - lastPingTime).count() > pingTarget) {
 				lastPingTime = start;
@@ -149,9 +152,21 @@ void Server::run(ScreenInteractive& screen) {
 				screen.Post(Event::Custom);
 			}
 
+			//TODO: sync target should join work threads before sending
+			//cheeese
+			{
+				time_t rn = GetTime();
+				for (auto [i, g] : SceneManager::grids) {
+					g->Update(rn - g->lastUpdate);
+					g->FixedUpdate(rn - g->lastUpdate_fixed);
+				}
+			}
+
 			static auto lastSyncTime = high_resolution_clock::now();
 			if (duration_cast<milliseconds>(start - lastSyncTime).count() > syncTarget) {
 				lastSyncTime = start;
+
+				
 			}
 		}
 	}
@@ -172,14 +187,20 @@ bool Server::onClientConnect(std::shared_ptr<net::connection<NetMsgType>> client
 void Server::onClientDisconnect(std::shared_ptr<net::connection<NetMsgType>> client) {
 	std::lock_guard lk(renderMutex);
 
-	messageViewer->Post_Message((
-		std::format("[EVENT][DISCONNECT] lost {}, {}",
-			client->connectionID, 
-			connectionStatus.find(client->connectionID)->second.isQueue ? "Q" : "C"
-		)),
-		ftxui::color(ftxui::Color::CyanLight));
+	if (client) {
+		messageViewer->Post_Message((
+			std::format("[EVENT][DISCONNECT] lost conneciton {}",
+				client->connectionID
+				//connectionStatus.find(client->connectionID)->second.isQueue ? "Q" : "C"
+			)),
+			ftxui::color(ftxui::Color::CyanLight));
 
-	connectionStatus.erase(client->connectionID);
+		connectionStatus.erase(client->connectionID);
+	} else {
+		messageViewer->Post_Message(
+			"[EVENT][DISCONNECT] we lost someone(???) D:",
+			ftxui::color(ftxui::Color::Purple4));
+	}
 }
 
 //for user purposes, good luck tring to use this for anyhting otherwise. rip
@@ -199,23 +220,25 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 	std::lock_guard lk(renderMutex);
 
 	switch (msg.header.id) {
-		case NetMsgType::Ping:
-			if (!logCommonEvents) break;
 
 		case NetMsgType::GridRequest:
-		case NetMsgType::GameObjectUpdate:
+		case NetMsgType::IDCorrection:
+			if (!logCommonEvents) break;
 
 		//the ones that should alwayse be visible
 		case NetMsgType::ConnectionStatus:
-		case NetMsgType::IDCorrection:
 		case NetMsgType::IDPartition:
-		case NetMsgType::RequestById:
 			messageViewer->Post_Message(
-				std::format("[received] - {}", 
+				std::format("[received] {} - {}", 
+					client->connectionID,
 					BE_NetMsgType::_from_index(msg.header.id)._to_string()),
 				ftxui::color(ftxui::Color::Yellow));
 			break;
+		case NetMsgType::RequestById:
 
+		case NetMsgType::GameObjectPost:
+		case NetMsgType::GameObjectUpdate:
+		case NetMsgType::Ping:
 		default:;
 	}
 
@@ -239,7 +262,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				
 				msg.body.clear();
 
-				IDPartition part = IDPartition();
+				IDPartition part;
 					part.min = partitionCounter * STD_PARTITION_SIZE;
 					part.max = part.min + STD_PARTITION_SIZE - 1;
 					part.nxt = part.min;
@@ -260,10 +283,6 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				msg << corr;
 				MessageAllClients(msg);
 			} break;
-		case NetMsgType::GameObjectUpdate: {
-
-				MessageAllClients(msg);
-			} break;
 		case NetMsgType::ConnectionStatus: {
 				auto cs = ConnectionStatus();
 				msg >> cs;
@@ -278,28 +297,85 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 					gr.pos = { 0,0 };
 				auto grid = SceneManager::GetGrid(gr.pos);
 				
-				msg.body.clear();
-				msg.header.id = NetMsgType::GameObjectPost;
-
-				//message packing
-				grid->packMessage(msg);
 
 				Classes clas({
 					IdGen<Grid>::gof.class_id,
 				});
+				GameObjectPost package;
+					package.id.grid_id = package.id.inst_id = grid->id();
+					package.time = grid->lastUpdate;
+
+				//message packing
+				msg.body.clear();
+				msg.header.id = NetMsgType::GameObjectPost;
+				grid->packMessage(msg);
+
 				clas.Pack(msg);
 
-				GameObjectPost package;
-				package.id.grid_id = package.id.inst_id = grid->id();
-				package.time = GetTime();
 				msg << package;
+
+				MessageClient(client, msg);
+			}break;
+		case NetMsgType::GameObjectUpdate: {
+				Message msgCpy = msg;
+				GameObjectUpdate gou;
+				msg >> gou;
+
+				auto res = SceneManager::processMessage(msg, gou);
+
+ 				if (res) MessageClient(client, res.value());
+				else MessageAllClients(msgCpy, client);
+			}break;
+		case NetMsgType::GameObjectPost: {
+				Message msgCpy = msg;
+				GameObjectPost gop;
+				msg >> gop;
+
+				auto res = SceneManager::processMessage(msg, gop);
+
+				if (res) MessageClient(client, res.value());
+				else MessageAllClients(msgCpy, client);
+			}break;
+		case NetMsgType::RequestById: {
+				RequestById rbi;
+				msg >> rbi;
+
+				auto op = SceneManager::find(rbi.id);
+
+				if(logCommonEvents)
+					messageViewer->Post_Message(
+						std::format("[received] {} - {} {}:{} op?{}",
+							client->connectionID,
+							BE_NetMsgType::_from_index(msg.header.id)._to_string(),
+							rbi.id.grid_id,
+							rbi.id.inst_id,
+							op ? "true" : "false"),
+						ftxui::color(ftxui::Color::Yellow));
+
+
+				if (!op)
+					break; //its over, try again later and pray it works
+
+				GameObjPtr goptr = op.value();
+
+				//send back the obj with POST
+				GameObjectPost gop{
+					.id = rbi.id,
+					.time = SceneManager::grids[rbi.id.grid_id]->lastUpdate //we live in a high trust socitey
+				};
+				Classes cls{ {goptr->GetClassId()}};
+
+				msg.header.id = NetMsgType::GameObjectPost;
+				msg.body.clear();
+				goptr->packMessage(msg);
+				cls.Pack(msg);
+				msg << gop;
 
 				MessageClient(client, msg);
 			}break;
 
 		default: {}
 	}
-
 }
 
 void Server::primeGameMap() {

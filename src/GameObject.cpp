@@ -4,8 +4,12 @@
 
 const Vec2 Vec2::BAD = Vec2(NAN, NAN);
 
+void GameObject::Update(float dt) {
+
+}
+
 void GameObject::FixedUpdate(float dt) {
-	transform.FixedUpdate(dt);
+	transform.Update(dt);
 }
 
 void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {

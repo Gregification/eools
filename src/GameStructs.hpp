@@ -118,7 +118,7 @@ namespace gs {
 			mat[1][1] += cos;
 		}
 
-		void applyTo(Vec2& vec) const {
+		Vec2 applyTo(Vec2 vec) const {
 			// | A B C |   | X |   | X |
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |
@@ -132,6 +132,8 @@ namespace gs {
 			vec.x =	mat[1][0] * vec.x //dx
 				  + mat[1][1] * vec.y //ey
 				  + mat[1][1] * vecz; //fz
+
+			return vec;
 		}
 
 		static constexpr Mat3x3 identity = {{
@@ -160,7 +162,7 @@ namespace gs {
 			velocity(0, 0)
 		{}
 
-		void FixedUpdate(float dt) {
+		void Update(float dt) {
 			rotation += dt * angularVelocity;
 
 			position += velocity * dt;

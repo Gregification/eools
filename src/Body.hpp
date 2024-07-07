@@ -25,7 +25,6 @@ public:
 	gs::Rectangle coverage;//rough area that the verticies covers
 	gs::Transformation_2D nonRotatedTransformation;
 
-public:
 	void updateCoverage();
 	gs::Transformation_2D effectiveTransformation();
 

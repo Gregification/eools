@@ -3,19 +3,35 @@
 #include <span>
 #include "Grid.hpp"
 
-#ifdef DrawText
-#undef DrawText
-#endif
-
 //gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
 void Grid::Update(float dt) {
-	
+	for (auto& v : _go_vec) {
+		if (!v.go) continue;
+
+		v.go->Update(dt);
+	}
+}
+
+void Grid::FixedUpdate(float dt) {
+	for (auto& v : _go_vec) {
+		if (!v.go) continue;
+
+		v.go->FixedUpdate(dt);
+	}
 }
 
 void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
 	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(id()));
+	c.DrawText(20, 30, "# children: " + std::to_string(_go_vec.size()));
+	int y = 30;
+	for (auto& v : _go_vec) {
+		c.DrawText(25, y+=10, "id: " + std::to_string(v.id) + "?" + (v.go ? ("exists@(" + std::to_string(v.go->transform.position.x) + "," + std::to_string(v.go->transform.position.y) + ")") : "dne"));
+		if (!v.go) continue;
+
+		v.go->Draw(c, trf);
+	}
 }
 
 void Grid::packMessage(Message& msg) {

@@ -38,9 +38,11 @@ public:
 	void setId(Instance_Id newId);
 	Instance_Id inline id() const { return instId; }
 
-	virtual void Update(float dt) {}
-
-	virtual void FixedUpdate(float dt);
+	//as of now its all cpu based(cringe) but the plans to split off the heavier work 
+	//	to the gpu eventually
+	//https://stackoverflow.com/questions/34447682/what-is-the-difference-between-update-fixedupdate-in-unity
+	virtual void Update(float);
+	virtual void FixedUpdate(float);
 
 	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D&) const;
 

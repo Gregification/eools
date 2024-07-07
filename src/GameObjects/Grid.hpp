@@ -5,6 +5,10 @@
 
 #include "../NetGameObject.hpp"
 
+#ifdef DrawText
+#undef DrawText
+#endif
+
 class Grid : public NetGameObject<Grid> {
 	public:
 		NetGameObject::NetGameObject;
@@ -18,7 +22,8 @@ class Grid : public NetGameObject<Grid> {
 			GameObjPtr go;
 		};
 
-		void Update(float dt) override;
+		void Update(float) override;
+		void FixedUpdate(float) override;
 
 		void Draw(Canvas& c, Transformation_2D& trf) const override;
 

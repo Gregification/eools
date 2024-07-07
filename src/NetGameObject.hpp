@@ -11,4 +11,8 @@ public:
 	Class_Id GetClassId() const override {
 		return IdGen<T>::gof.class_id;
 	}
+
+	static Class_Id ClassId() {
+		return IdGen<T>::gof.class_id;
+	}
 };

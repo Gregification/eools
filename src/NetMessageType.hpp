@@ -105,8 +105,10 @@ static_assert(std::is_standard_layout<ID>::value);
 struct IDPartition {
 	Instance_Id min, max, nxt;
 	
-	IDPartition() : IDPartition(0,0,-1) {}
+	IDPartition() : IDPartition(0,0,1) {}
 	IDPartition(Instance_Id mi, Instance_Id mx, Instance_Id nx) : min(mi), max(mx), nxt(nx) {}
+
+	static IDPartition LOCAL_PARITION;
 
 	Instance_Id getNext() {
 		return nxt++;
@@ -121,7 +123,6 @@ struct IDPartition {
 	}
 };
 static_assert(std::is_standard_layout<IDPartition>::value);
-static IDPartition LOCAL_PARITION = IDPartition();
 
 struct ConnectionStatus {
 	Instance_Id clientId;

@@ -29,13 +29,13 @@ namespace SceneManager {
 	/*gets grid at position, if it exists*/
 	std::optional<std::shared_ptr<Grid>> GridAt(Vec2);
 
-	std::optional<GameObjPtr> find(Instance_Id);
+	std::optional<GameObjPtr> find(ID);
 
 	/****************************************************************
 	* netowrk
 	****************************************************************/
 	void CorrectID(IDCorrection);
-	void ApplyClasses(GameObjPtr, Classes, Message);
+	void ApplyClasses(GameObjPtr, Classes&, Message&);
 
 	std::optional<Message> processMessage(Message&, GameObjectUpdate);
 	std::optional<Message> processMessage(Message&, GameObjectPost);
