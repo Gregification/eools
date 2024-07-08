@@ -14,9 +14,9 @@ void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
 }
 
 void Ship::packMessage(net::message<NetMsgType>& msg) {
-	
+	GameObject::packMessage(msg);
 }
 
 void  Ship::unpackMessage(net::message<NetMsgType>& msg) {
-
+	GameObject::unpackMessage(msg);
 }
