@@ -153,7 +153,7 @@ void Client::run(ScreenInteractive& screen) {
 		Loop loop(&screen, mainContainer);
 
 		time_point
-			start	= steady_clock::now(),
+			start	= high_resolution_clock::now(),
 			now		= start,
 			lastPhysTime = start;
 
@@ -303,7 +303,7 @@ Component Client::Renderer_inventory() {
 }
 
 void Client::Draw(Canvas& c) {//play renderer
-	if (currentGrid){
+	if (false && currentGrid){
 		Transformation_2D trans;
 		currentGrid->Draw(c, trans);
 		c.DrawText(10,10, "drawing current grid");

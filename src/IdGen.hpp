@@ -2,8 +2,7 @@
 
 #include <memory>
 
-class GameObject;
-class GameObjectFactory;
+#include "GameObjectFactory.hpp"
 
 template<class T> //CRTP
 class IdGen {

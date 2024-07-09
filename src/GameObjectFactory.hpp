@@ -7,7 +7,7 @@
 #include "Game_common.hpp"
 
 class GameObject;
-
+	
 class GameObjectFactory {
 public:
 	typedef std::function<std::shared_ptr<GameObject>()>
@@ -46,9 +46,9 @@ private: //private to ensure only this class modifies it
 
 
 public:
-
 	typedef std::function<std::shared_ptr<GameObject>(const std::shared_ptr<GameObject>)>
 		CastFunction;//i am aware this is stupid
+
 	static std::shared_ptr<GameObject> GetInstance(Class_Id id);
 	static std::shared_ptr<GameObject> CastTo(std::shared_ptr<GameObject>&, Class_Id);
 

@@ -5,6 +5,10 @@
 #include <unordered_map>
 #include <map>
 
+//should have added this earlier, most of the code dosent use it but anything new should
+class GameObject;
+typedef std::shared_ptr<GameObject> GameObjPtr;
+
 #include "Game_common.hpp"
 #include "NetMessageType.hpp"
 #include "GameStructs.hpp"
@@ -13,10 +17,6 @@
 
 using namespace ftxui;
 using namespace gs;
-
-//should have added this earlier, most of the code dosent use it but anything new should
-class GameObject;
-typedef std::shared_ptr<GameObject> GameObjPtr;
 
 /*
 * physics & game-stat related details are in the Body subclass

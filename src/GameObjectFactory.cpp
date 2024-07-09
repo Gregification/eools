@@ -1,8 +1,5 @@
-#pragma once
-
 #include "GameObjectFactory.hpp"
 #include "GameObject.hpp"
-#include "GameStructs.hpp"
 
 std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList{};
 std::vector<GameObjectFactory::CastFunction> GameObjectFactory::CastList{};

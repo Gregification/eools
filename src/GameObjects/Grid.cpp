@@ -1,5 +1,3 @@
-#pragma once
-
 #include <span>
 #include "Grid.hpp"
 

@@ -8,7 +8,7 @@
 using namespace ftxui;
 
 int main(int argc, char *argv[]) {
-    //GOInit::init();
+    GOInit::init();//TODO: fix this patch
 
     App *app;
     uint16_t serverPort = SERVER_PORT;

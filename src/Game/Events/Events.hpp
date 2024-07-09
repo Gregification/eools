@@ -7,6 +7,7 @@
 #include <any>
 #include <typeindex>
 #include <memory>
+#include <algorithm>
 
 #include <ftxui/component/event.hpp>
 #include "../../better-enums/enum.h"
@@ -121,7 +122,7 @@ namespace Events {
 		size_t ClearListenersToEvent(EVENT e) {
 			SubGroup2Listeners& subgroup = event_to_subscribers[e];
 
-			size_t ret = subgroup.count();
+			size_t ret = subgroup.size();
 			subgroup.clear();
 
 			return ret;
