@@ -16,9 +16,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Include Vulkan
 # if using vcpkg manager copy the file path from "vcpkg integrate install" into VSS "cmake toolchain" (manage configurations under debug)
-find_package(vulkan REQUIRED)
+#find_package(vulkan REQUIRED)
 # must include vulkan includes manually
-include_directories(D:/vcpackage/vcpkg/packages/vulkan-headers_x64-windows/include)
+#include_directories(D:/vcpackage/vcpkg/packages/vulkan-headers_x64-windows/include)
 
 # Include FTXUI
 include(FetchContent)
@@ -63,15 +63,15 @@ file(GLOB_RECURSE TESTS
     tests/*.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN} "src/Game/GOInit.cpp")
-add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS}  "src/Game/GOInit.cpp")
+add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN} "src/main.cpp")
+add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} "Tests/test.cpp")
 
 set(LIBS 
     ftxui::screen
     ftxui::dom
     ftxui::component
     asio
-    ${VULKAN_LIBRARIES}
+  #  ${VULKAN_LIBRARIES}
     Catch2::Catch2
 )
 

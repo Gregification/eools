@@ -12,8 +12,6 @@ public:
 	const static GameObjectFactory gof;
 
 private:
-	const static T dummy;
-
 	/*im losing it
 	* GameObjectFactory has a prupose that is to be able to
 	* instiantiate any GameObject form a given ClassId, it does so by registering a
@@ -28,7 +26,6 @@ private:
 	* instiantiating every class manually in a massive list, which defeats the
 	* point of all this...
 	*/
-
 	void static init() {
 		static bool once = false;
 		if (once) return;
@@ -44,6 +41,3 @@ private:
 
 template<class T>
 const GameObjectFactory IdGen<T>::gof = GameObjectFactory(static_cast<T*>(nullptr));
-
-template<class T>
-const T IdGen<T>::dummy = T();
