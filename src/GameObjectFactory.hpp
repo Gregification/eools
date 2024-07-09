@@ -12,14 +12,10 @@ class GameObjectFactory {
 public:
 	typedef std::function<std::shared_ptr<GameObject>()>
 		InstanceConstructor;
-	typedef std::function<std::shared_ptr<GameObject>(const std::shared_ptr<GameObject>)>
-		CastFunction;
 
 	template<class T>
 	GameObjectFactory(T* dummy) : class_id(nextIdx++)
 	{
-		int temp = 0;
-
 		static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 		
 		//this dosent actually modify the ClassList vector before runtime(even though it does execute)
@@ -35,14 +31,29 @@ public:
 
 	static Class_Id nextIdx;
 
-	static std::shared_ptr<GameObject> GetInstance(Class_Id id);
+	static int getClassListSize() {
+		return ClassList.size();
+	}
 
+private: //private to ensure only this class modifies it
+	static std::vector<InstanceConstructor> ClassList;
+
+
+
+	//ignore stuff down here
+
+
+
+
+public:
+
+	typedef std::function<std::shared_ptr<GameObject>(const std::shared_ptr<GameObject>)>
+		CastFunction;//i am aware this is stupid
+	static std::shared_ptr<GameObject> GetInstance(Class_Id id);
 	static std::shared_ptr<GameObject> CastTo(std::shared_ptr<GameObject>&, Class_Id);
 
 	//named with underscore otherwise has naming conflict with windows api
 	static void Register_Class(Class_Id cid, InstanceConstructor ic, CastFunction cf);
-
 private:
-	static std::vector<InstanceConstructor> ClassList;
-	static std::vector<CastFunction> CastList;//if you know a better way to do this please email me, idc how long ago this code was written, github has my contacts. t
+	static std::vector<CastFunction> CastList;
 };

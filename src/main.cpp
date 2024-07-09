@@ -8,10 +8,8 @@
 using namespace ftxui;
 
 int main(int argc, char *argv[]) {
-    auto junk = GameObjectFactory::GetInstance(0);
-    int temp = 0;
-
     //GOInit::init();
+
     App *app;
     uint16_t serverPort = SERVER_PORT;
     ScreenInteractive screen = ScreenInteractive::Fullscreen();
