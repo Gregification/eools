@@ -205,7 +205,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
-			if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
+			//if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
