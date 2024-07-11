@@ -33,6 +33,7 @@ void KeyBinds::unregisterCtrlEvent(ftxui::Event e, CONTROL_EVENT c) {
 *****************************************************************************************************************/
 
 KeyBinds::Key2ControlEvents KeyBinds::KeyMap = {
+	{ftxui::Event::Character('o'),	{KeyBinds::CONTROL_EVENT::DEBUG_btn}  },
 	{ftxui::Event::Character('n'),	{KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW}  },
 	{ftxui::Event::Character('m'),	{KeyBinds::CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY}  },
 	{ftxui::Event::Character('t'),	{KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW}},
@@ -48,6 +49,7 @@ KeyBinds::Key2ControlEvents KeyBinds::KeyMap = {
 *****************************************************************************************************************/
 
 Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
+	{CONTROL_EVENT::DEBUG_btn, {"debug button", "a button for debugging"}},
 	{CONTROL_EVENT::DISPLAY_NEW_WINDOW, {"open new window", "shows windows avalible to open"}},
 	{CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY, {"toggle movement overlay", "shows directional vectors of the specified object"}},
 	{CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, {"remove selected window", "removes the latest selected window"}},

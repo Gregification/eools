@@ -136,6 +136,7 @@ namespace Events {
 	/*keybinds*/
 	namespace KeyBinds {
 		BETTER_ENUM(BE_CONTROL_EVENT, int,
+			DEBUG_btn,
 			DISPLAY_NEW_WINDOW,
 			DISPLAY_TOGGLE_MOVEMENT_OVERLAY,
 			DISPLAY_REMOVE_WINDOW,

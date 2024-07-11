@@ -20,21 +20,25 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 
 		auto rend = Renderer_play() | flex
 			| CatchEvent([&](Event e) {
-			if (e.is_mouse()) {
-				OnMouse(std::move(e));
-				return true;
-			};
-			return false;
-				});
+				if (e.is_mouse()) {
+					OnMouse(std::move(e));
+					return true;
+				};
+				return false;
+			});
 
 		//init  modal
 		Component modalContainer = Container::Stacked({});
 		{
 			Component list = Container::Vertical({});
-			auto list_states = std::array<bool, InterfaceContent::publicInterfaces.size()>();
+			static auto list_states = std::array<bool, InterfaceContent::publicInterfaces.size()>();
 
 			for (int i = 0; i < InterfaceContent::publicInterfaces.size(); i++) {
-				list->Add(Checkbox(std::to_string(i) + ": " + InterfaceContent::publicInterfaces[i].first, &list_states[i]));//C28020, "by design" apparently
+				auto name = std::to_string(i) + ": " + InterfaceContent::publicInterfaces[i].first;
+				list->Add(Checkbox(
+					name,
+					&list_states[i]
+				));
 			}
 
 			Component modal = Container::Vertical({
@@ -66,7 +70,7 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 						text("select windows to open together"),
 						separator(),
 						content
-						});
+					});
 				}) | borderHeavy | bgcolor(Color::Blue);
 
 			modalContainer |= Modal(modal, &showNewWindowModal);
@@ -79,7 +83,9 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 				rend,
 			}) | CatchEvent([&](Event e) {
 				if (e.is_mouse()) return false;
+
 				Events::KeyBinds::sendKey(std::move(e));
+
 				return true;
 			});
 	}
@@ -157,7 +163,7 @@ void Client::run(ScreenInteractive& screen) {
 			now		= start,
 			lastPhysTime = start;
 
-		const time_t target = 1000 / 30;
+		const time_t target = 1000 / 25;
 		time_t dt;
 
 		float avgElapse = target;
@@ -187,7 +193,7 @@ void Client::run(ScreenInteractive& screen) {
 			//sync local player
 			if(currentGrid) {
 				static Message msg{ .header{.id = NetMsgType::GameObjectUpdate} };
-				static Classes cls{ { Ship::ClassId(), IdGen<GameObject>::gof.class_id } };
+				static Classes cls{ { GameObject::gof.class_id } };
 
 				GameObjectUpdate gou{.time = currentGrid->lastUpdate };
 					gou.id.grid_id = currentGrid->id();
@@ -195,9 +201,17 @@ void Client::run(ScreenInteractive& screen) {
 
 				msg.body.clear();
 				
-				ship->packMessage(msg);
 				ship->GameObject::packMessage(msg);
 				cls.Pack(msg);
+				msg << gou;
+
+				Send(msg);
+
+				Classes ocls{ {Ship::ClassId() } };
+				
+				msg.body.clear();
+				ship->packMessage(msg);
+				ocls.Pack(msg);
 				msg << gou;
 
 				Send(msg);
@@ -205,7 +219,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
-			//if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
+			if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
@@ -219,8 +233,13 @@ void Client::run(ScreenInteractive& screen) {
 }
 
 void Client::OnMessage(net::message<NetMsgType> msg) {
-	if(msg.header.id != NetMsgType::Ping)
-		Events::ClientEvent::observer.invokeEvent(Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, "received: " + std::to_string(static_cast<int>(msg.header.id)));
+	if (msg.header.id != NetMsgType::Ping) {
+		auto str = BE_NetMsgType::_from_index(msg.header.id)._to_string();
+		Events::ClientEvent::observer.invokeEvent(
+			Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+			"received: " + (std::string)str
+		);
+	}
 
 	switch (msg.header.id) {
 		case NetMsgType::Ping: {
@@ -303,7 +322,7 @@ Component Client::Renderer_inventory() {
 }
 
 void Client::Draw(Canvas& c) {//play renderer
-	if (false && currentGrid){
+	if (currentGrid){
 		Transformation_2D trans;
 		currentGrid->Draw(c, trans);
 		c.DrawText(10,10, "drawing current grid");
@@ -450,7 +469,23 @@ void Client::initEvents() {
 	* game
 	***********************************************************************************************************/
 
+	auto DEBUG_send_ship_update = MakeListener([&] {
+			static Message msg{ .header{.id = NetMsgType::GameObjectUpdate} };
+			static Classes cls{ { GameObject::gof.class_id } };
 
+			GameObjectUpdate gou{ .time = currentGrid->lastUpdate };
+			gou.id.grid_id = currentGrid->id();
+			gou.id.inst_id = ship->id();
+
+			msg.body.clear();
+
+			ship->GameObject::packMessage(msg);
+			cls.Pack(msg);
+			msg << gou;
+
+			Send(msg);
+		});
+	listeners.push_back(DEBUG_send_ship_update);
 
 	/***********************************************************************************************************
 	* bindings
@@ -462,6 +497,7 @@ void Client::initEvents() {
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
+	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DEBUG_btn, DEBUG_send_ship_update);
 
 	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);
 

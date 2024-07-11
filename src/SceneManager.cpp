@@ -49,9 +49,9 @@ void SceneManager::CorrectID(IDCorrection idc) {
 }
 
 void SceneManager::ApplyClasses(GameObjPtr go, Classes& clas, Message& msg) {
+	auto* ptr = go.get();
 	for (Class_Id cid : clas.class_ids) {
-		auto derivedPtr = GameObjectFactory::CastTo(go, cid);
-		derivedPtr->unpackMessage(msg);
+		GameObjectFactory::UnpackAs(cid, msg, ptr);
 	}
 }
 

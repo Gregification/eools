@@ -16,7 +16,7 @@ public:
 
 public:
 	long long lastUpdate;
-	float mass = .01 * KT;
+	Unit mass = .01 * KT;
 
 	gs::Transform transform;
 	float completeScale = 1;

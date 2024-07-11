@@ -8,6 +8,10 @@ template<class T> //CRTP
 class IdGen {
 	friend class GOInit;
 public:
+	IdGen() {
+		static_assert(std::is_base_of<GameObject, T>::value);
+	}
+
 	const static GameObjectFactory gof;
 
 private:
@@ -25,18 +29,24 @@ private:
 	* instiantiating every class manually in a massive list, which defeats the
 	* point of all this...
 	*/
-	void static init() {
-		static bool once = false;
-		if (once) return;
-		once = true;
-
-		GameObjectFactory::Register_Class(
-			gof.class_id,
-			[] { return std::make_shared<T>(); },
-			[](const std::shared_ptr<GameObject>& ptr) { return std::dynamic_pointer_cast<T>(ptr); }
-		);
-	};
+	void static init();
 };
 
 template<class T>
 const GameObjectFactory IdGen<T>::gof = GameObjectFactory(static_cast<T*>(nullptr));
+
+template<class T>
+void IdGen<T>::init() {
+	GameObjectFactory::Register_Class(
+		gof.class_id,
+		[] { return std::make_shared<T>(); }, //instance constructor
+		[](Message& msg, GameObject* go) { //packer
+			T* p = ((T*)go);
+			p->T::packMessage(msg);
+		},
+		[](Message& msg, GameObject* go) { //unpacker
+			T* p = dynamic_cast<T*>(go);
+			p->T::unpackMessage(msg);
+		}
+	);
+};

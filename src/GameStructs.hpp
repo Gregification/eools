@@ -29,10 +29,10 @@ namespace gs {
 	}
 
 	struct Vec2 {
-		float x, y;
+		Unit x, y;
 
 		Vec2() : Vec2(0,0) {}
-		Vec2(float x, float y) : x(x), y(y) {}
+		Vec2(Unit x, Unit y) : x(x), y(y) {}
 		Vec2(const Vec2& other) : x(other.x), y(other.y) {}
 
 		static const Vec2 BAD;//(NAN,NAN)
@@ -61,27 +61,27 @@ namespace gs {
 			return (a.x + b.x) * (a.y + b.y);
 		}
 
-		float magnitude()				const { return std::sqrtf(magnitudeSquared()); }
-		float magnitudeSquared()		const { return x * x + y * y; }
-		float sum()						const { return x + y; }
-		float dot(const Vec2& other)	const { return ((*this) * other).sum(); }
+		Unit magnitude()			const { return std::sqrtf(magnitudeSquared()); }
+		Unit magnitudeSquared()		const { return x * x + y * y; }
+		Unit sum()					const { return x + y; }
+		Unit dot(const Vec2& other)	const { return ((*this) * other).sum(); }
 
 		Vec2& operator += (const Vec2& other) { x += other.x;	y += other.y;	return *this; }
 		Vec2& operator -= (const Vec2& other) { x -= other.x;	y -= other.y;	return *this; }
 		Vec2& operator *= (const Vec2& other) { x *= other.x;	y *= other.y;	return *this; }
 		Vec2& operator /= (const Vec2& other) { x /= other.x;	y /= other.y;	return *this; }
-		Vec2& operator += (const float other) { x += other;		y += other;		return *this; }
-		Vec2& operator -= (const float other) { x -= other;		y -= other;		return *this; }
-		Vec2& operator *= (const float other) { x *= other;		y *= other;		return *this; }
-		Vec2& operator /= (const float other) { x /= other;		y /= other;		return *this; }
+		Vec2& operator += (const Unit other) { x += other;		y += other;		return *this; }
+		Vec2& operator -= (const Unit other) { x -= other;		y -= other;		return *this; }
+		Vec2& operator *= (const Unit other) { x *= other;		y *= other;		return *this; }
+		Vec2& operator /= (const Unit other) { x /= other;		y /= other;		return *this; }
 		Vec2 operator + (const Vec2& other) const { return Vec2(x + other.x, y - other.y); }
 		Vec2 operator - (const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
 		Vec2 operator * (const Vec2& other) const { return Vec2(x * other.x, y * other.y); }
 		Vec2 operator / (const Vec2& other) const { return Vec2(x / other.x, y / other.y); }
-		Vec2 operator + (const float other) const { return Vec2(x + other, y + other); }
-		Vec2 operator - (const float other) const { return Vec2(x - other, y - other); }
-		Vec2 operator * (const float other) const { return Vec2(x * other, y * other); }
-		Vec2 operator / (const float other) const { return Vec2(x / other, y / other); }
+		Vec2 operator + (const Unit other) const { return Vec2(x + other, y + other); }
+		Vec2 operator - (const Unit other) const { return Vec2(x - other, y - other); }
+		Vec2 operator * (const Unit other) const { return Vec2(x * other, y * other); }
+		Vec2 operator / (const Unit other) const { return Vec2(x / other, y / other); }
 	};
 	static_assert(std::is_standard_layout<gs::Vec2>::value);
 
@@ -128,10 +128,10 @@ namespace gs {
 
 			vec.x =	mat[0][0] * vec.x //ax
 				  + mat[0][1] * vec.y //by
-				  + mat[0][1] * vecz; //cz
+				  + mat[0][1];// * vecz; //cz
 			vec.x =	mat[1][0] * vec.x //dx
 				  + mat[1][1] * vec.y //ey
-				  + mat[1][1] * vecz; //fz
+				  + mat[1][1];// * vecz; //fz
 
 			return vec;
 		}

@@ -1,6 +1,6 @@
 #pragma once
 
-// naming conflict with a window api macro and ftxui canvas draw text method
+// naming conflict with a window api macro and ftxui::Canvas::DrawText method
 #ifdef DrawText
 #undef DrawText
 #endif
@@ -33,11 +33,15 @@ float inline GetDT(time_t dt) {
 * game stuff
 ******************************************************************************/
 
+//should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates
+//	maybe use the BVH setup as the coordinates? could aleivate the issue in some cases
+typedef float Unit;
+
 //units : multiply the num by these ratios to get their respective values
 //see https://en.wikipedia.org/wiki/Standard_gravitational_parameter
-#define KM 0.000'001
-#define KT 0.001
-#define KJ 0.000'000'001
+#define KM 1
+#define KT 1
+#define KJ 1e-9
 #define LS KM * 299'792.458
 #define AU KM * 14'959'787.069'1
-#define GRAV_CONST 6.67430e-11
+#define GRAV_CONST 6.67430e-11 //needs adjusted if KM & KT arnt the same scale

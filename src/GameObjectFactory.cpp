@@ -1,26 +1,41 @@
 #include "GameObjectFactory.hpp"
 #include "GameObject.hpp"
+#include "IdGen.hpp"
 
-std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::ClassList{};
-std::vector<GameObjectFactory::CastFunction> GameObjectFactory::CastList{};
 Class_Id GameObjectFactory::nextIdx = 0;
 
-std::shared_ptr<GameObject> GameObjectFactory::GetInstance(Class_Id id) {
-	return ClassList[id]();
+std::vector<GameObjectFactory::InstanceConstructor> GameObjectFactory::_instConstructors{};
+std::vector<GameObjectFactory::Pakistan> 
+	GameObjectFactory::_packers{},
+	GameObjectFactory::_unpackers{};
+
+GameObjPtr GameObjectFactory::GetInstance(Class_Id cid) {
+	return _instConstructors[cid]();
 }
 
-std::shared_ptr<GameObject> GameObjectFactory::CastTo(std::shared_ptr<GameObject>& ptr, Class_Id cid) {
-	assert(cid < CastList.size());
-	return CastList[cid](ptr);
+void GameObjectFactory::UnpackAs(Class_Id cid, Message& msg, GameObject* go) {
+	_unpackers[cid](msg, std::move(go));
 }
 
-void GameObjectFactory::Register_Class(Class_Id cid, InstanceConstructor ic, CastFunction cf) {
+void GameObjectFactory::PackAs(Class_Id cid, Message& msg, GameObject* go) {
+	_packers[cid](msg, std::move(go));
+}
+
+void GameObjectFactory::Register_Class(
+		Class_Id cid,
+		InstanceConstructor ic,
+		Pakistan packer,
+		Pakistan unpacker
+	) {
 	assert(cid < nextIdx);
-	if (ClassList.size() < nextIdx) {
-		ClassList.resize(nextIdx);
-		CastList.resize(nextIdx);
+
+	if (_instConstructors.size() < nextIdx) {
+		_instConstructors.resize(nextIdx);
+		_packers.resize(nextIdx);
+		_unpackers.resize(nextIdx);
 	}
 
-	ClassList[cid] = ic;
-	CastList[cid] = cf;
+	_instConstructors[cid] = ic;
+	_packers[cid] = packer;
+	_unpackers[cid] = unpacker;
 }
