@@ -19,10 +19,9 @@ std::shared_ptr<Grid> SceneManager::GetGrid(Vec2 pos) {
 }
 
 std::optional<std::shared_ptr<Grid>> SceneManager::GridAt(Vec2 pos) {
-	if (!pos.IsBad())
-		for (auto& [id, g] : grids)
-			if ((g->transform.position - pos).magnitudeSquared() < MIN_GRID_SEPERATION_SQUARED)
-				return g;
+	for (auto& [id, g] : grids)
+		if ((g->transform.position - pos).magnitudeSquared() < MIN_GRID_SEPERATION_SQUARED)
+			return g;
 
 	return std::nullopt;
 }

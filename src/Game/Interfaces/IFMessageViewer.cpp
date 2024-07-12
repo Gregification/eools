@@ -7,13 +7,9 @@ IFMessageViewer::IFMessageViewer() {
 
 	listener = Events::MakeListener<std::string>([&](std::string msg) { Post_Message(msg); });
 	
-	Post_Message("brought to you by Interfaces/IFMessageViewer");
+	//Post_Message("brought to you by Interfaces/IFMessageViewer");
 
 	Add(content | ftxui::focusPositionRelative(0, 1) | ftxui::yframe);
-
-	Events::ClientEvent::observer.AddListenerToEvent(Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, 
-		listener
-	);
 }
 
 void IFMessageViewer::Post_Message(std::string txt, ftxui::ElementDecorator decor) {

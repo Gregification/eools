@@ -33,4 +33,5 @@ public:
 private:
 	float rotation_cached;
 	gs::Transformation_2D rotatedTransformation;
+	//https://stackoverflow.com/questions/7469959/given-2-points-how-do-i-draw-a-line-at-a-right-angle-to-the-line-formed-by-the-t/7470098#7470098
 };

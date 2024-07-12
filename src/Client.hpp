@@ -13,13 +13,6 @@
 #include "better-enums/enum.h"
 #include "SceneManager.hpp"
 
-BETTER_ENUM(CLIENT_TAB, int,
-	CONTROL,
-	MAP,
-	CARGO,
-	EXPANSIONS
-);
-
 class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
 

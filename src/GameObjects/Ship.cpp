@@ -4,13 +4,20 @@
 #include "Ship.hpp"
 
 void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
-	c.DrawText(transform.position.x, transform.position.y,"s" + std::to_string(id()));
-	/*Vec2 former = Vec2(transform.offX(), transform.offY());
-	for (Vec2 v : body) {
-		transform.applyTo(v);
-		c.DrawBlockLine(former.x, former.y, v.x, v.y);
-		former = v;
-	}*/
+	#define tra transform
+	#define pos tra.position
+
+	float scale = 3;
+	c.DrawBlockCircle(pos.x, pos.y, scale);
+	
+	Transformation_2D mod = tra.getRotationTransformation();
+	Vec2 
+		start(0, scale),
+		end(0, scale * 3);
+	/*start = mod.applyTo(start);
+	end = mod.applyTo(end);*/
+
+	c.DrawBlockLine(pos.x + start.x, pos.y + start.y, pos.x + end.x, pos.y + end.y, Color::Green);
 }
 
 void Ship::packMessage(Message& msg, MsgDiffType) {

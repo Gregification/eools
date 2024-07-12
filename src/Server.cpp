@@ -152,7 +152,7 @@ void Server::run(ScreenInteractive& screen) {
 				screen.Post(Event::Custom);
 			}
 
-			//TODO: sync target should join work threads before sending
+			//TODO: sync target should join processes before sending
 			//cheeese
 			{
 				time_t rn = GetTime();
@@ -292,10 +292,6 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		case NetMsgType::GridRequest: {
 				GridRequest gr;
 				msg >> gr;
-
-				//default position
-				if (gr.pos.IsBad())
-					gr.pos = { 0,0 };
 
 				auto grid = SceneManager::GetGrid(gr.pos);
 

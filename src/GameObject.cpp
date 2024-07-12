@@ -2,8 +2,6 @@
 #include "IdGen.hpp"
 #include "GameObjectFactory.hpp"
 
-const Vec2 Vec2::BAD = Vec2(NAN, NAN);
-
 void GameObject::Update(float dt) {
 
 }

@@ -53,7 +53,7 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 									auto const &cont = InterfaceContent::publicInterfaces[i];
 
 									windowContainer->Add(Window({
-											.inner = cont.second(),
+											.inner = cont.second(*this),
 											.title = cont.first,
 											.left = 0,
 											.top = 1,
@@ -63,11 +63,11 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 								}
 						}),
 						Button("clear",		[&] { for (bool& v : list_states) v = false; }),
-						Button("cancel",	[&] { SetNewWindowDialogue(false);	for (bool& v : list_states) v = false; })
+						Button("cancel",	[&] { SetNewWindowDialogue(false); })
 					})
 				}) | Renderer([&](Element content) {
 					return vbox({
-						text("select windows to open together"),
+						text("select windows to (not) open together"),
 						separator(),
 						content
 					});
@@ -120,7 +120,6 @@ void Client::run(ScreenInteractive& screen) {
 		msg << gr;
 		Send(msg);
 
-		assert(!gr.pos.IsBad());
 		unresolvedResponder.push_back([pos = gr.pos, this](Client&)->bool {
 				auto g = SceneManager::GridAt(pos);
 				if (g) {
@@ -129,7 +128,7 @@ void Client::run(ScreenInteractive& screen) {
 					//add ship
 					currentGrid->AddObject(ship);
 
-					//send POST for player
+					//send POST to add this player
 					Send(SceneManager::POST(currentGrid->id(), ship.get()));
 
 					return true;

@@ -1,10 +1,11 @@
 #pragma once
 
+#include <array>
+#include <cmath>
 #include <cmath>
 #include <limits>
 #include <vector>
-#include <array>
-#include <cmath>
+#include <variant>
 
 #include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
@@ -28,68 +29,71 @@ namespace gs {
 		return y * (1.5F - (x2 * y * y));
 	}
 
-	struct Vec2 {
-		Unit x, y;
+	template<typename T>
+	struct Vec2_T {
+		T x, y;
 
-		Vec2() : Vec2(0,0) {}
-		Vec2(Unit x, Unit y) : x(x), y(y) {}
-		Vec2(const Vec2& other) : x(other.x), y(other.y) {}
+		Vec2_T() : Vec2_T(T(), T()) {}
+		Vec2_T(T x, T y) : x(x), y(y) {}
+		Vec2_T(const Vec2_T& other) : x(other.x), y(other.y) {}
 
-		static const Vec2 BAD;//(NAN,NAN)
-
-		static Vec2 UnitVec(const Vec2& other) {
-			Vec2 ret(other.x, other.y);
+		static Vec2_T UnitVec(const Vec2_T& other) {
+			Vec2_T ret(other.x, other.y);
 			float ivsqrt = Q_inverseSqrt(other.magnitudeSquared());
 			if (ivsqrt != 0) ret *= ivsqrt;
 			return ret;
 		}
 
-		static Vec2 Rot(const Vec2& point, const Vec2& pivot, const float radian) {
+		static Vec2_T Rot(const Vec2_T& point, const Vec2_T& pivot, const float radian) {
 			float s = std::sinf(radian);
 			float c = std::cosf(radian);
-			Vec2 ret = point - pivot;
-		
-			return Vec2(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
-		}
+			Vec2_T ret = point - pivot;
 
-		bool IsBad() {
-			return x == NAN || y == NAN;
+			return Vec2_T(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
 		}
 
 		//https://youtu.be/Ip3X9LOh2dk?t=150
-		static float determinate(const Vec2& a, const Vec2& b) {
+		static float determinate(const Vec2_T& a, const Vec2_T& b) {
 			return (a.x + b.x) * (a.y + b.y);
 		}
 
-		Unit magnitude()			const { return std::sqrtf(magnitudeSquared()); }
-		Unit magnitudeSquared()		const { return x * x + y * y; }
-		Unit sum()					const { return x + y; }
-		Unit dot(const Vec2& other)	const { return ((*this) * other).sum(); }
+		T magnitude()			const { return std::sqrtf(magnitudeSquared()); }
+		T magnitudeSquared()		const { return x * x + y * y; }
+		T sum()					const { return x + y; }
+		T dot(const Vec2_T& other)	const { return ((*this) * other).sum(); }
 
-		Vec2& operator += (const Vec2& other) { x += other.x;	y += other.y;	return *this; }
-		Vec2& operator -= (const Vec2& other) { x -= other.x;	y -= other.y;	return *this; }
-		Vec2& operator *= (const Vec2& other) { x *= other.x;	y *= other.y;	return *this; }
-		Vec2& operator /= (const Vec2& other) { x /= other.x;	y /= other.y;	return *this; }
-		Vec2& operator += (const Unit other) { x += other;		y += other;		return *this; }
-		Vec2& operator -= (const Unit other) { x -= other;		y -= other;		return *this; }
-		Vec2& operator *= (const Unit other) { x *= other;		y *= other;		return *this; }
-		Vec2& operator /= (const Unit other) { x /= other;		y /= other;		return *this; }
-		Vec2 operator + (const Vec2& other) const { return Vec2(x + other.x, y - other.y); }
-		Vec2 operator - (const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
-		Vec2 operator * (const Vec2& other) const { return Vec2(x * other.x, y * other.y); }
-		Vec2 operator / (const Vec2& other) const { return Vec2(x / other.x, y / other.y); }
-		Vec2 operator + (const Unit other) const { return Vec2(x + other, y + other); }
-		Vec2 operator - (const Unit other) const { return Vec2(x - other, y - other); }
-		Vec2 operator * (const Unit other) const { return Vec2(x * other, y * other); }
-		Vec2 operator / (const Unit other) const { return Vec2(x / other, y / other); }
+		Vec2_T& operator += (const Vec2_T& other) { x += other.x;	y += other.y;	return *this; }
+		Vec2_T& operator -= (const Vec2_T& other) { x -= other.x;	y -= other.y;	return *this; }
+		Vec2_T& operator *= (const Vec2_T& other) { x *= other.x;	y *= other.y;	return *this; }
+		Vec2_T& operator /= (const Vec2_T& other) { x /= other.x;	y /= other.y;	return *this; }
+		Vec2_T& operator += (const T other) { x += other;		y += other;		return *this; }
+		Vec2_T& operator -= (const T other) { x -= other;		y -= other;		return *this; }
+		Vec2_T& operator *= (const T other) { x *= other;		y *= other;		return *this; }
+		Vec2_T& operator /= (const T other) { x /= other;		y /= other;		return *this; }
+		Vec2_T operator + (const Vec2_T& other) const { return Vec2_T(x + other.x, y - other.y); }
+		Vec2_T operator - (const Vec2_T& other) const { return Vec2_T(x - other.x, y - other.y); }
+		Vec2_T operator * (const Vec2_T& other) const { return Vec2_T(x * other.x, y * other.y); }
+		Vec2_T operator / (const Vec2_T& other) const { return Vec2_T(x / other.x, y / other.y); }
+		Vec2_T operator + (const T other) const { return Vec2_T(x + other, y + other); }
+		Vec2_T operator - (const T other) const { return Vec2_T(x - other, y - other); }
+		Vec2_T operator * (const T other) const { return Vec2_T(x * other, y * other); }
+		Vec2_T operator / (const T other) const { return Vec2_T(x / other, y / other); }
 	};
-	static_assert(std::is_standard_layout<gs::Vec2>::value);
+	
+	typedef Vec2_T<Unit> Vec2;
+	static_assert(std::is_standard_layout<Vec2>::value);
+	typedef Vec2_T<float> Vec2_f;
+	static_assert(std::is_standard_layout<Vec2_f>::value);
+	typedef Vec2_T<double> Vec2_d;
+	static_assert(std::is_standard_layout<Vec2_d>::value);
+	typedef Vec2_T<int> Vec2_i;
+	static_assert(std::is_standard_layout<Vec2_i>::value);
 
 	struct Rectangle {
-		Rectangle() : Rectangle(Vec2(0,0), Vec2(1,1)) {}
-		Rectangle(Vec2 pos, Vec2 size) : pos(pos), size(size) {}
+		Rectangle() : Rectangle(Vec2_f(0,0), Vec2_f(1,1)) {}
+		Rectangle(Vec2_f pos, Vec2_f size) : pos(pos), size(size) {}
 
-		Vec2 pos, size;
+		Vec2_f pos, size;
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
@@ -169,9 +173,9 @@ namespace gs {
 		}
 
 		Transformation_2D getRotationTransformation() const {
-			Transformation_2D ret = Transformation_2D();
+			Transformation_2D ret;
 			ret.rotateBy(rotation);
-			return std::move(ret);
+			return ret;
 		}
 	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);

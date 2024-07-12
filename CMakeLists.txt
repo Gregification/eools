@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 
+message("PLEASE USE A FULL UNICODE FONT, PREFERIABLY CASCADIA")
+
 project(EOOLS 
     LANGUAGES CXX
     VERSION 0.0.0
@@ -62,6 +64,7 @@ list(REMOVE_ITEM SRCS ${PROJECT_MAIN})
 file(GLOB_RECURSE TESTS
     tests/*.cpp
 )
+
 
 add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN} "src/main.cpp")
 add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} "Tests/test.cpp")
