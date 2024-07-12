@@ -17,13 +17,13 @@ namespace net {
 			client
 		};
 
-		connection(owner root, asio::io_context& asioContext, asio::ip::tcp::socket socket, tsqueue<owned_message<T>>& qIn)
+		connection(owner rootClassId, asio::io_context& asioContext, asio::ip::tcp::socket socket, tsqueue<owned_message<T>>& qIn)
 			:	m_asioContext(asioContext),
 				m_socket(std::move(socket)),
 				m_qMessagesIn(qIn),
 				connectionID(-1)
 		{
-			m_OwnerType = root;
+			m_OwnerType = rootClassId;
 		}
 
 		virtual ~connection() {};

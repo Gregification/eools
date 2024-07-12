@@ -28,8 +28,11 @@ public:
 		Body()
 	{
 		setId(id);
+		_updateTimes.lastFixedUpdate = _updateTimes.lastUpdate = GetTime();
 	}
 	virtual ~GameObject() = default;
+
+	UpdateTime _updateTimes;
 
 public:
 	void setId(Instance_Id newId);
@@ -38,27 +41,27 @@ public:
 
 	std::string getDisplayName() const { return _displayName; }
 
-	void addSynchronizationTarget(SyncTarget);
+	const SyncCollection& getSynchronizationTargets();
+	void clearSynchronizationTargets();
 
-	SyncCollection getSynchronizationTargets();
-
-	//as of now its all cpu based(cringe) but the plans to split off the heavier work 
-	//	to the gpu eventually
+	//as of now its all cpu based(cringe) but the plans to split off physics 
+	// to the gpu eventually
 	//https://stackoverflow.com/questions/34447682/what-is-the-difference-between-update-fixedupdate-in-unity
 	virtual void Update(float);
 	virtual void FixedUpdate(float);
 
-	virtual void packMessage(Message&, MsgDiffType = MsgDiff_EVERYTHING);
-	virtual void unpackMessage(Message&, MsgDiffType = MsgDiff_EVERYTHING);
+	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
 
 	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D&) const;
 
 	virtual std::string GetDescription() const;
 
-
 	virtual Class_Id GetClassId() const;
 
 protected:
+	void addSynchronizationTarget(SyncTarget);
+
 	Instance_Id _instId;
 	std::string _displayName;
 

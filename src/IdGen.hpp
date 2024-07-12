@@ -40,11 +40,11 @@ void IdGen<T>::init() {
 	GameObjectFactory::Register_Class(
 		gof.class_id,
 		[] { return std::make_shared<T>(); }, //instance constructor
-		[](Message& msg, GameObject* go) { //packer
-			((T*)go)->T::packMessage(msg);
+		[](Message& msg, MsgDiffType diff, GameObject* go) { //packer
+			((T*)go)->T::packMessage(msg, diff);
 		},
-		[](Message& msg, GameObject* go) { //unpacker
-			((T*)go)->T::unpackMessage(msg);
+		[](Message& msg, MsgDiffType diff, GameObject* go) { //unpacker
+			((T*)go)->T::unpackMessage(msg, diff);
 		}
 	);
 };

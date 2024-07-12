@@ -1,5 +1,6 @@
-#include "SceneManager.hpp"
+#include <algorithm>
 
+#include "SceneManager.hpp"
 #include "GameObjectFactory.hpp"
 
 std::unordered_map<Instance_Id, std::shared_ptr<Grid>> SceneManager::grids;
@@ -48,42 +49,93 @@ void SceneManager::CorrectID(IDCorrection idc) {
 	}
 }
 
-void SceneManager::ApplyClasses(GameObjPtr go, Classes& clas, Message& msg) {
-	auto* ptr = go.get();
-	for (Class_Id cid : clas.class_ids) {
-		GameObjectFactory::UnpackAs(cid, msg, ptr);
+void SceneManager::ApplyUpdate(GameObject* go, Message& msg) {
+	//assume gop has been taken care of already
+
+	SyncTarget st;
+	while (msg.size() > 0) {
+		msg >> st;
+		GameObjectFactory::UnpackAs(st.class_id, st.diff, msg, go);
 	}
+}
+
+bool SceneManager::NeedsUpdate(GameObject* go) {
+	return !go->getSynchronizationTargets().empty();
+}
+
+Message SceneManager::POST(Instance_Id gid, GameObject* go) {
+	GameObjectPost gop{
+		.time = go->_updateTimes,
+		.rootClassId = go->GetClassId()
+	};
+	gop.id.grid_id = gid;
+	gop.id.inst_id = go->id();
+
+	Message msg;
+		msg.header.id = NetMsgType::GameObjectPost;
+	
+	go->packMessage(msg, DEFAULT_MsgDiff_EVERYTHING);
+	msg << gop;
+
+	return msg;
+}
+
+Message SceneManager::UPDATE(Instance_Id gid, GameObject* go) {
+	GameObjectUpdate gop{ .time = go->_updateTimes };
+		gop.id.grid_id = gid;
+		gop.id.inst_id = go->id();
+	
+	Message msg;
+		msg.header.id = NetMsgType::GameObjectUpdate;
+
+	for (SyncTarget st : go->getSynchronizationTargets()) {
+		GameObjectFactory::PackAs(st.class_id, st.diff, msg, go);
+		msg << st;
+	}
+
+	go->clearSynchronizationTargets();
+
+	msg << gop;
+
+	return msg;
 }
 
 std::optional<Message>
 	SceneManager::processMessage(Message& msg, GameObjectUpdate gou) {
-	Classes clas(msg);
 
 	std::shared_ptr<Grid> grid;
 
+	//if hte target grid dne, ignore current request, ask for the grid
 	auto it = grids.find(gou.id.grid_id);
-	if (it == grids.end()) { //if the target grid dne
+	if (it == grids.end()) {
 
-		//to avoid spamming mutiple grid requests. does not account for mutiple grids
+		//because this can be triggered by any Update, need a cool down to avoid spamming
+		//	the implimentation bellow does not account for mutiple grids
 		static time_t lastSent = 0;
 		time_t rn = GetTime();
 		if (rn - lastSent < 200) return std::nullopt;
 		lastSent = rn;
 
-		gou.id.inst_id = gou.id.grid_id; //get the grid instead of what ever the update was for
+		//set the grid as the thing we're trying to request
+		gou.id.inst_id = gou.id.grid_id;
+
 		goto requestCompleteObject;
 	}
 
+	//confirmed grid exists localy
 	grid = it->second;
+
 	if (!gou.id.IsGrid()) {
 		auto targ = grid->FindObject(gou.id.inst_id);
 		
+		//if missing target object, request it
 		if(!targ)
 			goto requestCompleteObject;
 
-		ApplyClasses(targ.value(), clas, msg);
-	} else 
-		ApplyClasses(grid, clas, msg);
+		//apply message content to object (is not a grid)
+		ApplyUpdate(targ.value().get(), msg);
+	} else //apply message content to object(is a grid)
+		ApplyUpdate(grid.get(), msg);
 
 	return std::nullopt;
 
@@ -103,24 +155,25 @@ std::optional<Message>
 	SceneManager::processMessage(Message& msg, GameObjectPost gop) {
 
 	auto git = grids.find(gop.id.grid_id);
-	Classes clas(msg);
 
 	if (gop.id.IsGrid()) {
 		std::shared_ptr<Grid> obj;
 		
 		//make new grid if necessary, reuse old one otherwise
 		if (git == grids.end()) {
-			obj = dynamic_pointer_cast<Grid>(GameObjectFactory::GetInstance(clas.class_ids[0]));
+			obj = static_pointer_cast<Grid>(GameObjectFactory::GetInstance(gop.rootClassId));
+
+			obj->setId(gop.id.grid_id);
+
+			grids[gop.id.grid_id] = obj;
 		} else {
 			obj = git->second;
 		}
 
-		obj->lastUpdate = obj->lastUpdate_fixed = gop.time;
-		obj->setId(gop.id.grid_id);
+		obj->_updateTimes = gop.time;
 
-		ApplyClasses(obj, clas, msg);
-		
-		grids[gop.id.grid_id] = obj;
+		//because this is post, can assume it is top class, so no need to cast
+		obj->unpackMessage(msg, DEFAULT_MsgDiff_EVERYTHING);
 
 		return std::nullopt;
 	}
@@ -137,20 +190,25 @@ std::optional<Message>
 			return std::optional<net::message<NetMsgType>>{res};
 		}
 
-		//just going ot be positive and assume its not a overlapping id
-		// if it is then its over, the problem could be anywhere on server or client
-		auto obj = GameObjectFactory::GetInstance(clas.class_ids[0]);
-		obj->setId(gop.id.inst_id);
+		GameObjPtr obj;
 
-		ApplyClasses(obj, clas, msg);
+		//if is a existing opject just update it to match
+		// going with the assumption that theres no id conflict, were screwed if there is!
+		auto op = git->second->FindObject(gop.id.inst_id);
+		if (op)
+			obj = op.value();
+		else {
+			obj = GameObjectFactory::GetInstance(gop.rootClassId);
 
+			obj->setId(gop.id.inst_id);
+		}
+
+		obj->_updateTimes = gop.time;
+
+		obj->unpackMessage(msg, DEFAULT_MsgDiff_EVERYTHING);
+
+		//add to grid
 		git->second->AddObject(obj);
-
-		//synch obj with local grid. 
-		//    - this is not thread safe <- update can potentially access other objs
-		//    - can result in negative time updates (oh well)
-		obj->Update(GetDT(gop.time - git->second->lastUpdate));
-		obj->Update(GetDT(gop.time - git->second->lastUpdate_fixed));
 
 		return std::nullopt;
 	}

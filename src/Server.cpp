@@ -293,28 +293,16 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 				GridRequest gr;
 				msg >> gr;
 
+				//default position
 				if (gr.pos.IsBad())
 					gr.pos = { 0,0 };
+
 				auto grid = SceneManager::GetGrid(gr.pos);
-				
 
-				Classes clas({
-					IdGen<Grid>::gof.class_id,
-				});
-				GameObjectPost package;
-					package.id.grid_id = package.id.inst_id = grid->id();
-					package.time = grid->lastUpdate;
-
-				//message packing
-				msg.body.clear();
-				msg.header.id = NetMsgType::GameObjectPost;
-				grid->packMessage(msg);
-
-				clas.Pack(msg);
-
-				msg << package;
-
-				MessageClient(client, msg);
+				MessageClient(
+					client,
+					SceneManager::POST(grid->id(), grid.get())
+				);
 			}break;
 		case NetMsgType::GameObjectUpdate: {
 				Message msgCpy = msg;
@@ -352,26 +340,14 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 							op ? "true" : "false"),
 						ftxui::color(ftxui::Color::Yellow));
 
-
+				//if local does not have
 				if (!op)
 					break; //its over, try again later and pray it works
 
-				GameObjPtr goptr = op.value();
-
-				//send back the obj with POST
-				GameObjectPost gop{
-					.id = rbi.id,
-					.time = SceneManager::grids[rbi.id.grid_id]->lastUpdate //we live in a high trust socitey
-				};
-				Classes cls{ {goptr->GetClassId()}};
-
-				msg.header.id = NetMsgType::GameObjectPost;
-				msg.body.clear();
-				goptr->packMessage(msg);
-				cls.Pack(msg);
-				msg << gop;
-
-				MessageClient(client, msg);
+				MessageClient(
+					client,
+					SceneManager::POST(rbi.id.grid_id, op.value().get())
+				);
 			}break;
 
 		default: {}

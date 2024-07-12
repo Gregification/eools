@@ -129,21 +129,8 @@ void Client::run(ScreenInteractive& screen) {
 					//add ship
 					currentGrid->AddObject(ship);
 
-					//send POST to server
-					GameObjectPost gop;
-						gop.time = currentGrid->lastUpdate;
-						gop.id.grid_id = currentGrid->id();
-						gop.id.inst_id = ship->id();
-					Classes clas{ {ship->GetClassId() }};
-					Message msg;
-
-					msg.header.id = NetMsgType::GameObjectPost;
-
-					ship->packMessage(msg);
-					clas.Pack(msg);
-					msg << gop;
-
-					Send(msg);
+					//send POST for player
+					Send(SceneManager::POST(currentGrid->id(), ship.get()));
 
 					return true;
 				}
@@ -186,26 +173,16 @@ void Client::run(ScreenInteractive& screen) {
 
 			if (currentGrid) {
 				time_t rn = GetTime();
-				currentGrid->Update(rn - currentGrid->lastUpdate);
-				currentGrid->FixedUpdate(rn - currentGrid->lastUpdate_fixed);
-			}
+				currentGrid->Update(rn);
+				currentGrid->FixedUpdate(rn);
 
-			//sync local player
-			if(currentGrid) {
-				static Message msg{ .header{.id = NetMsgType::GameObjectUpdate} };
-				static Classes cls{ { GameObject::gof.class_id } };
-
-				GameObjectUpdate gou{.time = currentGrid->lastUpdate };
-					gou.id.grid_id = currentGrid->id();
-					gou.id.inst_id = ship->id();
-
-				msg.body.clear();
-				
-				ship->GameObject::packMessage(msg);
-				cls.Pack(msg);
-				msg << gou;
-
-				Send(msg);
+				//sync local player
+				if (ship) {
+					if (SceneManager::NeedsUpdate(ship.get())) {
+						auto msg = SceneManager::UPDATE(currentGrid->id(), ship.get());
+						Send(msg);
+					}
+				}
 			}
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
@@ -461,20 +438,9 @@ void Client::initEvents() {
 	***********************************************************************************************************/
 
 	auto DEBUG_send_ship_update = MakeListener([&] {
-			static Message msg{ .header{.id = NetMsgType::GameObjectUpdate} };
-			static Classes cls{ { GameObject::gof.class_id } };
-
-			GameObjectUpdate gou{ .time = currentGrid->lastUpdate };
-			gou.id.grid_id = currentGrid->id();
-			gou.id.inst_id = ship->id();
-
-			msg.body.clear();
-
-			ship->GameObject::packMessage(msg);
-			cls.Pack(msg);
-			msg << gou;
-
-			Send(msg);
+			Send( //just abuse POST as update
+				SceneManager::POST(currentGrid->id(), ship.get())
+			);
 		});
 	listeners.push_back(DEBUG_send_ship_update);
 

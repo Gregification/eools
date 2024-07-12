@@ -13,12 +13,12 @@ GameObjPtr GameObjectFactory::GetInstance(Class_Id cid) {
 	return _instConstructors[cid]();
 }
 
-void GameObjectFactory::UnpackAs(Class_Id cid, Message& msg, GameObject* go) {
-	_unpackers[cid](msg, std::move(go));
+void GameObjectFactory::UnpackAs(Class_Id cid, MsgDiffType diff, Message& msg, GameObject* go) {
+	_unpackers[cid](msg, diff, go);
 }
 
-void GameObjectFactory::PackAs(Class_Id cid, Message& msg, GameObject* go) {
-	_packers[cid](msg, std::move(go));
+void GameObjectFactory::PackAs(Class_Id cid, MsgDiffType diff, Message& msg, GameObject* go) {
+	_packers[cid](msg, diff, go);
 }
 
 void GameObjectFactory::Register_Class(

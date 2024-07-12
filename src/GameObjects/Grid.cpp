@@ -4,19 +4,38 @@
 //gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
-void Grid::Update(float dt) {
-	for (auto& v : _go_vec) {
-		if (!v.go) continue;
+void Grid::Update(time_t currTime) {
+	for (int i = 0; i < _go_vec.size(); i++) {
+		if (_go_vec[i].go) {
+			GameObject* gp = _go_vec[i].go.get();
 
-		v.go->Update(dt);
+			gp->Update(GetDT(currTime - gp->lastUpdate));
+			gp->_updateTimes.lastUpdate = currTime;
+		}
 	}
 }
 
-void Grid::FixedUpdate(float dt) {
-	for (auto& v : _go_vec) {
-		if (!v.go) continue;
+void Grid::FixedUpdate(time_t currTime) {
+	for (int i = 0; i < _go_vec.size(); i++) {
+		if (_go_vec[i].go) {
+			GameObject* gp = _go_vec[i].go.get();
 
-		v.go->FixedUpdate(dt);
+			gp->FixedUpdate(GetDT(currTime - gp->lastUpdate));
+			gp->_updateTimes.lastFixedUpdate = currTime;
+		}
+	}
+}
+
+void Grid::FixedUpdate_w_messaging(time_t currTime, std::function<void(GameObject*)> godo) {
+	for (int i = 0; i < _go_vec.size(); i++) {
+		if (_go_vec[i].go) {
+			GameObject* gp = _go_vec[i].go.get();
+		
+			gp->FixedUpdate(GetDT(currTime - gp->lastUpdate));
+			gp->lastUpdate = currTime;
+
+			godo(gp);
+		}
 	}
 }
 

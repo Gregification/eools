@@ -16,7 +16,7 @@ public:
 		InstanceConstructor;
 	typedef std::function<GameObject* (GameObject*)>
 		Kazathstan;//cast-ist-stan... ba dum tiss
-	typedef std::function<void(Message&, GameObject*)>
+	typedef std::function<void(Message&, MsgDiffType, GameObject*)>
 		Pakistan;//packs and unpakcs stuff
 
 	const Class_Id class_id;
@@ -39,8 +39,8 @@ public:
 
 	static GameObjPtr GetInstance(Class_Id);
 
-	static void UnpackAs(Class_Id, Message&, GameObject*);
-	static void PackAs(Class_Id, Message&, GameObject*);
+	static void UnpackAs(Class_Id, MsgDiffType, Message&, GameObject*);
+	static void PackAs(Class_Id, MsgDiffType, Message&, GameObject*);
 
 	//for testing. see commented out main in Tests/test.cpp
 	static int getClassListSize() {

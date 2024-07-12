@@ -55,7 +55,17 @@ typedef BE_NetMsgType::_enumerated NetMsgType;
 typedef net::message<NetMsgType>
 	Message;
 
-//a request to send changes of the local object
+//////////////////////////////////////////////////////////////////////////////
+//	standarized syncing
+//////////////////////////////////////////////////////////////////////////////
+
+struct UpdateTime {
+	time_t lastUpdate;
+	time_t lastFixedUpdate;
+};
+static_assert(std::is_standard_layout<UpdateTime>::value);
+
+//indicates the changes involved(for both packing & unpacking)
 struct SyncTarget {
 	Class_Id class_id;
 	MsgDiffType diff;
@@ -64,6 +74,7 @@ struct SyncTarget {
 		return class_id == other.class_id && diff == other.diff;
 	}
 };
+static_assert(std::is_standard_layout<SyncTarget>::value);
 
 struct SyncTargetHash {
 	auto operator()(const SyncTarget& sr) const -> uint16_t { //easier if hash size matches the structs size
@@ -109,7 +120,7 @@ void inline unpackArray(
 }
 
 //////////////////////////////////////////////////////////////////////////////
-//	standarized server messages
+//	standarized content
 //////////////////////////////////////////////////////////////////////////////
 
 struct ID {
@@ -189,41 +200,16 @@ static_assert(std::is_standard_layout<GridRequest>::value);
 
 struct GameObjectUpdate {
 	ID id;
-	time_t time;
-	//[Classes]
+	UpdateTime time;
 };
 static_assert(std::is_standard_layout<GameObjectUpdate>::value);
 
 struct GameObjectPost { //see server.cpp message handler for setup
 	ID id;
-	time_t	time;
-	//[Classes]
+	UpdateTime time;
+	Class_Id rootClassId;
 };
 static_assert(std::is_standard_layout<GameObjectPost>::value);
-
-struct Classes {
-	std::vector<Class_Id> class_ids;
-
-	Classes() = default;
-	Classes(std::vector<Class_Id> ids) : class_ids(ids) {}
-	Classes(net::message<NetMsgType>& msg) {
-		Unpack(msg);
-	}
-
-	void Pack(net::message<NetMsgType>& msg) {
-		packArray<Class_Id, Class_Id>(msg, class_ids, [](Class_Id cid) { return cid; });
-	}
-
-	void Unpack(net::message<NetMsgType>& msg) {
-		unpackArray<Class_Id>(msg, class_ids, [](net::message<NetMsgType>& msg) { Class_Id cid; msg >> cid; return cid; });
-	}
-
-	static Classes GetClasses(net::message<NetMsgType>& msg) {
-		Classes ret;
-		ret.Unpack(msg);
-		return ret;
-	}
-};
 
 struct GameObjectGridChange : GameObjectUpdate{
 	Instance_Id current_grid_id;

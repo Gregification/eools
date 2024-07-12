@@ -13,7 +13,7 @@ class Grid : public NetGameObject<Grid> {
 	public:
 		NetGameObject::NetGameObject;
 
-		time_t lastUpdate, lastUpdate_fixed;
+		time_t lastUpdate_fixed;
 
 		Vec2 gridPos;
 
@@ -22,8 +22,9 @@ class Grid : public NetGameObject<Grid> {
 			GameObjPtr go;
 		};
 
-		void Update(float) override;
-		void FixedUpdate(float) override;
+		void Update(time_t);
+		void FixedUpdate(time_t);
+		void FixedUpdate_w_messaging(time_t, std::function<void(GameObject*)>);
 
 		void Draw(Canvas& c, Transformation_2D& trf) const override;
 
@@ -42,6 +43,9 @@ class Grid : public NetGameObject<Grid> {
 		bool RemoveObject(Instance_Id);
 
 	private:
+		using GameObject::Update;
+		using GameObject::FixedUpdate;
+
 		//hybrid approach, objs are stored in both a map and vector
 		//map : need fast look up capabilities for processing network packets
 		//vector: need fast itterations for rendering & game processes

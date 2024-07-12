@@ -35,7 +35,12 @@ namespace SceneManager {
 	* netowrk
 	****************************************************************/
 	void CorrectID(IDCorrection);
-	void ApplyClasses(GameObjPtr, Classes&, Message&);
+	void ApplyUpdate(GameObject*, Message&);
+
+	bool NeedsUpdate(GameObject*);
+
+	Message POST(Instance_Id grid_id, GameObject* obj);
+	Message UPDATE(Instance_Id grid_id, GameObject* obj);
 
 	std::optional<Message> processMessage(Message&, GameObjectUpdate);
 	std::optional<Message> processMessage(Message&, GameObjectPost);
