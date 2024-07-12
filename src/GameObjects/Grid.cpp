@@ -32,7 +32,7 @@ void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
 	}
 }
 
-void Grid::packMessage(Message& msg) {
+void Grid::packMessage(Message& msg, MsgDiffType) {
 	packArray<GOObj, Instance_Id> (
 		msg,
 		_go_vec,
@@ -42,7 +42,7 @@ void Grid::packMessage(Message& msg) {
 	msg << gridPos;
 }
 
-void Grid::unpackMessage(Message& msg) {
+void Grid::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> gridPos;	
 
 	std::vector<Instance_Id> objs;

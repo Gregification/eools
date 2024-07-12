@@ -8,7 +8,19 @@ void GameObject::Update(float dt) {
 
 }
 
+//adds target if it didnt exist, overwrites if the ttl is shorter
+void GameObject::addSynchronizationTarget(SyncTarget st) {
+	_syncCollection.insert(st);
+}
+
+SyncCollection GameObject::getSynchronizationTargets() {
+	return _syncCollection;
+}
+
 void GameObject::FixedUpdate(float dt) {
+	static const SyncTarget syncTarg{ .class_id = IdGen<GameObject>::gof.class_id, .diff = MsgDiff_EVERYTHING };
+	addSynchronizationTarget(syncTarg);
+
 	transform.Update(dt);
 }
 
@@ -22,45 +34,21 @@ Class_Id GameObject::GetClassId() const {
 	return IdGen<GameObject>::gof.class_id;
 }
 
-void GameObject::packMessage(Message& msg) {
+void GameObject::packMessage(Message& msg, MsgDiffType) {
 	msg << transform;
 	msg << mass;
 }
 
-void GameObject::unpackMessage(Message& msg) {
+void GameObject::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> mass;
 	msg >> transform;
 }
 
-bool GameObject::NeedsNetUpdate() {
-	return true;
-}
 
 std::string GameObject::GetDescription() const {
 	return "default gameobject description";
 }
 
-std::string GameObject::getDisplayId() {
-	return displayId;
-}
-
-std::string GameObject::getDisplayName() {
-	return displayName;
-}
-
 void GameObject::setId(Instance_Id newId) {
-	instId = newId;
-
-	if (instId == BAD_ID) {
-		displayId = "BAD ID";
-	}
-	else {
-		std::stringstream ss;
-		ss << std::hex << std::uppercase << instId;
-		displayId = ss.str();
-	}
-}
-
-void GameObject::setDisplayName(std::string dispName) {
-	displayName = dispName;
+	_instId = newId;
 }

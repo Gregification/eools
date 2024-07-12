@@ -27,8 +27,8 @@ class Grid : public NetGameObject<Grid> {
 
 		void Draw(Canvas& c, Transformation_2D& trf) const override;
 
-		void packMessage(Message& msg) override;
-		void unpackMessage(Message& msg) override;
+		void packMessage(Message&, MsgDiffType = 0) override;
+		void unpackMessage(Message&, MsgDiffType = 0) override;
 
 		void RemoveAllObjects();
 		

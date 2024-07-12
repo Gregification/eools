@@ -11,7 +11,7 @@ public:
 			int targType = -1;
 
 			if (auto go = selectedObject.lock()) {
-				id		= go->getDisplayId();
+				id		= go->id();
 				name	= go->getDisplayName();
 				targType = static_cast<int>(go->GetClassId());
 			} else {

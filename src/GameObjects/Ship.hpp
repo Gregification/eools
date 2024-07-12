@@ -20,7 +20,6 @@ class Ship : public NetGameObject<Ship> {
 	public:
 		void Draw(Canvas& c, Transformation_2D& transform) const override;
 
-		void packMessage(net::message<NetMsgType>& msg) override;
-
-		void unpackMessage(net::message<NetMsgType>& msg) override;
+		void packMessage(Message&, MsgDiffType = 0) override;
+		void unpackMessage(Message&, MsgDiffType = 0) override;
 };

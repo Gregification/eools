@@ -206,15 +206,6 @@ void Client::run(ScreenInteractive& screen) {
 				msg << gou;
 
 				Send(msg);
-
-				Classes ocls{ {Ship::ClassId() } };
-				
-				msg.body.clear();
-				ship->packMessage(msg);
-				ocls.Pack(msg);
-				msg << gou;
-
-				Send(msg);
 			}
 
 			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();

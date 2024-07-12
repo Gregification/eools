@@ -41,12 +41,10 @@ void IdGen<T>::init() {
 		gof.class_id,
 		[] { return std::make_shared<T>(); }, //instance constructor
 		[](Message& msg, GameObject* go) { //packer
-			T* p = ((T*)go);
-			p->T::packMessage(msg);
+			((T*)go)->T::packMessage(msg);
 		},
 		[](Message& msg, GameObject* go) { //unpacker
-			T* p = dynamic_cast<T*>(go);
-			p->T::unpackMessage(msg);
+			((T*)go)->T::unpackMessage(msg);
 		}
 	);
 };

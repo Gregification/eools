@@ -13,12 +13,10 @@ void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
 	}*/
 }
 
-void Ship::packMessage(net::message<NetMsgType>& msg) {
-	//GameObject::packMessage(msg);
-	int a = 0;
+void Ship::packMessage(Message& msg, MsgDiffType) {
+	
 }
 
-void  Ship::unpackMessage(net::message<NetMsgType>& msg) {
-	//GameObject::unpackMessage(msg);
-	int a = 0;
+void Ship::unpackMessage(Message& msg, MsgDiffType) {
+	
 }

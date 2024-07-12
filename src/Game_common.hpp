@@ -19,6 +19,10 @@ typedef	uint8_t Class_Id;
 #define BAD_ID 0
 typedef uint64_t Instance_Id;	//instance id
 
+#define MsgDiff_EVERYTHING 0
+typedef uint8_t
+	MsgDiffType; //indicates the kind of info a message contains
+
 /*miliseconds since epoch*/
 time_t inline GetTime() {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

@@ -1,11 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <unordered_set>
 
-#include "NetCommon/eol_net.hpp"
 #include "GameStructs.hpp"
 #include "better-enums/enum.h"
-#include "Game_common.hpp"
 
 //basically server api
 //the enum is used to map to its corrosponding struct. "corrospoonding" as in the names match(very closely at least).
@@ -52,7 +51,28 @@ BETTER_ENUM(BE_NetMsgType, uint8_t,
 	GameObjectPost
 );
 typedef BE_NetMsgType::_enumerated NetMsgType;
-typedef net::message<NetMsgType> Message;
+
+typedef net::message<NetMsgType>
+	Message;
+
+//a request to send changes of the local object
+struct SyncTarget {
+	Class_Id class_id;
+	MsgDiffType diff;
+
+	bool operator==(const SyncTarget& other) const {
+		return class_id == other.class_id && diff == other.diff;
+	}
+};
+
+struct SyncTargetHash {
+	auto operator()(const SyncTarget& sr) const -> uint16_t { //easier if hash size matches the structs size
+		return std::bit_cast<std::uint16_t>(sr);
+	}
+};
+
+typedef std::unordered_set<SyncTarget, SyncTargetHash>
+	SyncCollection; //the collection type that synch requests are buffered in
 
 template<typename ELE, typename TARG = ELE>
 void inline packArray(
