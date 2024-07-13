@@ -20,10 +20,25 @@ void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
 	c.DrawBlockLine(pos.x + start.x, pos.y + start.y, pos.x + end.x, pos.y + end.y, Color::Green);
 }
 
-void Ship::packMessage(Message& msg, MsgDiffType) {
-	
+void Ship::packMessage(Message& msg, MsgDiffType diff) {
+	switch (diff) {
+		default:
+		case DEFAULT_MsgDiff_EVERYTHING: {
+			packArray<Vec2_f, Vec2_f>(msg, body);
+		} break;
+	}
 }
 
-void Ship::unpackMessage(Message& msg, MsgDiffType) {
-	
+void Ship::unpackMessage(Message& msg, MsgDiffType diff) {
+	switch (diff) {
+		default:
+		case DEFAULT_MsgDiff_EVERYTHING: {
+			unpackArray<Vec2_f>(msg, body);
+		} break;
+	}
+}
+
+const std::vector<Vec2_f> Ship::getBody() const
+{
+	return body;
 }

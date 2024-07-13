@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <functional>
 #include <unordered_set>
 
@@ -86,10 +87,10 @@ typedef std::unordered_set<SyncTarget, SyncTargetHash>
 	SyncCollection; //the collection type that synch requests are buffered in
 
 template<typename ELE, typename TARG = ELE>
-void inline packArray(
+void packArray(
 	Message& msg,
 	std::vector<ELE>& vec,
-	std::function<TARG(ELE&)> getVal
+	std::function<TARG(ELE&)> getVal = [](ELE& e) -> TARG { return e; }
 ) {
 	static_assert(std::is_standard_layout<TARG>::value);
 
@@ -100,10 +101,10 @@ void inline packArray(
 }
 
 template<typename T>
-void inline unpackArray(
+void unpackArray(
 	Message& msg,
 	std::vector<T>& arr,
-	std::function<T(Message&)> getVal
+	std::function<T(Message&)> getVal = [](Message& msg) -> T { T a; msg << a; return a; }
 ) {
 	if (msg.size() < sizeof(size_t)) return;
 
