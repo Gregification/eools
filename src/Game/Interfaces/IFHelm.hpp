@@ -8,13 +8,12 @@ class IFHelm : public InterfaceContent {
 public:
 	IFHelm();
 
-	void Of(std::shared_ptr<Ship>);
-	
-	std::weak_ptr<Ship> getOf() const;
+	void setShip(std::shared_ptr<Ship>);
 
+	std::weak_ptr<Ship> getShip() const;
 
-	std::function<void(std::shared_ptr<Ship>)> listener;
+protected:
+	std::weak_ptr<Ship> _ship;
 
-private:
-	std::weak_ptr<Ship> _of;
+	ftxui::Component getShipView() const;
 };

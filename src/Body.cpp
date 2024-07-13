@@ -13,17 +13,17 @@ void Body::updateCoverage() {
 			#define a v[i]
 			//std::max\min isnt happy with templates
 
-			//c.pos : smallest x,y pair
-			//c.size : largest x,y pair
+			//c.pos  (NW): smallest x, largest y
+			//c.size (SE): largest x, smallest y
 
 			if (c.pos.x > a.x)
 				c.pos.x = a.x;
 			else if (c.size.x < a.x)
 				c.size.x = a.x;
 
-			if (c.pos.y > a.y)
+			if (c.pos.y < a.y)
 				c.pos.y = a.y;
-			else if (c.size.y < a.y)
+			else if (c.size.y > a.y)
 				c.size.y = a.y;
 		}
 

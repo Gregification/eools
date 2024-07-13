@@ -27,12 +27,12 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 			Events::ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			mv->addListener(Events::MakeListener< std::shared_ptr<Ship>>(
 				[&](std::shared_ptr<Ship> s) {
-					mv->Of(s);
+					mv->setShip(s);
 				}
 			)
 		));
 
-		mv->Of(c.getShip());
+		mv->setShip(c.getShip());
 
 		return mv;
 	}},

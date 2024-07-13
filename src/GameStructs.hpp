@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cmath>
-#include <cmath>
 #include <limits>
 #include <type_traits>
 #include <vector>
@@ -13,6 +12,23 @@
 
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
+	static std::string getPrettyString(float n) {
+		#define maxD 3
+		#define imaxD 1/maxD
+
+		//d : exact number of difits
+		int d = static_cast<int>(std::log10f(std::abs(n)));
+
+		//ad : number of steps, and a special case to have at least a 1's place
+		int ad = d * imaxD * maxD - (d < 0) * maxD;
+
+		//adjusts decimal to the step accounting that step != #digits
+		n *= std::pow(10, -d + d - ad);
+
+		//cant figure out how to insert maxD automatically,
+		//idk y the second arguement isn't being padded
+		return std::format("{:02d}e{:03.1f}", ad, n);
+	}
 
 	/* quick inverse squareroot using defined behavior
 	 see reply on stack overlfow of original author https://stackoverflow.com/questions/24405129/how-to-implement-fast-inverse-sqrt-without-undefined-behavior
@@ -35,6 +51,7 @@ namespace gs {
 		T x, y;
 
 		Vec2_T() : Vec2_T(T(), T()) {}
+		Vec2_T(T xy) : Vec2_T(xy, xy) {}
 		Vec2_T(T x, T y) : x(x), y(y) {}
 		template<typename U>
 		explicit Vec2_T(const Vec2_T<U>& rhs) : x(rhs.x), y(rhs.y) {}
@@ -104,6 +121,10 @@ namespace gs {
 		Vec2_T operator - (const T& other) const { return Vec2_T(x - other, y - other); }
 		Vec2_T operator * (const T& other) const { return Vec2_T(x * other, y * other); }
 		Vec2_T operator / (const T& other) const { return Vec2_T(x / other, y / other); }
+
+		operator std::string() const {
+			return getPrettyString(x) + ", " + getPrettyString(y);
+		}
 	};
 	
 	typedef Vec2_T<Unit> Vec2;
