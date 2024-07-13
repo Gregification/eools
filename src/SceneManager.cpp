@@ -41,6 +41,53 @@ std::optional<GameObjPtr> SceneManager::find(ID id) {
 	}
 }
 
+void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(Message)> send, std::function<bool(GameObject*)> canSend){
+	time_t 
+		rn = GetTime(), 
+		dt;
+
+	auto goVec = g->getObjVec();
+
+	for (int i = 0; i < goVec.size(); i++) {
+		if (!(i % 5)) rn = GetTime();
+
+		if (goVec[i].go) {
+			GameObject* gp = goVec[i].go.get();
+
+			float dt_f = GetDT(rn - gp->_updateTimes.lastUpdate);
+
+			//TODO shuffle over to gpu somehow, dosen need to be in this funciton really
+			gp->GameObject::Update(dt_f);
+
+			gp->Update(dt_f);
+			gp->_updateTimes.lastUpdate = rn;
+
+			dt = rn - gp->_updateTimes.lastFixedUpdate;
+
+			if (dt > tt_fixed) {
+				dt_f = GetDT(rn - gp->_updateTimes.lastFixedUpdate);
+				
+				gp->GameObject::FixedUpdate(dt_f);
+
+				gp->FixedUpdate(dt_f);
+				gp->_updateTimes.lastFixedUpdate = rn;
+
+				if(canSend(gp) && SceneManager::NeedsUpdate(gp))
+					send(SceneManager::UPDATE(g->id(), gp));
+			}
+		}
+	}
+
+	//update the grid itself
+	g->Update(GetDT(rn - g->_updateTimes.lastUpdate));
+	g->FixedUpdate(GetDT(rn - g->_updateTimes.lastFixedUpdate));
+	g->_updateTimes.lastUpdate
+		= g->_updateTimes.lastFixedUpdate
+		= rn;
+	if (SceneManager::NeedsUpdate(g))
+		send(SceneManager::POST(g->id(), g));
+}
+
 void SceneManager::CorrectID(IDCorrection idc) {
 	auto op = find(idc.formerID);
 	if (op) {

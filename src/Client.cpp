@@ -155,23 +155,23 @@ void Client::run(ScreenInteractive& screen) {
 		Loop loop(&screen, mainContainer);
 
 		time_point
-			start	= high_resolution_clock::now(),
+			start	= steady_clock::now(),
 			now		= start,
 			lastPhysTime = start;
 
 		const time_t target = 1000 / 25;
 		time_t dt;
 
-		float avgElapse = target;
+		float numPkt, avgElapse = target;
 		const float weight = 1.0f/10;
 
 		for(;;) {		
-			start = high_resolution_clock::now();
+			start = steady_clock::now();
 
 			if (!loop.HasQuitted())
 				loop.RunOnce();
 
-			float numPkt = Update();
+			numPkt = Update();
 
 			for (int i = 0; i < unresolvedResponder.size(); i++) {
 				if (unresolvedResponder[i](*this)) {
@@ -181,24 +181,20 @@ void Client::run(ScreenInteractive& screen) {
 			}
 
 			if (currentGrid) {
-				time_t rn = GetTime();
-				currentGrid->Update(rn);
-				currentGrid->FixedUpdate(rn);
-
-				//sync local player
-				if (ship) {
-					if (SceneManager::NeedsUpdate(ship.get())) {
-						auto msg = SceneManager::UPDATE(currentGrid->id(), ship.get());
-						Send(msg);
-					}
-				}
+				SceneManager::processGrid(
+					currentGrid.get(),
+					target,
+					[&](Message m) { Send(std::move(m)); },
+					[ship = ship.get()](GameObject* g) { return g == ship; }
+				);
 			}
 
-			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-			if (dt < target) std::this_thread::sleep_for(milliseconds(target - dt));
-
-			dt = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+			if (dt < target) {
+				std::this_thread::sleep_for(milliseconds(target - dt));
+				dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
+			}
 
 			avgElapse = avgElapse + (dt - avgElapse) * weight;
 			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;

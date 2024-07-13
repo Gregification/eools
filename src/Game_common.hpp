@@ -25,7 +25,7 @@ typedef uint8_t
 
 /*miliseconds since epoch*/
 time_t inline GetTime() {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
 //keep incase want to go back to 32 bit 

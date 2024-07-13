@@ -21,7 +21,9 @@ void GameObject::clearSynchronizationTargets() {
 
 
 void GameObject::FixedUpdate(float dt) {
-	static const SyncTarget syncTarg{ .class_id = IdGen<GameObject>::gof.class_id, .diff = DEFAULT_MsgDiff_EVERYTHING };
+	static const SyncTarget syncTarg{ 
+		.class_id = IdGen<GameObject>::gof.class_id, 
+		.diff = DEFAULT_MsgDiff_EVERYTHING};
 	addSynchronizationTarget(syncTarg);
 
 	transform.Update(dt);

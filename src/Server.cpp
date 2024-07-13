@@ -155,10 +155,19 @@ void Server::run(ScreenInteractive& screen) {
 			//TODO: sync target should join processes before sending
 			//cheeese
 			{
-				time_t rn = GetTime();
+				static const time_t target = 1000 / 30;
 				for (auto [i, g] : SceneManager::grids) {
-					g->Update(rn - g->lastUpdate);
-					g->FixedUpdate(rn - g->lastUpdate_fixed);
+					if (g);
+					SceneManager::processGrid(
+						g.get(),
+						target,
+						[](auto) {
+							
+						},
+						[](auto) {
+							return false;
+						}
+					);
 				}
 			}
 
@@ -326,7 +335,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 
 				auto op = SceneManager::find(rbi.id);
 
-				if(logCommonEvents)
+				/*if(logCommonEvents)
 					messageViewer->Post_Message(
 						std::format("[received] {} - {} {}:{} op?{}",
 							client->connectionID,
@@ -334,7 +343,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 							rbi.id.grid_id,
 							rbi.id.inst_id,
 							op ? "true" : "false"),
-						ftxui::color(ftxui::Color::Yellow));
+						ftxui::color(ftxui::Color::Yellow));*/
 
 				//if local does not have
 				if (!op)

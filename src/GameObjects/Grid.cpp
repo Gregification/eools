@@ -4,40 +4,6 @@
 //gold mine https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
-void Grid::Update(time_t currTime) {
-	for (int i = 0; i < _go_vec.size(); i++) {
-		if (_go_vec[i].go) {
-			GameObject* gp = _go_vec[i].go.get();
-
-			gp->Update(GetDT(currTime - gp->lastUpdate));
-			gp->_updateTimes.lastUpdate = currTime;
-		}
-	}
-}
-
-void Grid::FixedUpdate(time_t currTime) {
-	for (int i = 0; i < _go_vec.size(); i++) {
-		if (_go_vec[i].go) {
-			GameObject* gp = _go_vec[i].go.get();
-
-			gp->FixedUpdate(GetDT(currTime - gp->lastUpdate));
-			gp->_updateTimes.lastFixedUpdate = currTime;
-		}
-	}
-}
-
-void Grid::FixedUpdate_w_messaging(time_t currTime, std::function<void(GameObject*)> godo) {
-	for (int i = 0; i < _go_vec.size(); i++) {
-		if (_go_vec[i].go) {
-			GameObject* gp = _go_vec[i].go.get();
-		
-			gp->FixedUpdate(GetDT(currTime - gp->lastUpdate));
-			gp->lastUpdate = currTime;
-
-			godo(gp);
-		}
-	}
-}
 
 void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
 	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(id()));
@@ -75,6 +41,10 @@ void Grid::unpackMessage(Message& msg, MsgDiffType) {
 void Grid::RemoveAllObjects() {
 	_go_vec.clear();
 	_go_map.clear();
+}
+
+const std::vector<Grid::GOObj> Grid::getObjVec() const {
+	return _go_vec;
 }
 
 void Grid::AddObject(GameObjPtr go) {

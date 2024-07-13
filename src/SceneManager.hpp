@@ -31,6 +31,13 @@ namespace SceneManager {
 
 	std::optional<GameObjPtr> find(ID);
 
+	void processGrid(
+		Grid*,
+		time_t,
+		std::function<void(Message)>,
+		std::function<bool(GameObject*)>
+	);
+
 	/****************************************************************
 	* netowrk
 	****************************************************************/
