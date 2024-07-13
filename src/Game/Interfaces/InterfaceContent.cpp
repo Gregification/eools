@@ -7,16 +7,19 @@
 const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces = { {
 	{"Message Viewer",[](Client&) {
 		auto mv = ftxui::Make<IFMessageViewer>();
-		mv->Post_Message("non scrollable text");
 
-		Events::ClientEvent::observer.AddListenerToEvent( //behold, a chunk
+		if(rand() < RAND_MAX / 50)
+			mv->Post_Message("We've been trying to reach you about your ship's extended warranty...");
+
+		//I LOVE NAME SPACES!!!
+		Events::ClientEvent::observer.AddListenerToEvent(
 			Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
 			mv->addListener(Events::MakeListener<std::string>(
-				[&](std::string msg) {
-					mv->Post_Message(msg);
+				[p = mv](std::string msg) {
+					p->Post_Message(msg);
 				}
-			)
-		));
+			))
+		);
 
 		return mv;
 	}},
@@ -26,8 +29,8 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 		Events::ClientEvent::observer.AddListenerToEvent(
 			Events::ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			mv->addListener(Events::MakeListener< std::shared_ptr<Ship>>(
-				[&](std::shared_ptr<Ship> s) {
-					mv->setShip(s);
+				[p = mv](std::shared_ptr<Ship> s) {
+					p->setShip(s);
 				}
 			)
 		));

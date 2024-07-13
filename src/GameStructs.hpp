@@ -13,8 +13,8 @@
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
 	static std::string getPrettyString(float n) {
-		#define maxD 3
-		#define imaxD 1/maxD
+		static const int maxD = 3;
+		static const int imaxD = 1 / maxD;
 
 		//d : exact number of difits
 		int d = static_cast<int>(std::log10f(std::abs(n)));
@@ -25,8 +25,7 @@ namespace gs {
 		//adjusts decimal to the step accounting that step != #digits
 		n *= std::pow(10, -d + d - ad);
 
-		//cant figure out how to insert maxD automatically,
-		//idk y the second arguement isn't being padded
+		//cant figure out how to insert maxD automatically
 		return std::format("{:02d}e{:03.1f}", ad, n);
 	}
 
