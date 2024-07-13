@@ -2,12 +2,7 @@
 #include <iostream>
 
 IFMessageViewer::IFMessageViewer() {
-
 	content = ftxui::Container::Vertical({});
-
-	listener = Events::MakeListener<std::string>([&](std::string msg) { Post_Message(msg); });
-	
-	//Post_Message("brought to you by Interfaces/IFMessageViewer");
 
 	Add(content | ftxui::focusPositionRelative(0, 1) | ftxui::yframe);
 }

@@ -55,8 +55,8 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 									windowContainer->Add(Window({
 											.inner = cont.second(*this),
 											.title = cont.first,
-											.left = 0,
-											.top = 1,
+											.left = i * 7 % 50,
+											.top = i * 7 % 50,
 										}));
 
 									break;
@@ -89,6 +89,10 @@ Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNe
 				return true;
 			});
 	}
+}
+
+std::shared_ptr<Ship> Client::getShip() const {
+	return ship;
 }
 
 /*
@@ -130,6 +134,12 @@ void Client::run(ScreenInteractive& screen) {
 
 					//send POST to add this player
 					Send(SceneManager::POST(currentGrid->id(), ship.get()));
+
+					//trigger the ship viewer thing
+					Events::ClientEvent::observer.invokeEvent(
+						Events::ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
+						ship
+					);
 
 					return true;
 				}

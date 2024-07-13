@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cmath>
 #include <limits>
+#include <type_traits>
 #include <vector>
 #include <variant>
 
@@ -35,7 +36,8 @@ namespace gs {
 
 		Vec2_T() : Vec2_T(T(), T()) {}
 		Vec2_T(T x, T y) : x(x), y(y) {}
-		Vec2_T(const Vec2_T& other) : x(other.x), y(other.y) {}
+		template<typename U>
+		explicit Vec2_T(const Vec2_T<U>& rhs) : x(rhs.x), y(rhs.y) {}
 
 		static Vec2_T UnitVec(const Vec2_T& other) {
 			Vec2_T ret(other.x, other.y);
@@ -62,22 +64,46 @@ namespace gs {
 		T sum()					const { return x + y; }
 		T dot(const Vec2_T& other)	const { return ((*this) * other).sum(); }
 
-		Vec2_T& operator += (const Vec2_T& other) { x += other.x;	y += other.y;	return *this; }
-		Vec2_T& operator -= (const Vec2_T& other) { x -= other.x;	y -= other.y;	return *this; }
-		Vec2_T& operator *= (const Vec2_T& other) { x *= other.x;	y *= other.y;	return *this; }
-		Vec2_T& operator /= (const Vec2_T& other) { x /= other.x;	y /= other.y;	return *this; }
-		Vec2_T& operator += (const T other) { x += other;		y += other;		return *this; }
-		Vec2_T& operator -= (const T other) { x -= other;		y -= other;		return *this; }
-		Vec2_T& operator *= (const T other) { x *= other;		y *= other;		return *this; }
-		Vec2_T& operator /= (const T other) { x /= other;		y /= other;		return *this; }
-		Vec2_T operator + (const Vec2_T& other) const { return Vec2_T(x + other.x, y - other.y); }
-		Vec2_T operator - (const Vec2_T& other) const { return Vec2_T(x - other.x, y - other.y); }
-		Vec2_T operator * (const Vec2_T& other) const { return Vec2_T(x * other.x, y * other.y); }
-		Vec2_T operator / (const Vec2_T& other) const { return Vec2_T(x / other.x, y / other.y); }
-		Vec2_T operator + (const T other) const { return Vec2_T(x + other, y + other); }
-		Vec2_T operator - (const T other) const { return Vec2_T(x - other, y - other); }
-		Vec2_T operator * (const T other) const { return Vec2_T(x * other, y * other); }
-		Vec2_T operator / (const T other) const { return Vec2_T(x / other, y / other); }
+		template<typename U,
+			typename std::enable_if<std::is_convertible<U, T>::value, int>::type = 0>
+		Vec2_T& operator=(const Vec2_T<U>& rhs) {
+			x = static_cast<T>(rhs.x);
+			y = static_cast<T>(rhs.y);
+			return *this;
+		}
+
+		template<typename U> Vec2_T<T> operator+(const Vec2_T<U>& rhs) const {
+			return Vec2_T<T>{x + static_cast<T>(rhs.x), y + static_cast<T>(rhs.y)};
+		} 
+		template<typename U> Vec2_T<T> operator-(const Vec2_T<U>& rhs) const {
+			return Vec2_T<T>{x - static_cast<T>(rhs.x), y - static_cast<T>(rhs.y)};
+		}
+		template<typename U> Vec2_T<T> operator*(const Vec2_T<U>& rhs) const {
+			return Vec2_T<T>{x * static_cast<T>(rhs.x), y * static_cast<T>(rhs.y)};
+		}
+		template<typename U> Vec2_T<T> operator/(const Vec2_T<U>& rhs) const {
+			return Vec2_T<T>{x / static_cast<T>(rhs.x), y / static_cast<T>(rhs.y)};
+		}
+		template<typename U> Vec2_T<T>& operator+=(const Vec2_T<U>& rhs) {
+			x += static_cast<T>(rhs.x); y += static_cast<T>(rhs.y); return *this;
+		}
+		template<typename U> Vec2_T<T>& operator-=(const Vec2_T<U>& rhs) {
+			x -= static_cast<T>(rhs.x); y -= static_cast<T>(rhs.y); return *this;
+		}
+		template<typename U> Vec2_T<T>& operator*=(const Vec2_T<U>& rhs) {
+			x *= static_cast<T>(rhs.x); y *= static_cast<T>(rhs.y); return *this;
+		}
+		template<typename U> Vec2_T<T>& operator/=(const Vec2_T<U>& rhs) {
+			x /= static_cast<T>(rhs.x); y /= static_cast<T>(rhs.y); return *this;
+		}
+		Vec2_T& operator += (const T& other) { x += other;		y += other;		return *this; }
+		Vec2_T& operator -= (const T& other) { x -= other;		y -= other;		return *this; }
+		Vec2_T& operator *= (const T& other) { x *= other;		y *= other;		return *this; }
+		Vec2_T& operator /= (const T& other) { x /= other;		y /= other;		return *this; }
+		Vec2_T operator + (const T& other) const { return Vec2_T(x + other, y + other); }
+		Vec2_T operator - (const T& other) const { return Vec2_T(x - other, y - other); }
+		Vec2_T operator * (const T& other) const { return Vec2_T(x * other, y * other); }
+		Vec2_T operator / (const T& other) const { return Vec2_T(x / other, y / other); }
 	};
 	
 	typedef Vec2_T<Unit> Vec2;
@@ -94,6 +120,8 @@ namespace gs {
 		Rectangle(Vec2_f pos, Vec2_f size) : pos(pos), size(size) {}
 
 		Vec2_f pos, size;
+
+		float getArea() const { return size.x * size.y; }
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
@@ -122,7 +150,8 @@ namespace gs {
 			mat[1][1] += cos;
 		}
 
-		Vec2 applyTo(Vec2 vec) const {
+		template<typename T>
+		Vec2_T<T> applyTo(Vec2_T<T> vec) const {
 			// | A B C |   | X |   | X |
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |

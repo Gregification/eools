@@ -61,7 +61,8 @@ Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
 }};
 
 Observer<ClientEvent::CLIENT_EVENT> ClientEvent::observer = { {
-	{CLIENT_EVENT::EVENT_MESSAGE, {"messages to the user", "shows windows avalible to open"}},
+	{CLIENT_EVENT::EVENT_MESSAGE, {"general events", "forwards events that the user may find usefull"}},
+	{CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS, {"operable ship select", "triggered when a operable ship is selected"}},
 } };
 
 Observer<Network::NETWORK_EVENT> Network::observer = { {

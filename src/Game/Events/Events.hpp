@@ -170,7 +170,8 @@ namespace Events {
 	/*game/ui/user events*/
 	namespace ClientEvent {
 		BETTER_ENUM(BE_CLIENT_EVENT, int, 
-			EVENT_MESSAGE	//expected std::string
+			EVENT_MESSAGE,	//expected std::string
+			ON_SHIP_OPERABLE_SHIP_FOCOUS
 		);
 		typedef BE_CLIENT_EVENT::_enumerated CLIENT_EVENT;
 

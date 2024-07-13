@@ -9,19 +9,37 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 		auto mv = ftxui::Make<IFMessageViewer>();
 		mv->Post_Message("non scrollable text");
 
-		mv->listener = Events::MakeListener<std::string>([&](std::string msg) {
-				mv->Post_Message(msg);
-		});
-		Events::ClientEvent::observer.AddListenerToEvent(
+		Events::ClientEvent::observer.AddListenerToEvent( //behold, a chunk
 			Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-			mv->listener
-		);
+			mv->addListener(Events::MakeListener<std::string>(
+				[&](std::string msg) {
+					mv->Post_Message(msg);
+				}
+			)
+		));
 
 		return mv;
 	}},
-	{"Helm",[](Client&) {
+	{"Helm",[](Client& c) {
 		auto mv = ftxui::Make<IFHelm>();
+
+		Events::ClientEvent::observer.AddListenerToEvent(
+			Events::ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
+			mv->addListener(Events::MakeListener< std::shared_ptr<Ship>>(
+				[&](std::shared_ptr<Ship> s) {
+					mv->Of(s);
+				}
+			)
+		));
+
+		mv->Of(c.getShip());
 
 		return mv;
 	}},
 } };
+
+template<typename ARG>
+std::shared_ptr<Events::Listener<ARG>> InterfaceContent::addListener(std::shared_ptr<Events::Listener<ARG>> ll) {
+	listeners.push_back(ll);
+	return ll;
+}

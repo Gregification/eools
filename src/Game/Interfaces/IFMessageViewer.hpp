@@ -22,7 +22,6 @@ class IFMessageViewer : public InterfaceContent {
 		void OnHide() override;
 
 		bool ToggleColor = true;
-		std::shared_ptr<Events::Listener<std::string>> listener;
 
 	protected:
 		ftxui::Component content;

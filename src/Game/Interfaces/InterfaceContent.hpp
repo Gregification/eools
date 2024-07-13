@@ -12,9 +12,11 @@ class InterfaceContent : public ftxui::ComponentBase {
 public:
 	virtual ~InterfaceContent() = default;
 
+	template<typename ARG>
+	std::shared_ptr<Events::Listener<ARG>> addListener(std::shared_ptr<Events::Listener<ARG>>);
+
 	//refresh content
 	virtual void Refresh() {};
-
 	/*called once when selected*/
 	virtual void OnSelect() { Refresh(); }
 	/*callled once when removed*/
@@ -31,4 +33,8 @@ public:
 	> PublicInterfacesType;
 
 	static const PublicInterfacesType publicInterfaces;
+
+protected:
+	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;
+
 };

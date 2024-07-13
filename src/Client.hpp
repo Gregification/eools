@@ -24,6 +24,8 @@ public:
 
 	void run(ScreenInteractive& screen) override;
 
+	std::shared_ptr<Ship> getShip() const;
+
 protected:
 	std::shared_ptr<Ship> ship;
 	std::shared_ptr<Grid> currentGrid;
@@ -54,7 +56,6 @@ private:
 	Component Renderer_inventory();	
 
 	void Draw(Canvas& c);
-
 public:
 	/****************************************************************
 	* game controlls
