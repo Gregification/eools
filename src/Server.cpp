@@ -153,14 +153,14 @@ void Server::run(ScreenInteractive& screen) {
 			}
 
 			//TODO: sync target should join processes before sending
+			//		this should also actually do something, its just wasted space currently
 			//cheeese
 			{
-				static const time_t target = 1000 / 30;
 				for (auto [i, g] : SceneManager::grids) {
 					if (g);
 					SceneManager::processGrid(
 						g.get(),
-						target,
+						syncTarget,
 						[](auto) {
 							
 						},
@@ -169,13 +169,6 @@ void Server::run(ScreenInteractive& screen) {
 						}
 					);
 				}
-			}
-
-			static auto lastSyncTime = high_resolution_clock::now();
-			if (duration_cast<milliseconds>(start - lastSyncTime).count() > syncTarget) {
-				lastSyncTime = start;
-
-				
 			}
 		}
 	}

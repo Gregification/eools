@@ -56,7 +56,7 @@ void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(Mess
 
 			float dt_f = GetDT(rn - gp->_updateTimes.lastUpdate);
 
-			//TODO shuffle over to gpu somehow, dosen need to be in this funciton really
+			//TODO: shuffle over to gpu somehow, dosen need to be in this funciton really
 			gp->GameObject::Update(dt_f);
 
 			gp->Update(dt_f);
@@ -67,6 +67,7 @@ void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(Mess
 			if (dt > tt_fixed) {
 				dt_f = GetDT(rn - gp->_updateTimes.lastFixedUpdate);
 				
+				//TODO: also shuffle over to gpu (maybe? i forgot :( )
 				gp->GameObject::FixedUpdate(dt_f);
 
 				gp->FixedUpdate(dt_f);
@@ -84,8 +85,8 @@ void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(Mess
 	g->_updateTimes.lastUpdate
 		= g->_updateTimes.lastFixedUpdate
 		= rn;
-	if (SceneManager::NeedsUpdate(g))
-		send(SceneManager::POST(g->id(), g));
+	if (canSend(g) && SceneManager::NeedsUpdate(g))
+		send(SceneManager::UPDATE(g->id(), g));
 }
 
 void SceneManager::CorrectID(IDCorrection idc) {

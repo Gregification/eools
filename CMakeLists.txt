@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22.1)
 
 message("PLEASE USE A FULL UNICODE FONT, PREFERIABLY CASCADIA")
 
-project(EOOLS 
+project(eools 
     LANGUAGES CXX
     VERSION 0.0.0
     DESCRIPTION "terminal game"

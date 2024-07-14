@@ -24,7 +24,7 @@ public:
 	/*called once if it was just formerly the focoused tab*/
 	virtual void OnHide() {};
 
-	static const int NUM_INTERFACES = 2;//yeah
+	static const int NUM_INTERFACES = 3;//yeah
 	typedef std::array<
 		std::pair<
 			std::string,

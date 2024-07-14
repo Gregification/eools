@@ -10,13 +10,6 @@ BETTER_ENUM(_ENUM, int,
 	B,
 	C
 );
-//enum _ENUM {
-//	A,
-//	B,
-//	C
-//};
-
-
 
 TEST_CASE("event observer works as intended", "[keybinds][ui]") {
 	//these are not a exaustive test. just to ensure its not total gribrish

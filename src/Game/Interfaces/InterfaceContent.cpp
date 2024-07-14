@@ -39,6 +39,9 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 
 		return mv;
 	}},
+	{"Controlls",[](Client& c) {
+		return ftxui::Make<IFControlls>();
+	}},
 } };
 
 template<typename ARG>

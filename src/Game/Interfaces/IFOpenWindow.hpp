@@ -2,11 +2,9 @@
 
 #include "InterfaceContent.hpp"
 
-class IFOpenWindow : InterfaceContent {
+class IFOpenWindow : public InterfaceContent {
 public:
-	IFOpenWindow() {
-
-	}
+	IFOpenWindow() = default;
 
 	void OnConfirmSelection();
 

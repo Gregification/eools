@@ -148,16 +148,13 @@ void Client::run(ScreenInteractive& screen) {
 	}
 
 	//main
-	//TODO: fix it :(
+	//TODO: fix it better
 	{
 		using namespace std::chrono;
 
 		Loop loop(&screen, mainContainer);
 
-		time_point
-			start	= steady_clock::now(),
-			now		= start,
-			lastPhysTime = start;
+		time_point start = steady_clock::now();
 
 		const time_t target = 1000 / 25;
 		time_t dt;
@@ -191,7 +188,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-			if (dt < target) {
+			if (false && dt < target) {
 				std::this_thread::sleep_for(milliseconds(target - dt));
 				dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 			}
@@ -206,12 +203,18 @@ void Client::run(ScreenInteractive& screen) {
 }
 
 void Client::OnMessage(net::message<NetMsgType> msg) {
-	if (msg.header.id != NetMsgType::Ping) {
-		auto str = BE_NetMsgType::_from_index(msg.header.id)._to_string();
-		Events::ClientEvent::observer.invokeEvent(
-			Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-			"received: " + (std::string)str
-		);
+	switch (msg.header.id) {
+		case NetMsgType::GridRequest:
+		case NetMsgType::GameObjectPost:
+		case NetMsgType::IDCorrection:
+		case NetMsgType::ConnectionStatus:
+		case NetMsgType::IDPartition:
+		case NetMsgType::RequestById:
+			Events::ClientEvent::observer.invokeEvent(
+				Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+				BE_NetMsgType::_from_index(msg.header.id)._to_string()
+			);
+		default:;
 	}
 
 	switch (msg.header.id) {
@@ -267,7 +270,6 @@ Component Client::Renderer_play() {
 			Draw(c);
 		});
 	});
-		//Container::Stacked({Window({.title = "renderer_play"})})
 }
 
 Component Client::Renderer_map() {
@@ -343,27 +345,27 @@ void Client::OnMouse(Event e) {
 	//	where the cursor is
 	Vec2 pos = { (float)(e.mouse().x) * 2, (float)(e.mouse().y) * 4 };
 
-	ship->transform.position = pos;
-
 	Vec2 dm(0,0);
 		dm.x = (e.mouse().x - 1) * 2 - mouse.x;
 		dm.y = (e.mouse().y - 1) * 4 - mouse.y;
 	mouse += dm;
 
 	switch (e.mouse().button) {
-		case Mouse::Left:
-			break;
-		case Mouse::Middle:
-			break;
-		case Mouse::Right:
+		case Mouse::Left: {
+				ship->transform.position = pos;
+			}break;
+		case Mouse::Middle: {
+
+			}break;
+		case Mouse::Right: {
 				cam.offset += dm;
-			break;
-		case Mouse::WheelUp:
+			}break;
+		case Mouse::WheelUp: {
 				cam.scale += 1 + cam.scale * 1.2;
-			break;
-		case Mouse::WheelDown:
+			}break;
+		case Mouse::WheelDown: {
 				cam.scale -= 1 + cam.scale * 1.2;
-			break;
+			}break;
 	}
 }
 
