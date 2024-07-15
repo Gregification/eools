@@ -6,15 +6,7 @@
 
 
 void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
-	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(id()));
-	c.DrawText(20, 30, "# children: " + std::to_string(_go_vec.size()));
-	int y = 30;
-	for (auto& v : _go_vec) {
-		c.DrawText(25, y+=10, "id: " + std::to_string(v.id) + "?" + (v.go ? ("exists@(" + std::to_string(v.go->transform.position.x) + "," + std::to_string(v.go->transform.position.y) + ")") : "dne"));
-		if (!v.go) continue;
-
-		v.go->Draw(c, trf);
-	}
+	
 }
 
 void Grid::packMessage(Message& msg, MsgDiffType) {

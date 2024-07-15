@@ -12,6 +12,7 @@
 
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
+
 	static std::string getPrettyString(float n) {
 		static const int maxD = 3;
 		static const int imaxD = 1 / maxD;
@@ -70,11 +71,6 @@ namespace gs {
 			return Vec2_T(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
 		}
 
-		//https://youtu.be/Ip3X9LOh2dk?t=150
-		static float determinate(const Vec2_T& a, const Vec2_T& b) {
-			return (a.x + b.x) * (a.y + b.y);
-		}
-
 		T magnitude()			const { return std::sqrtf(magnitudeSquared()); }
 		T magnitudeSquared()		const { return x * x + y * y; }
 		T sum()					const { return x + y; }
@@ -86,6 +82,10 @@ namespace gs {
 			x = static_cast<T>(rhs.x);
 			y = static_cast<T>(rhs.y);
 			return *this;
+		}
+		
+		bool operator==(const Vec2_T<T>& other) const {
+			return x == other.x && y == other.y;
 		}
 
 		template<typename U> Vec2_T<T> operator+(const Vec2_T<U>& rhs) const {
@@ -153,38 +153,71 @@ namespace gs {
 
 		Mat3x3 mat;//[row][column]
 
-		float & scaleX() { return mat[0][0]; }
-		float & scaleY() { return mat[1][1]; }
-		float & offX()	 { return mat[0][2]; }
-		float & offY()   { return mat[1][2]; }
-		float & shearX() { return mat[0][1]; }
-		float & shearY() { return mat[1][0]; }
+		inline float & scaleX() { return mat[0][0]; }
+		inline float & scaleY() { return mat[1][1]; }
+		inline float & transX()	{ return mat[0][2]; }
+		inline float & transY() { return mat[1][2]; }
+		inline float & shearX() { return mat[1][0]; }
+		inline float & shearY() { return mat[0][1]; }
 
 		void rotateBy(float rad) {
 			float
 				sin = std::sinf(rad),
 				cos = std::cosf(rad);
+
 			mat[0][0] += cos;
-			mat[0][1] += -sin;
+			mat[0][1] -= sin;
 			mat[1][0] += sin;
 			mat[1][1] += cos;
 		}
 
+		float inline getDeterminant_2D() const{
+			return DETERMINANT_2x2(mat[0][0], mat[1][0], mat[0][1], mat[1][1]);
+		}
+
+		float inline getDeterminant_3D() const {
+			return 
+				  mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
+				- mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
+				+ mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
+		}
+
+		Transformation_2D getInverse() const {
+			Mat3x3 inv;
+
+			float determinant = getDeterminant_3D();
+
+			// ...
+			if (determinant == 0) 
+				determinant = 1;
+
+			for (int x = 0; x < mat.size(); x++)
+				for (int y = 0; y < mat[x].size(); y++) {
+					inv[y][x] = DETERMINANT_2x2(
+						mat[(x + 1) % 3][(y + 1) % 3],
+						mat[(x + 2) % 3][(y + 1) % 3],
+						mat[(x + 1) % 3][(y + 2) % 3],
+						mat[(x + 2) % 3][(y + 2) % 3]
+					) / determinant;
+				}
+
+			return Transformation_2D(inv);
+		}
+
 		template<typename T>
-		Vec2_T<T> applyTo(Vec2_T<T> vec) const {
+		Vec2_T<T> applyTo(Vec2_T<T> vec, float vecz = 1) const {
 			// | A B C |   | X |   | X |
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |
 			//  [this]     [vec]  [final]
-			// ignore Z
-			const float vecz = 1;
+			// - ignore final.z
 
 			vec.x =	mat[0][0] * vec.x //ax
 				  + mat[0][1] * vec.y //by
-				  + mat[0][1];// * vecz; //cz
-			vec.x =	mat[1][0] * vec.x //dx
+				  + mat[0][2] * vecz; //cz
+			vec.y =	mat[1][0] * vec.x //dx
 				  + mat[1][1] * vec.y //ey
-				  + mat[1][1];// * vecz; //fz
+				  + mat[1][2] * vecz; //fz
 
 			return vec;
 		}
@@ -206,9 +239,12 @@ namespace gs {
 		float rotation;//radians
 		float angularVelocity;
 
+		float acceleration;
+
 		Vec2 position, velocity;
 
 		Transform() :
+			acceleration(0),
 			rotation(0),
 			angularVelocity(0),
 			position(0, 0),
@@ -217,6 +253,9 @@ namespace gs {
 
 		void Update(float dt) {
 			rotation += dt * angularVelocity;
+
+			velocity.x += acceleration * dt * std::cosf(rotation);
+			velocity.y += acceleration * dt * std::sinf(rotation);
 
 			position += velocity * dt;
 		}

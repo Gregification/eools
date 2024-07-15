@@ -3,7 +3,9 @@
 #include "Game/Interfaces/InterfaceContent.hpp"
 #include <ftxui/component/component.hpp>
 
-Client::Client() : ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())) {
+Client::Client() : 
+	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
+	mouse_screen(0) {
 	//init ui
 	{
 		windowContainer = Container::Stacked({});
@@ -298,9 +300,7 @@ Component Client::Renderer_inventory() {
 
 void Client::Draw(Canvas& c) {//play renderer
 	if (currentGrid){
-		Transformation_2D trans;
-		currentGrid->Draw(c, trans);
-		c.DrawText(10,10, "drawing current grid");
+		cam.Draw(c, currentGrid);
 	} else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
@@ -316,19 +316,19 @@ void Client::Draw(Canvas& c) {//play renderer
 		int w2 = w / 2, h2 = h / 2;
 		float o = 10 * dt;
 
-		static float offX = 4, offY = 4, xs = 1, ys = 1;
-		offX += o * xs;
-		offY += o * ys;
+		static float transX = 4, transY = 4, xs = 1, ys = 1;
+		transX += o * xs;
+		transY += o * ys;
 
-		if(offX > w/l || offX < 3) xs *= -1;
-		if(offY > h/l || offY < 3) ys *= -1;
+		if(transX > w/l || transX < 3) xs *= -1;
+		if(transY > h/l || transY < 3) ys *= -1;
 		
 		for (int i = 1; i < l; i++) {
 			c.DrawPointEllipse(
-				w2 + (mouse.x - w2) *i*i / w2,
-				h2 + (mouse.y - h2) *i*i / h2,
-				offX * i,
-				offY * i
+				w2 + (mouse_screen.x - w2) *i*i / w2,
+				h2 + (mouse_screen.y - h2) *i*i / h2,
+				transX * i,
+				transY * i
 			);
 		}
 	}
@@ -343,29 +343,61 @@ void Client::OnMouse(Event e) {
 	
 	//idk what the mouse pos is relative too but these offsets get it to 
 	//	where the cursor is
-	Vec2 pos = { (float)(e.mouse().x) * 2, (float)(e.mouse().y) * 4 };
+	Vec2_i pos = { e.mouse_screen().x * 2, e.mouse_screen().y * 4 };
 
-	Vec2 dm(0,0);
-		dm.x = (e.mouse().x - 1) * 2 - mouse.x;
-		dm.y = (e.mouse().y - 1) * 4 - mouse.y;
-	mouse += dm;
+	Vec2_i dm(
+		(e.mouse_screen().x - 1) * 2 - mouse_screen.x,
+		(e.mouse_screen().y - 1) * 4 - mouse_screen.y
+	);
 
-	switch (e.mouse().button) {
+	mouse_screen += dm;
+	cam.mouse_screen = mouse_screen;
+	cam.mouse_screen.x += 3;
+	cam.mouse_screen.y += 4;
+
+	switch (e.mouse_screen().button) {
 		case Mouse::Left: {
-				ship->transform.position = pos;
+				ship->transform.position = cam.screenToGrid(pos);
 			}break;
 		case Mouse::Middle: {
-
-			}break;
-		case Mouse::Right: {
 				cam.offset += dm;
 			}break;
+		case Mouse::Right: {
+
+			}break;
 		case Mouse::WheelUp: {
-				cam.scale += 1 + cam.scale * 1.2;
+				cam.scale -= cam.scale * 0.2f;
+				cam.scale = std::max(0.000'000'000'1f, cam.scale);
+
+				goto scaleChange;
 			}break;
 		case Mouse::WheelDown: {
-				cam.scale -= 1 + cam.scale * 1.2;
+				cam.scale += cam.scale * 0.2f;
+
+				goto scaleChange;
 			}break;
+		{
+		scaleChange:
+			Transformation_2D t;
+			t.transX() = cam.offset.x;
+			t.transY() = cam.offset.y;
+			t.scaleX() = t.scaleY() = cam.scale;
+
+			cam.offset += t.applyTo(cam.mouse_screen) - cam.mouse_screen;
+		}
+	}
+
+	switch (e.mouse_screen().button) {
+		case Mouse::Left:
+		case Mouse::Middle:
+		case Mouse::Right:
+		case Mouse::WheelUp:
+		case Mouse::WheelDown:
+			Events::ClientEvent::observer.invokeEvent(
+				Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+				"scale : " + std::to_string(cam.scale) +
+				"\noffset: " + (std::string)cam.offset
+			);
 	}
 }
 

@@ -26,16 +26,18 @@ public:
 
 	std::shared_ptr<Ship> getShip() const;
 
+	Camera cam;
+
 protected:
 	std::shared_ptr<Ship> ship;
 	std::shared_ptr<Grid> currentGrid;
 
 	void OnMessage(net::message<NetMsgType> msg) override;
 
-	Camera cam;
-	Vec2 mouse;
+	Vec2_i mouse_screen;
 
 private:
+
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it

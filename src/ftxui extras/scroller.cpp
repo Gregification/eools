@@ -39,16 +39,16 @@ namespace ftxui {
         }
 
         bool OnEvent(Event event) final {
-            if (event.is_mouse() && box_.Contain(event.mouse().x, event.mouse().y))
+            if (event.is_mouse() && box_.Contain(event.mouse_screen().x, event.mouse_screen().y))
                 TakeFocus();
 
             int selected_old = selected_;
             if (event == Event::ArrowUp || event == Event::Character('k') ||
-                (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
+                (event.is_mouse() && event.mouse_screen().button == Mouse::WheelUp)) {
                 selected_--;
             }
             if ((event == Event::ArrowDown || event == Event::Character('j') ||
-                (event.is_mouse() && event.mouse().button == Mouse::WheelDown))) {
+                (event.is_mouse() && event.mouse_screen().button == Mouse::WheelDown))) {
                 selected_++;
             }
             if (event == Event::PageDown)

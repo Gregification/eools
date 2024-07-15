@@ -14,7 +14,9 @@ class Ship : public NetGameObject<Ship> {
 		void packMessage(Message&, MsgDiffType) override;
 		void unpackMessage(Message&, MsgDiffType) override;
 
-		const std::vector<Vec2_f> getBody() const;
+		void Update(float);
+
+		const std::vector<Vec2_f> getBody() const;		
 
 	protected:
 		std::vector<Vec2_f> body;

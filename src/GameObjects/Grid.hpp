@@ -10,6 +10,8 @@
 #endif
 
 class Grid : public NetGameObject<Grid> {
+	friend class Camera;
+
 	public:
 		NetGameObject::NetGameObject;
 

@@ -5,7 +5,8 @@
 
 void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
 	#define tra transform
-	#define pos tra.position
+
+	Vec2_f pos = trans.applyTo(tra.position);
 
 	float scale = 3;
 	c.DrawBlockCircle(pos.x, pos.y, scale);
@@ -36,6 +37,10 @@ void Ship::unpackMessage(Message& msg, MsgDiffType diff) {
 			unpackArray<Vec2_f>(msg, body);
 		} break;
 	}
+}
+
+void Ship::Update(float){
+	
 }
 
 const std::vector<Vec2_f> Ship::getBody() const

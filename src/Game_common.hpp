@@ -23,6 +23,9 @@ typedef uint64_t Instance_Id;	//instance id
 typedef uint8_t
 	MsgDiffType; //indicates the kind of info a message contains
 
+//quadrants of a 2x2 matrix
+#define DETERMINANT_2x2(ii, i, iii, iv) (ii * iv - i * iii)
+
 /*miliseconds since epoch*/
 time_t inline GetTime() {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();

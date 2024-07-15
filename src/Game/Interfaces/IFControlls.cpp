@@ -12,6 +12,7 @@ IFControlls::IFControlls() {
 	Refresh();
 
 	Add(ftxui::Scroller(ftxui::Renderer([&] {
+		//honestly this is as ******** as it looks
 		auto table = ftxui::Table(options);
 		
 		table.SelectAll().Border(ftxui::BorderStyle::EMPTY);
