@@ -23,8 +23,9 @@ typedef uint64_t Instance_Id;	//instance id
 typedef uint8_t
 	MsgDiffType; //indicates the kind of info a message contains
 
-//quadrants of a 2x2 matrix
+//matrix stuff
 #define DETERMINANT_2x2(ii, i, iii, iv) (ii * iv - i * iii)
+#define PT(MAT,X,Y) MAT[Y][X]
 
 /*miliseconds since epoch*/
 time_t inline GetTime() {

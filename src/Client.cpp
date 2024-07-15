@@ -20,15 +20,6 @@ Client::Client() :
 			return buffer;
 			});
 
-		auto rend = Renderer_play() | flex
-			| CatchEvent([&](Event e) {
-				if (e.is_mouse()) {
-					OnMouse(std::move(e));
-					return true;
-				};
-				return false;
-			});
-
 		//init  modal
 		Component modalContainer = Container::Stacked({});
 		{
@@ -78,16 +69,40 @@ Client::Client() :
 			modalContainer |= Modal(modal, &showNewWindowModal);
 		}
 
+		auto rend = Renderer_play() | flex | CatchEvent([&](Event e) {
+			if (e.is_mouse()) {
+				OnMouse(std::move(e));
+				return true;
+			};
+
+			return false;
+		});
+
 		mainContainer = Container::Stacked({
 				clientStats,
 				modalContainer,
 				windowContainer,
 				rend,
-			}) | CatchEvent([&](Event e) {
+			}) | CatchEvent([&](Event e) {//this under rend's CatchEvent
+				if (e.input() == "\x1B") {
+					Events::ClientEvent::observer.invokeEvent(
+						Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+						"excape key"
+					);
+					return true;
+				}
 				if (e.is_mouse()) return false;
 
-				Events::KeyBinds::sendKey(std::move(e));
 
+				if (e.is_character()) {
+					
+					Events::ClientEvent::observer.invokeEvent(
+						Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+						e.character()
+					);
+
+					Events::KeyBinds::sendKey(std::move(e));
+				}
 				return true;
 			});
 	}
@@ -360,34 +375,40 @@ void Client::OnMouse(Event e) {
 				ship->transform.position = cam.screenToGrid(pos);
 			}break;
 		case Mouse::Middle: {
-				cam.offset += dm;
+				cam.offX() += dm.x;
+				cam.offY() += dm.y;
 			}break;
 		case Mouse::Right: {
 
 			}break;
 		case Mouse::WheelUp: {
-				cam.scale -= cam.scale * 0.2f;
-				cam.scale = std::max(0.000'000'000'1f, cam.scale);
+				cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
+				cam.trans.scaleX() = std::max(0.000'000'000'1f, cam.trans.scaleX());
+				cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
+				cam.trans.scaleY() = std::max(0.000'000'000'1f, cam.trans.scaleY());
 
 				goto scaleChange;
 			}break;
 		case Mouse::WheelDown: {
-				cam.scale += cam.scale * 0.2f;
+				cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
+				cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
 
 				goto scaleChange;
 			}break;
 		{
 		scaleChange:
-			Transformation_2D t;
-			t.transX() = cam.offset.x;
-			t.transY() = cam.offset.y;
-			t.scaleX() = t.scaleY() = cam.scale;
+			//adjust cam to matching position
+			auto newoff = cam.trans.applyTo(cam.getOffVec() + mouse_screen);
+			newoff -= mouse_screen;
 
-			cam.offset += t.applyTo(cam.mouse_screen) - cam.mouse_screen;
+			/*cam.offX() = newoff.x;
+			cam.offY() = newoff.y;*/
+
+			break;
 		}
 	}
 
-	switch (e.mouse_screen().button) {
+	/*switch (e.mouse_screen().button) {
 		case Mouse::Left:
 		case Mouse::Middle:
 		case Mouse::Right:
@@ -395,10 +416,10 @@ void Client::OnMouse(Event e) {
 		case Mouse::WheelDown:
 			Events::ClientEvent::observer.invokeEvent(
 				Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-				"scale : " + std::to_string(cam.scale) +
-				"\noffset: " + (std::string)cam.offset
+				"scale : " + (std::string)cam.getScaleVec() +
+				"\noffset: " + (std::string)cam.getOffVec()
 			);
-	}
+	}*/
 }
 
 void Client::initEvents() {

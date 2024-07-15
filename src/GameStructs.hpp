@@ -141,64 +141,91 @@ namespace gs {
 
 		Vec2_f pos, size;
 
-		float getArea() const { return size.x * size.y; }
+		inline float getArea() const { return size.x * size.y; }
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
 	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
-	using Mat3x3 = std::array<std::array<float, 3>, 3>;
+	using Arr3 = std::array<float, 3>;
+	using Mat3x3 = std::array<Arr3, 3>;
 	struct Transformation_2D {
 		Transformation_2D() : Transformation_2D(identity) {}
 		Transformation_2D(Mat3x3 mat) : mat(mat) {}
 
-		Mat3x3 mat;//[row][column]
+		// | A B C |   | X |   | X |
+		// | D E F | * | Y | = | Y |
+		// | G H I |   | Z |   | Z |
+		//  [this]     [vec]  [final]
+		// - ignore final.z
+		Mat3x3 mat;//[row][column] aka [y][x]. should help a bit since thats how the loops tend to go
 
-		inline float & scaleX() { return mat[0][0]; }
-		inline float & scaleY() { return mat[1][1]; }
-		inline float & transX()	{ return mat[0][2]; }
-		inline float & transY() { return mat[1][2]; }
-		inline float & shearX() { return mat[1][0]; }
-		inline float & shearY() { return mat[0][1]; }
+
+		//no func fo effecting Z translations because would 
+		//	then have to use Vec3's to do math
+		inline float & scaleX() { return PT(mat, 0, 0); }
+		inline float & scaleY() { return PT(mat, 1, 1); }
+		inline float & scaleZ() { return PT(mat, 2, 2); }
+		inline float & transX()	{ return PT(mat, 2, 0); }
+		inline float & transY() { return PT(mat, 2, 1); }
+		inline float & shearX() { return PT(mat, 1, 0); }
+		inline float & shearY() { return PT(mat, 0, 1); } 
 
 		void rotateBy(float rad) {
 			float
 				sin = std::sinf(rad),
 				cos = std::cosf(rad);
 
-			mat[0][0] += cos;
-			mat[0][1] -= sin;
-			mat[1][0] += sin;
-			mat[1][1] += cos;
+			PT(mat, 0, 0) = cos;
+			PT(mat, 1, 1) = cos;
+			PT(mat, 1, 0) = -sin;
+			PT(mat, 0, 1) = sin;
 		}
 
 		float inline getDeterminant_2D() const{
-			return DETERMINANT_2x2(mat[0][0], mat[1][0], mat[0][1], mat[1][1]);
+			return DETERMINANT_2x2(
+				PT(mat,0,0),
+				PT(mat,1,0),
+				PT(mat,0,1),
+				PT(mat,1,1)
+			);
 		}
 
 		float inline getDeterminant_3D() const {
-			return 
-				  mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
-				- mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
-				+ mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
-		}
+			return 0//skimmed this formula from wiki. seems shorter than having 3 sub determinants
+				+ PT(mat,0,0) * PT(mat,1,1) * PT(mat,2,2) //+aei
+				+ PT(mat,1,0) * PT(mat,2,1) * PT(mat,0,2) //+bfg
+				+ PT(mat,2,0) * PT(mat,0,1) * PT(mat,1,2) //+cdh
+				- PT(mat,2,0) * PT(mat,1,1) * PT(mat,0,2) //-ceg
+				- PT(mat,1,0) * PT(mat,0,1) * PT(mat,2,2) //-bdi
+				- PT(mat,0,0) * PT(mat,2,1) * PT(mat,1,2) //-afh
+			;
+ 		}
 
 		Transformation_2D getInverse() const {
 			Mat3x3 inv;
 
-			float determinant = getDeterminant_3D();
+			float det_3D = getDeterminant_3D();
 
 			// ...
-			if (determinant == 0) 
-				determinant = 1;
+			if (det_3D == 0) 
+				det_3D = 1;
 
-			for (int x = 0; x < mat.size(); x++)
-				for (int y = 0; y < mat[x].size(); y++) {
-					inv[y][x] = DETERMINANT_2x2(
-						mat[(x + 1) % 3][(y + 1) % 3],
-						mat[(x + 2) % 3][(y + 1) % 3],
-						mat[(x + 1) % 3][(y + 2) % 3],
-						mat[(x + 2) % 3][(y + 2) % 3]
-					) / determinant;
+			for (int x = 0; x < 3; x++)
+				for (int y = 0; y < 3; y++) {
+					//cofactor matrix
+					//& reflected
+					int
+						x1 = (x + 1) % 3,
+						x2 = (x + 2) % 3,
+						y1 = (y + 1) % 3,
+						y2 = (y + 2) % 3;
+
+					PT(inv,y,x) = DETERMINANT_2x2(
+						PT(mat,x1, y1),
+						PT(mat,x2, y1),
+						PT(mat,x1, y2),
+						PT(mat,x2, y2)
+					) / det_3D;
 				}
 
 			return Transformation_2D(inv);
@@ -206,20 +233,46 @@ namespace gs {
 
 		template<typename T>
 		Vec2_T<T> applyTo(Vec2_T<T> vec, float vecz = 1) const {
+			//can overlook Z out since G and H might as well be 0 as far as 2d is concerned
 			// | A B C |   | X |   | X |
 			// | D E F | * | Y | = | Y |
 			// | G H I |   | Z |   | Z |
-			//  [this]     [vec]  [final]
-			// - ignore final.z
+			//  [this]     [vec]   [out]
+			Vec2_T<T> out;
+			out.x =	
+				  PT(mat, 0, 0) * vec.x //ax
+				+ PT(mat, 1, 0) * vec.y //by
+				+ PT(mat, 2, 0) * vecz; //cz
+			out.y = 
+				  PT(mat, 0, 1) * vec.x //dx
+				+ PT(mat, 1, 1) * vec.y //ey
+				+ PT(mat, 2, 1) * vecz; //fz
 
-			vec.x =	mat[0][0] * vec.x //ax
-				  + mat[0][1] * vec.y //by
-				  + mat[0][2] * vecz; //cz
-			vec.y =	mat[1][0] * vec.x //dx
-				  + mat[1][1] * vec.y //ey
-				  + mat[1][2] * vecz; //fz
+			return out;
+		}
 
-			return vec;
+		//shouldnt need anything larger than this
+		Arr3 mul(const Arr3& arr) const {
+			// | A B C |   | X |   | X |
+			// | D E F | * | Y | = | Y |
+			// | G H I |   | Z |   | Z |
+			//  [this]     [arr]   [out]
+			Arr3 out;
+
+			out[0] =
+				  PT(mat, 0, 0) * arr[0]  //ax
+				+ PT(mat, 1, 0) * arr[1]  //by
+				+ PT(mat, 2, 0) * arr[2]; //cz
+			out[1] =
+				  PT(mat, 0, 1) * arr[0]  //dx
+				+ PT(mat, 1, 1) * arr[1]  //ey
+				+ PT(mat, 2, 1) * arr[2]; //fz
+			out[2] =
+				  PT(mat, 0, 2) * arr[0]  //gx
+				+ PT(mat, 1, 2) * arr[1]  //hy
+				+ PT(mat, 2, 2) * arr[2]; //iz
+
+			return out;
 		}
 
 		static constexpr Mat3x3 identity = {{
@@ -232,6 +285,11 @@ namespace gs {
 				{{0,0,0}},
 				{{0,0,1}}	//for consistency
 			}};
+		static constexpr Mat3x3 zero = { {
+				{{0,0,0}},
+				{{0,0,0}},
+				{{0,0,0}}
+			} };
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
