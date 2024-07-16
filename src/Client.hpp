@@ -37,7 +37,7 @@ protected:
 	Vec2_i mouse_screen;
 
 private:
-
+	bool isWindowSelected = false;
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it

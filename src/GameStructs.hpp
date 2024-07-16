@@ -71,6 +71,10 @@ namespace gs {
 			return Vec2_T(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
 		}
 
+		static float Slope(const Vec2_T& a, const Vec2_T& b) {
+			return (b.y - a.y) / (b.x - a.x);
+		}
+
 		T magnitude()			const { return std::sqrtf(magnitudeSquared()); }
 		T magnitudeSquared()		const { return x * x + y * y; }
 		T sum()					const { return x + y; }
@@ -158,7 +162,6 @@ namespace gs {
 		//  [this]     [vec]  [final]
 		// - ignore final.z
 		Mat3x3 mat;//[row][column] aka [y][x]. should help a bit since thats how the loops tend to go
-
 
 		//no func fo effecting Z translations because would 
 		//	then have to use Vec3's to do math

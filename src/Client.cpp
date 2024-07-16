@@ -8,7 +8,12 @@ Client::Client() :
 	mouse_screen(0) {
 	//init ui
 	{
-		windowContainer = Container::Stacked({});
+		windowContainer = Container::Stacked({}) | CatchEvent([&](Event e) {
+			//give window priority
+			//if (e.is_mouse() && isWindowSelected) return true;
+
+			return false;
+		});
 
 		clientStats = Renderer([&] {
 			static Element buffer = text("pester your cat");
@@ -84,15 +89,7 @@ Client::Client() :
 				windowContainer,
 				rend,
 			}) | CatchEvent([&](Event e) {//this under rend's CatchEvent
-				if (e.input() == "\x1B") {
-					Events::ClientEvent::observer.invokeEvent(
-						Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-						"excape key"
-					);
-					return true;
-				}
 				if (e.is_mouse()) return false;
-
 
 				if (e.is_character()) {
 					
@@ -365,6 +362,8 @@ void Client::OnMouse(Event e) {
 		(e.mouse_screen().y - 1) * 4 - mouse_screen.y
 	);
 
+	Vec2 mouseOnGrid;
+
 	mouse_screen += dm;
 	cam.mouse_screen = mouse_screen;
 	cam.mouse_screen.x += 3;
@@ -382,27 +381,31 @@ void Client::OnMouse(Event e) {
 
 			}break;
 		case Mouse::WheelUp: {
+				mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
+
 				cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
-				cam.trans.scaleX() = std::max(0.000'000'000'1f, cam.trans.scaleX());
+				cam.trans.scaleX() = std::max(0.000'001f, cam.trans.scaleX());
 				cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
-				cam.trans.scaleY() = std::max(0.000'000'000'1f, cam.trans.scaleY());
+				cam.trans.scaleY() = std::max(0.000'001f, cam.trans.scaleY());
 
 				goto scaleChange;
 			}break;
 		case Mouse::WheelDown: {
+				mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
+
 				cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
 				cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
 
 				goto scaleChange;
 			}break;
+
 		{
 		scaleChange:
 			//adjust cam to matching position
-			auto newoff = cam.trans.applyTo(cam.getOffVec() + mouse_screen);
-			newoff -= mouse_screen;
+			auto mos = cam.gridToScreen(mouseOnGrid) - cam.mouse_screen;
 
-			/*cam.offX() = newoff.x;
-			cam.offY() = newoff.y;*/
+			cam.offX() = -mos.x;
+			cam.offY() = -mos.y;
 
 			break;
 		}

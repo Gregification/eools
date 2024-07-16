@@ -2,45 +2,42 @@
 
 using namespace gs;
 
-void Body::updateCoverage() {
-	#define v verticies
-	#define c coverage
+void Body::recalAABB() {
 
-	if (c.getArea() == 0 && v.size() > 0) {
-		c.pos = c.size = v[0];
+	if (coverage.getArea() == 0 && verticies.size() > 0) {
+		coverage.pos = coverage.size = verticies[0];
 
-		for (int i = 1; i < v.size(); i++) {
-			#define a v[i]
+		for (int i = 1; i < verticies.size(); i++) {
 			//std::max\min isnt happy with templates
 
-			//c.pos  (NW): smallest x, largest y
-			//c.size (SE): largest x, smallest y
+			//coverage.pos  (NW): smallest x, largest y
+			//coverage.size (SE): largest x, smallest y
 
-			if (c.pos.x > a.x)
-				c.pos.x = a.x;
-			else if (c.size.x < a.x)
-				c.size.x = a.x;
+			if (coverage.pos.x > verticies[i].x)
+				coverage.pos.x = verticies[i].x;
+			else if (coverage.size.x < verticies[i].x)
+				coverage.size.x = verticies[i].x;
 
-			if (c.pos.y < a.y)
-				c.pos.y = a.y;
-			else if (c.size.y > a.y)
-				c.size.y = a.y;
+			if (coverage.pos.y < verticies[i].y)
+				coverage.pos.y = verticies[i].y;
+			else if (coverage.size.y > verticies[i].y)
+				coverage.size.y = verticies[i].y;
 		}
 
-		c.size -= c.pos;
+		coverage.size -= coverage.pos;
 	}
 
-	//adjust so that it can be rotated however
+	//adjust so that it coveragean be rotated however
 	// pythagorean
-	c.size *= c.size;
-	c.size *= 2;
-	c.size.x = std::sqrtf(c.size.x);
-	c.size.y = std::sqrtf(c.size.y);
+	coverage.size *= coverage.size;
+	coverage.size *= 2;
+	coverage.size.x = std::sqrtf(coverage.size.x);
+	coverage.size.y = std::sqrtf(coverage.size.y);
 }
 
-gs::Rectangle Body::getCoverage() {
+gs::Rectangle Body::getAABB() {
 	if (coverage.getArea() == 0 && verticies.size() > 1)
-		updateCoverage();
+		recalAABB();
 
 	return coverage;
 }
@@ -53,4 +50,25 @@ Transformation_2D Body::effectiveTransformation() {
 	}
 
 	return rotatedTransformation;
+}
+
+/*
+* code taken from 
+* https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+*/
+bool Body::isPointInBody(Vec2_f p) const
+{
+	bool out = false;
+
+	int a = verticies.size()-1, b = 0;
+
+	//better explained from stack overflow
+	for (int b = 0; b < verticies.size(); a = b++) {
+		if ((verticies[b].y > p.y) != (verticies[a].y > p.y) &&
+			(p.x < (verticies[a].x - verticies[b].x) * (p.y - verticies[b].y) / (verticies[a].y - verticies[b].y) + verticies[b].x)
+			)
+			out = !out;
+	}
+
+	return out;
 }

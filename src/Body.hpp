@@ -20,16 +20,18 @@ public:
 	Unit mass = .01 * KT;
 
 	gs::Transform transform;
-	std::vector<gs::Vec2_i> verticies{ {-5,-5}, {-5, 5}, {5, 5}, {5, -5} };//no concave, plz. i beg
+	std::vector<gs::Vec2_f> verticies{ {-5,-5}, {-5, 5}, {5, 5}, {5, -5} };
 
 	gs::Transformation_2D nonRotatedTransformation;
 
-	void updateCoverage();
-	gs::Rectangle getCoverage();
+	void recalAABB();
+	gs::Rectangle getAABB();
 
 	gs::Transformation_2D effectiveTransformation();
 
 	bool isDetected() { return true; }
+
+	bool isPointInBody(gs::Vec2_f) const;
 
 private:
 	gs::Rectangle coverage;//rough area that the verticies covers

@@ -38,6 +38,9 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 
 	c.DrawText(pos.x, pos.y, "scale: " + (std::string)getScaleVec());
 	c.DrawText(pos.x, pos.y + 10, "offset: " + (std::string)getOffVec());
+	c.DrawText(pos.x, pos.y + 20, "mouse: " + (std::string)mouse_screen);
+	c.DrawText(pos.x, pos.y + 30, "stog: " + (std::string)screenToGrid(mouse_screen));
+	c.DrawText(pos.x, pos.y + 40, "gtos: " + (std::string)gridToScreen(screenToGrid(mouse_screen)));
 
 	int y = 30;
 	for (auto& v : g->_go_vec) {
@@ -53,5 +56,5 @@ Vec2 Camera::screenToGrid(Vec2_i p) {
 }
 
 Vec2_i Camera::gridToScreen(Vec2 p) {
-	return static_cast<Vec2_i>(trans.applyTo(p));
+	return (Vec2_i)(trans.applyTo(p) - getOffVec());
 }

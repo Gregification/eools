@@ -35,7 +35,7 @@ ftxui::Component IFHelm::getShipView() const {
 		c.DrawPointLine(off.x, off.y, off.x, off.y + r.y, Color::Green);*/
 
 		if (s) {
-			auto cov = s->getCoverage();
+			auto cov = s->getAABB();
 			cov.pos.x = std::abs(cov.pos.x);
 			Vec2_i centered = r / 2;
 
