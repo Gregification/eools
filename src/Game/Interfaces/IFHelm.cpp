@@ -29,11 +29,6 @@ ftxui::Component IFHelm::getShipView() const {
 		auto s = _ship.lock();
 		auto c = Canvas(r.x + off.x * 2 + 3, r.y + off.y * 2 + 2);
 
-		/*c.DrawPointLine(off.x, off.y, off.x + r.x, off.y, Color::Green);
-		c.DrawPointLine(off.x + r.x, off.y + r.y, off.x + r.x, off.y, Color::Green);
-		c.DrawPointLine(off.x + r.x, off.y + r.y, off.x, off.y + r.y, Color::Green);
-		c.DrawPointLine(off.x, off.y, off.x, off.y + r.y, Color::Green);*/
-
 		if (s) {
 			auto cov = s->getAABB();
 			cov.pos.x = std::abs(cov.pos.x);

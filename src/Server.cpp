@@ -262,7 +262,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		case NetMsgType::IDPartition: {
 				static int partitionCounter = 1; //0'th reserved for server
 				
-				msg.body.clear();
+				msg._body.clear();
 
 				IDPartition part;
 					part.min = partitionCounter * STD_PARTITION_SIZE;

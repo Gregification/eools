@@ -30,7 +30,6 @@ public:
 		setId(id);
 		_updateTimes.lastFixedUpdate = _updateTimes.lastUpdate = GetTime();
 	}
-	virtual ~GameObject() = default;
 
 	UpdateTime _updateTimes;
 

@@ -256,7 +256,7 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				auto stat = ConnectionStatus();
 					stat.isQueue = false;
 
-				msg.body.clear();
+				msg._body.clear();
 				msg << stat;
 				Send(msg);
 			}break;

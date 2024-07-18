@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../NetGameObject.hpp"
+#include "../Game/Navigation.hpp"
 
 #ifdef DrawText
 #undef DrawText
@@ -8,7 +9,7 @@
 
 class Ship : public NetGameObject<Ship> {
 	public:
-		NetGameObject::NetGameObject;
+		using NetGameObject::NetGameObject;
 
 		void Draw(Canvas& c, Transformation_2D& transform) const override;
 		void packMessage(Message&, MsgDiffType) override;
@@ -17,7 +18,9 @@ class Ship : public NetGameObject<Ship> {
 		void Update(float);
 
 		const std::vector<Vec2_f> getBody() const;		
+		
+		Navigation::Navigator navigator;
 
 	protected:
-		std::vector<Vec2_f> body;
+		std::vector<Vec2_f> _body;
 };

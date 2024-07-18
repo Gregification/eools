@@ -50,7 +50,7 @@ namespace gs {
 	struct Vec2_T {
 		T x, y;
 
-		Vec2_T() : Vec2_T(T(), T()) {}
+		Vec2_T() : Vec2_T(0, 0) {}
 		Vec2_T(T xy) : Vec2_T(xy, xy) {}
 		Vec2_T(T x, T y) : x(x), y(y) {}
 		template<typename U>
@@ -297,7 +297,7 @@ namespace gs {
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
 	struct Transform {
-		float rotation;//radians
+		float rotation;//radians. i dont know enough to make it effeciently use some matrix stuff, cant figure how to read back the angle
 		float angularVelocity;
 
 		float acceleration;

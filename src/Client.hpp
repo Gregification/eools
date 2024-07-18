@@ -41,6 +41,11 @@ private:
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it
+	
+	/*
+	* functions here are called every update, return true if it can be removed.
+	* doubles as a nonblocking way to handle network requests, think ajax but even stupider.
+	*/
 	std::vector<std::function<bool(Client&)>> unresolvedResponder;
 
 	void initEvents();

@@ -6,7 +6,7 @@
 template<typename T>
 class NetGameObject : public IdGen<T>, public GameObject {
 public:
-	GameObject::GameObject;
+	using GameObject::GameObject;
 
 	Class_Id GetClassId() const override {
 		return IdGen<T>::gof.class_id;

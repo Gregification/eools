@@ -191,7 +191,7 @@ std::optional<Message>
 	
 	RequestById content{ .id = gou.id };
 
-	msg.body.clear();
+	msg._body.clear();
 	msg.header.id = NetMsgType::RequestById;
 	msg << content;
 

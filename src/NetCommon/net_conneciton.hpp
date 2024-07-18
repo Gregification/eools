@@ -115,7 +115,7 @@ namespace net {
 							return;
 						}
 
-						if (m_qMessagesOut.front().body.size() > 0) {
+						if (m_qMessagesOut.front()._body.size() > 0) {
 							WriteBody();
 						} else {
 							m_qMessagesOut.pop_front();
@@ -135,7 +135,7 @@ namespace net {
 							return;
 						}
 
-						m_msgBuffIn.body.resize(m_msgBuffIn.header.size);
+						m_msgBuffIn._body.resize(m_msgBuffIn.header.size);
 						if (m_msgBuffIn.header.size > 0) {
 							ReadBody();
 						} else {
@@ -146,7 +146,7 @@ namespace net {
 
 			//ASYNC - prime context ready to write message body
 			void WriteBody() {
-				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.front().body.size()),
+				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front()._body.data(), m_qMessagesOut.front()._body.size()),
 					[this](std::error_code ec, std::size_t length) {
 						if (ec) {
 							m_socket.close();
@@ -163,7 +163,7 @@ namespace net {
 
 			//ASYNC - prime context to read a message body
 			void ReadBody() {
-				asio::async_read(m_socket, asio::buffer(m_msgBuffIn.body.data(), m_msgBuffIn.body.size()),
+				asio::async_read(m_socket, asio::buffer(m_msgBuffIn._body.data(), m_msgBuffIn._body.size()),
 					[this](std::error_code ec, std::size_t length) {
 						if (ec) {
 							m_socket.close();

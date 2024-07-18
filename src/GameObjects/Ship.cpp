@@ -25,7 +25,7 @@ void Ship::packMessage(Message& msg, MsgDiffType diff) {
 	switch (diff) {
 		default:
 		case DEFAULT_MsgDiff_EVERYTHING: {
-			packArray<Vec2_f, Vec2_f>(msg, body);
+			packArray<Vec2_f, Vec2_f>(msg, _body);
 		} break;
 	}
 }
@@ -34,7 +34,7 @@ void Ship::unpackMessage(Message& msg, MsgDiffType diff) {
 	switch (diff) {
 		default:
 		case DEFAULT_MsgDiff_EVERYTHING: {
-			unpackArray<Vec2_f>(msg, body);
+			unpackArray<Vec2_f>(msg, _body);
 		} break;
 	}
 }
@@ -45,5 +45,5 @@ void Ship::Update(float){
 
 const std::vector<Vec2_f> Ship::getBody() const
 {
-	return body;
+	return _body;
 }

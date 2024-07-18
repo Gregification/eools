@@ -15,14 +15,14 @@ namespace net {
 	template <typename T>
 	struct message {
 		message_header<T> header{};
-		std::vector<uint8_t> body;
+		std::vector<uint8_t> _body;
 
 		size_t size() const {
-			return body.size();
+			return _body.size();
 		}
 
 		void sizeBody(const size_t size) {
-			body.resize(body.size() + size);
+			_body.resize(_body.size() + size);
 		}
 
 		friend std::ostream& operator << (std::ostream& os, const message<T>& msg) {
@@ -34,11 +34,11 @@ namespace net {
 		friend message<T>& operator << (message<T>& msg, const DT& data) {
 			static_assert(std::is_standard_layout<DT>::value, "too complex to complex to push");
 
-			size_t i = msg.body.size();
+			size_t i = msg._body.size();
 
-			msg.body.resize(i + sizeof(DT));
+			msg._body.resize(i + sizeof(DT));
 
-			std::memcpy(msg.body.data() + i, &data, sizeof(DT));
+			std::memcpy(msg._body.data() + i, &data, sizeof(DT));
 
 			msg.header.size = msg.size();
 
@@ -49,13 +49,13 @@ namespace net {
 		friend message<T>& operator >> (message<T>& msg, DT& data) {
 			static_assert(std::is_standard_layout<DT>::value, "too complex to complex to push");
 
-			size_t i = msg.body.size();
+			size_t i = msg._body.size();
 			if (i >= sizeof(DT)) {
 				i -= sizeof(DT);
 
-				std::memcpy(&data, msg.body.data() + i, sizeof(DT));
+				std::memcpy(&data, msg._body.data() + i, sizeof(DT));
 
-				msg.body.resize(i);
+				msg._body.resize(i);
 			}
 			msg.header.size = msg.size();
 			return msg;
@@ -68,7 +68,7 @@ namespace net {
 
 			std::memcpy(
 				&data,
-				body.data() + body.size() - sizeof(DT),
+				_body.data() + _body.size() - sizeof(DT),
 				sizeof(DT)
 			);
 

@@ -23,13 +23,13 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 	tr = trans.applyTo(tr);
 	br = trans.applyTo(br);
 
-	c.DrawPointLine(bl.x, bl.y, tl.x, tl.y, Color::Green);
+	/*c.DrawPointLine(bl.x, bl.y, tl.x, tl.y, Color::Green);
 	c.DrawPointLine(bl.x, bl.y, br.x, br.y, Color::Green);
 	c.DrawPointLine(tr.x, tr.y, br.x, br.y, Color::Green);
 	c.DrawPointLine(tr.x, tr.y, tl.x, tl.y, Color::Green);
 
 	c.DrawPointLine(tl.x, tl.y, br.x, br.y, Color::Blue);
-	c.DrawPointLine(bl.x, bl.y, tr.x, tr.y, Color::Orange1);
+	c.DrawPointLine(bl.x, bl.y, tr.x, tr.y, Color::Orange1);*/
 
 	//c.DrawBlockCircleFilled(mouse.x, mouse.y, 9);
 
