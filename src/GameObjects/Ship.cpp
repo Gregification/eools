@@ -15,8 +15,8 @@ void Ship::Draw(Canvas& c, Transformation_2D& trans) const {
 	Vec2 
 		start(0, scale),
 		end(0, scale * 3);
-	/*start = mod.applyTo(start);
-	end = mod.applyTo(end);*/
+	start = mod.applyTo(start);
+	end = mod.applyTo(end);
 
 	c.DrawBlockLine(pos.x + start.x, pos.y + start.y, pos.x + end.x, pos.y + end.y, Color::Green);
 }
@@ -40,7 +40,31 @@ void Ship::unpackMessage(Message& msg, MsgDiffType diff) {
 }
 
 void Ship::Update(float){
-	
+	switch (navinfo.travelState) {
+		case Navigation::TRAVEL_STATE::NONE: {
+
+			}break;
+
+		case Navigation::TRAVEL_STATE::ALIGN: {
+				navinfo.destInfo.align.targetRot;
+			}break;
+
+		case Navigation::TRAVEL_STATE::ALIGN_TO: {
+
+			}break;
+
+		case Navigation::TRAVEL_STATE::APPROACH: {
+
+			}break;
+
+		case Navigation::TRAVEL_STATE::MAINTAIN_DISTANCE: {
+
+			}break;
+
+		case Navigation::TRAVEL_STATE::ORBIT: {
+
+			}break;
+	}
 }
 
 const std::vector<Vec2_f> Ship::getBody() const

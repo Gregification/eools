@@ -10,8 +10,7 @@ public:
 	Body() :transform(),
 			rotation_cached(),
 			nonRotatedTransformation(gs::Transformation_2D::identity),
-			rotatedTransformation(gs::Transformation_2D::identity),
-			coverage({ 0,0 }, {0,0})
+			rotatedTransformation(gs::Transformation_2D::identity)
 	{}
 	virtual ~Body() = default;
 

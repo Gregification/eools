@@ -19,7 +19,7 @@ class IFMessageViewer : public InterfaceContent {
 			
 		void Refresh() override;
 		void OnDelete() override;
-		void OnHide() override;
+		void OnUnfocus() override;
 
 		bool ToggleColor = true;
 

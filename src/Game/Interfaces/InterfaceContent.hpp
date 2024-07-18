@@ -18,11 +18,11 @@ public:
 	//refresh content
 	virtual void Refresh() {};
 	/*called once when selected*/
-	virtual void OnSelect() { Refresh(); }
+	virtual void OnFocus() { Refresh(); }
 	/*callled once when removed*/
 	virtual void OnDelete() {};
 	/*called once if it was just formerly the focoused tab*/
-	virtual void OnHide() {};
+	virtual void OnUnfocus() {};
 
 	static const int NUM_INTERFACES = 3;//yeah
 	typedef std::array<

@@ -34,7 +34,7 @@ void IFMessageViewer::OnDelete() {
 	this->Detach();
 }
 
-void IFMessageViewer::OnHide() {
+void IFMessageViewer::OnUnfocus() {
 	
 
 }

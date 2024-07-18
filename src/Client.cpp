@@ -2,18 +2,19 @@
 
 #include "Game/Interfaces/InterfaceContent.hpp"
 #include <ftxui/component/component.hpp>
+#include "Game/Interfaces/IFOptions.hpp"
+
+Component Client::passThroughWindow = Renderer([&] {
+		return ftxui::emptyElement();
+	});
 
 Client::Client() : 
 	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
 	mouse_screen(0) {
 	//init ui
 	{
-		windowContainer = Container::Stacked({}) | CatchEvent([&](Event e) {
-			//give window priority
-			//if (e.is_mouse() && isWindowSelected) return true;
-
-			return false;
-		});
+		windowContainer = Container::Stacked({});
+		//windowContainer->Add(passThroughWindow);
 
 		clientStats = Renderer([&] {
 			static Element buffer = text("pester your cat");
@@ -24,6 +25,8 @@ Client::Client() :
 
 			return buffer;
 			});
+
+		auto rend = Renderer_play() | flex;
 
 		//init  modal
 		Component modalContainer = Container::Stacked({});
@@ -74,11 +77,57 @@ Client::Client() :
 			modalContainer |= Modal(modal, &showNewWindowModal);
 		}
 
-		auto rend = Renderer_play() | flex | CatchEvent([&](Event e) {
+
+		/*explination of cheesed solution for focoused window becaue this is really 
+		*	starting to look like spaghetti code. all the code for this is in the 
+		*	CatchEvent decorator of [windowContainer] and [rend]
+		* 
+		* problem: ftxui isnt able to correct the focus to what container was last used,
+		*	and because of stacked container ordering, input ment for the canvas is 
+		*	intercepted by the [windowContainer] first (very bad, cannot reorder stack).
+		* 
+		* solution: because mouse events are alwayse caught by the windows, use as 
+		*	a indicator.
+		*/
+
+		static bool wasWinSelected = false;
+
+		//put this with any new containers
+		auto windowFocusDetect = CatchEvent([&](Event e) {
 			if (e.is_mouse()) {
-				OnMouse(std::move(e));
+				if (e.mouse_screen().button == Mouse::None)
+					isWindowSelected = false;
+
 				return true;
-			};
+			}
+
+			return false;
+		});
+
+		auto windowContainer_wrapper = windowContainer | CatchEvent([&](Event e) {
+
+			if (isWindowSelected != wasWinSelected) {
+				wasWinSelected = isWindowSelected;
+
+				Events::ClientEvent::observer.invokeEvent<std::string>(
+					Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+					isWindowSelected ? "win selected" : "other selected");
+			}
+
+			if (!isWindowSelected && !showNewWindowModal) {
+				if (e.is_mouse() && e.mouse_screen().button != Mouse::None) {
+					OnMouse(std::move(e));
+					return true;
+				}
+
+				if (e.is_character()) {
+					Events::KeyBinds::sendKey(std::move(e));
+					return true;
+				}
+			}
+
+			if (e.is_mouse() && e.mouse_screen().button == Mouse::None)
+				isWindowSelected = true;
 
 			return false;
 		});
@@ -86,21 +135,8 @@ Client::Client() :
 		mainContainer = Container::Stacked({
 				clientStats,
 				modalContainer,
-				windowContainer,
-				rend,
-			}) | CatchEvent([&](Event e) {//this under rend's CatchEvent
-				if (e.is_mouse()) return false;
-
-				if (e.is_character()) {
-					
-					Events::ClientEvent::observer.invokeEvent(
-						Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-						e.character()
-					);
-
-					Events::KeyBinds::sendKey(std::move(e));
-				}
-				return true;
+				windowContainer_wrapper,
+				rend | windowFocusDetect,
 			});
 	}
 }
@@ -176,11 +212,10 @@ void Client::run(ScreenInteractive& screen) {
 		float numPkt, avgElapse = target;
 		const float weight = 1.0f/10;
 
-		for(;;) {		
+		while(!loop.HasQuitted()) {
 			start = steady_clock::now();
 
-			if (!loop.HasQuitted())
-				loop.RunOnce();
+			loop.RunOnce();
 
 			numPkt = Update();
 
@@ -211,7 +246,7 @@ void Client::run(ScreenInteractive& screen) {
 			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
 			refreshesPS = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
 
-			screen.PostEvent(Event::Custom);
+			//screen.PostEvent(Event::Custom);
 		}
 	}
 }
@@ -378,6 +413,18 @@ void Client::OnMouse(Event e) {
 				cam.offY() += dm.y;
 			}break;
 		case Mouse::Right: {
+			static std::weak_ptr<IFOptions> former;
+
+			if (former.expired()) {
+				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(cam.mouse_screen, *this);
+				former = ops;
+
+				windowContainer->Add(Window({
+					.inner = ops,
+					.left = e.mouse_screen().x,
+					.top = e.mouse_screen().y,
+					}));
+			}
 
 			}break;
 		case Mouse::WheelUp: {
@@ -425,6 +472,12 @@ void Client::OnMouse(Event e) {
 	}*/
 }
 
+template<typename T>
+std::shared_ptr<Events::Listener<T>> Client::addListener(std::shared_ptr<Events::Listener<T>> l){
+	listeners.push_back(l);
+	return l;
+}
+
 void Client::initEvents() {
 	using namespace Events;
 	/***********************************************************************************************************
@@ -440,41 +493,49 @@ void Client::initEvents() {
 	* network
 	***********************************************************************************************************/
 
-	auto network_send_message = MakeListener<net::message<NetMsgType>>([&](const net::message<NetMsgType>& m) { Send(m); });
-	listeners.push_back(network_send_message);
+	auto network_send_message = addListener(MakeListener<net::message<NetMsgType>>(
+		[&](const net::message<NetMsgType>& m) { 
+			Send(m); 
+		}));
 
 	/***********************************************************************************************************
 	* audio
 	***********************************************************************************************************/
 
-	auto DEBUG_beep = MakeListener<>([] { std::cout << "\a" << std::endl; });
-	listeners.push_back(DEBUG_beep);
-	auto DEBUG_beep_string = MakeListener<std::string>([](std::string) { std::cout << "\a" << std::endl; });
-	listeners.push_back(DEBUG_beep_string);
+	auto DEBUG_beep = addListener(MakeListener<>(
+		[] {
+			std::cout << "\a" << std::endl; 
+		}));
+	
+	auto DEBUG_beep_string = addListener(MakeListener<std::string>(
+		[](std::string) {
+			std::cout << "\a" << std::endl; 
+		}));
 
 	/***********************************************************************************************************
 	* client event
 	***********************************************************************************************************/
 
-	auto DEBUG_add_new_demo_window = MakeListener<>([&] {
+	auto DEBUG_add_new_demo_window = addListener(MakeListener<>(
+		[&] {
 			static int a = 0;
 			auto b = Window({ .title = "on call" + std::to_string(a++) });
 			windowContainer->Add(b);
-		});
-	listeners.push_back(DEBUG_add_new_demo_window);
+		}));
 
-	auto DEBUG_message_event = MakeListener<>([&]() {
+	auto DEBUG_message_event = addListener(MakeListener<>(
+		[&] {
 			static int a = 0;
 			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, std::to_string(a++));
-		});
-	listeners.push_back(DEBUG_message_event);
+		}));
 
-	auto open_new_window_dialogue = MakeListener([&] {
+	auto open_new_window_dialogue = addListener(MakeListener(
+		[&] {
 			showNewWindowModal = !showNewWindowModal;
-		});
-	listeners.push_back(open_new_window_dialogue);
+		}));
 
-	auto delete_selected_window = MakeListener([&] {
+	auto delete_selected_window = addListener(MakeListener(
+		[&] {
 			std::string message;
 
 			int count = windowContainer->ChildCount();
@@ -493,19 +554,18 @@ void Client::initEvents() {
 			}
 
 			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, message);
-		});
-	listeners.push_back(delete_selected_window);
+		}));
 
 	/***********************************************************************************************************
 	* game
 	***********************************************************************************************************/
 
-	auto DEBUG_send_ship_update = MakeListener([&] {
+	auto DEBUG_send_ship_update = addListener(MakeListener(
+		[&] {
 			Send( //just abuse POST as update
 				SceneManager::POST(currentGrid->id(), ship.get())
 			);
-		});
-	listeners.push_back(DEBUG_send_ship_update);
+		}));
 
 	/***********************************************************************************************************
 	* bindings

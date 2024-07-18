@@ -23,9 +23,19 @@ typedef uint64_t Instance_Id;	//instance id
 typedef uint8_t
 	MsgDiffType; //indicates the kind of info a message contains
 
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#include <math.h>
+#endif
+
 //matrix stuff
 #define DETERMINANT_2x2(ii, i, iii, iv) (ii * iv - i * iii)
 #define PT(MAT,X,Y) MAT[Y][X]
+
+
+/******************************************************************************
+* game stuff
+******************************************************************************/
 
 /*miliseconds since epoch*/
 time_t inline GetTime() {
@@ -36,10 +46,6 @@ time_t inline GetTime() {
 float inline GetDT(time_t dt) {
 	return dt / 1000.0;
 }
-
-/******************************************************************************
-* game stuff
-******************************************************************************/
 
 //should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates
 //	maybe use the BVH setup as the coordinates? could aleivate the issue in some cases

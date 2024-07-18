@@ -40,8 +40,14 @@ private:
 	bool isWindowSelected = false;
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
+	
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it
 	
+	Component mainContainer;
+	Component windowContainer;
+	Component clientStats;
+	static Component passThroughWindow;
+
 	/*
 	* functions here are called every update, return true if it can be removed.
 	* doubles as a nonblocking way to handle network requests, think ajax but even stupider.
@@ -53,9 +59,9 @@ private:
 	void SetNewWindowDialogue(bool);
 	void OnMouse(Event e);
 
-	Component mainContainer;
-	Component windowContainer;
-	Component clientStats;
+	/*convience funciton for adding listeners, to reduce boiler plate*/
+	template<typename T>
+	std::shared_ptr<Events::Listener<T>> addListener(std::shared_ptr<Events::Listener<T>>);
 
 	Component Renderer_play();
 	Component Renderer_map();
@@ -63,6 +69,7 @@ private:
 	Component Renderer_inventory();	
 
 	void Draw(Canvas& c);
+	
 public:
 	/****************************************************************
 	* game controlls

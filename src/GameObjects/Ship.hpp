@@ -19,7 +19,10 @@ class Ship : public NetGameObject<Ship> {
 
 		const std::vector<Vec2_f> getBody() const;		
 		
-		Navigation::Navigator navigator;
+		Navigation::NavInfo navinfo;
+
+		float rotAccele = M_PI_4;
+		float accele = 1;
 
 	protected:
 		std::vector<Vec2_f> _body;

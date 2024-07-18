@@ -10,5 +10,5 @@ public:
 
 	void Refresh() override;
 	void OnDelete() override;
-	void OnHide() override;
+	void OnUnfocus() override;
 };

@@ -48,13 +48,17 @@ namespace gs {
 
 	template<typename T>
 	struct Vec2_T {
-		T x, y;
+		T 
+			x = 0,
+			y = 0;
 
-		Vec2_T() : Vec2_T(0, 0) {}
-		Vec2_T(T xy) : Vec2_T(xy, xy) {}
-		Vec2_T(T x, T y) : x(x), y(y) {}
+		Vec2_T() = default;
+		Vec2_T(T xy) : Vec2_T(xy, xy) {};
+		Vec2_T(T xv, T yv) : x(xv), y(yv) {};
 		template<typename U>
-		explicit Vec2_T(const Vec2_T<U>& rhs) : x(rhs.x), y(rhs.y) {}
+		explicit Vec2_T(const Vec2_T<U>& rhs) : x(rhs.x), y(rhs.y) {};
+
+		~Vec2_T() = default;
 
 		static Vec2_T UnitVec(const Vec2_T& other) {
 			Vec2_T ret(other.x, other.y);
@@ -66,18 +70,20 @@ namespace gs {
 		static Vec2_T Rot(const Vec2_T& point, const Vec2_T& pivot, const float radian) {
 			float s = std::sinf(radian);
 			float c = std::cosf(radian);
-			Vec2_T ret = point - pivot;
-
-			return Vec2_T(ret.x * c - ret.y * s, ret.x * s + ret.y * c);
+			
+			return Vec2_T(
+				c * (point.x - pivot.x) - s * (point.y - pivot.y) + pivot.x,
+				s * (point.x - pivot.x) + c * (point.y - pivot.y) + pivot.y
+			);
 		}
 
 		static float Slope(const Vec2_T& a, const Vec2_T& b) {
 			return (b.y - a.y) / (b.x - a.x);
 		}
 
-		T magnitude()			const { return std::sqrtf(magnitudeSquared()); }
+		T magnitude()				const { return std::sqrtf(magnitudeSquared()); }
 		T magnitudeSquared()		const { return x * x + y * y; }
-		T sum()					const { return x + y; }
+		T sum()						const { return x + y; }
 		T dot(const Vec2_T& other)	const { return ((*this) * other).sum(); }
 
 		template<typename U,
@@ -140,9 +146,6 @@ namespace gs {
 	static_assert(std::is_standard_layout<Vec2_i>::value);
 
 	struct Rectangle {
-		Rectangle() : Rectangle(Vec2_f(0,0), Vec2_f(1,1)) {}
-		Rectangle(Vec2_f pos, Vec2_f size) : pos(pos), size(size) {}
-
 		Vec2_f pos, size;
 
 		inline float getArea() const { return size.x * size.y; }
@@ -300,23 +303,20 @@ namespace gs {
 		float rotation;//radians. i dont know enough to make it effeciently use some matrix stuff, cant figure how to read back the angle
 		float angularVelocity;
 
-		float acceleration;
+		Vec2 acceleration;
 
 		Vec2 position, velocity;
 
 		Transform() :
 			acceleration(0),
 			rotation(0),
-			angularVelocity(0),
-			position(0, 0),
-			velocity(0, 0)
+			angularVelocity(0)
 		{}
 
 		void Update(float dt) {
-			rotation += dt * angularVelocity;
+			rotation += angularVelocity * dt;
 
-			velocity.x += acceleration * dt * std::cosf(rotation);
-			velocity.y += acceleration * dt * std::sinf(rotation);
+			velocity += acceleration * dt;
 
 			position += velocity * dt;
 		}
@@ -326,6 +326,8 @@ namespace gs {
 			ret.rotateBy(rotation);
 			return ret;
 		}
+		
+		void applyAccele(float magnitude, float radian);
 	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);
 }

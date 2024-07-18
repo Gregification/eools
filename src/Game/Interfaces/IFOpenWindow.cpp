@@ -12,6 +12,6 @@ void IFOpenWindow::OnDelete() {
 
 }
 
-void IFOpenWindow::OnHide() {
+void IFOpenWindow::OnUnfocus() {
 
 }

@@ -48,7 +48,7 @@ void Grid::AddObject(GameObjPtr go) {
 
 std::optional<GameObjPtr> Grid::FindObject(Instance_Id id) {
 	auto it = _go_map.find(id);
-	if(it == _go_map.end())
+	if (it == _go_map.end())
 		return std::nullopt;
 
 	return std::make_optional<GameObjPtr>(it->second);

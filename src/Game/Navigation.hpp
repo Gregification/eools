@@ -2,6 +2,7 @@
 
 #include "../GameStructs.hpp"
 #include "../GameObject.hpp"
+#include "../GameObjects/Grid.hpp"
 
 namespace Navigation {
 	using namespace gs;
@@ -10,13 +11,13 @@ namespace Navigation {
 	//this way of having navigation be seperate from transform stops the 
 	//		implimenetaiton from caching anything but eh, skill issue?
 
-	enum TRAVEL_STATE : int8_t {
-		_ALIGN,
-		_ALIGN_TO,
-		_APPROACH,
-		_MAINTAIN_DISTANCE,
-		_NONE,
-		_ORBIT,
+	enum class TRAVEL_STATE : int8_t {
+		ALIGN,
+		ALIGN_TO,
+		APPROACH,
+		MAINTAIN_DISTANCE,
+		NONE,
+		ORBIT,
 	};
 
 	struct ALIGN {
@@ -24,8 +25,7 @@ namespace Navigation {
 	};
 
 	struct ALIGN_TO {
-		Instance_Id targetId;
-		std::weak_ptr<GameObject> targetObj;
+		ID target;
 	};
 
 	struct APPROACH {
@@ -46,18 +46,19 @@ namespace Navigation {
 	//unions do (well as much as the compiler wants you to think)
 	union DestinationInfo {
 		ALIGN				align;
-		//ALIGN_TO			align_to;
+		ALIGN_TO			align_to;
 		APPROACH			approach;
-		//MAINTAIN_DISTANCE	maintain_distance;
-		//ORBIT				orbit;
+		MAINTAIN_DISTANCE	maintain_distance;
+		ORBIT				orbit;
+
+		//required for non trivial constructors from Vec2_
+		DestinationInfo() { memset(this, 0, sizeof(DestinationInfo)); }
 	};
 	static_assert(std::is_standard_layout<DestinationInfo>::value);
 
-	struct Navigator {
+	struct NavInfo {
 		TRAVEL_STATE travelState;
 		DestinationInfo destInfo;
-
-		void navigate(gs::Transform&);
 	};
-	static_assert(std::is_standard_layout<Navigator>::value);
+	static_assert(std::is_standard_layout<NavInfo>::value);
 };
