@@ -30,10 +30,6 @@ void IFMessageViewer::Refresh() {
 	
 }
 
-void IFMessageViewer::OnDelete() {
-	this->Detach();
-}
-
 void IFMessageViewer::OnUnfocus() {
 	
 

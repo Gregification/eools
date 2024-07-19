@@ -13,6 +13,8 @@
 #include "better-enums/enum.h"
 #include "SceneManager.hpp"
 
+class InterfaceContent;
+
 class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
 
@@ -34,19 +36,23 @@ protected:
 
 	void OnMessage(net::message<NetMsgType> msg) override;
 
-	Vec2_i mouse_screen;
+	Vec2_i raw_mouse_screen;
 
 private:
 	bool isWindowSelected = false;
 	bool showNewWindowModal = false;
 	float avgPackets = 0;
 	
-	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;//purpose is to hold a active refrence for client listeners, the observer dosent handle it
+	//to keep client listeners alive since observer dosent handle it
+	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;
 	
+	//all open interfaces, seems like a bette rway to do things than
+	//	dynamic casting
+	std::vector<std::weak_ptr<InterfaceContent>> interfaceWindows;
+
 	Component mainContainer;
 	Component windowContainer;
 	Component clientStats;
-	static Component passThroughWindow;
 
 	/*
 	* functions here are called every update, return true if it can be removed.

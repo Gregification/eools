@@ -8,10 +8,6 @@ void IFOpenWindow::Refresh() {
 
 }
 
-void IFOpenWindow::OnDelete() {
-
-}
-
 void IFOpenWindow::OnUnfocus() {
 
 }

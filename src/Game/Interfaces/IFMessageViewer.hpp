@@ -18,7 +18,6 @@ class IFMessageViewer : public InterfaceContent {
 		void Post_Message(std::string, ftxui::ElementDecorator = ftxui::nothing);
 			
 		void Refresh() override;
-		void OnDelete() override;
 		void OnUnfocus() override;
 
 		bool ToggleColor = true;

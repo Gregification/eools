@@ -9,6 +9,5 @@ public:
 	void OnConfirmSelection();
 
 	void Refresh() override;
-	void OnDelete() override;
 	void OnUnfocus() override;
 };

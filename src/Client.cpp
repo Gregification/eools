@@ -4,13 +4,9 @@
 #include <ftxui/component/component.hpp>
 #include "Game/Interfaces/IFOptions.hpp"
 
-Component Client::passThroughWindow = Renderer([&] {
-		return ftxui::emptyElement();
-	});
-
 Client::Client() : 
 	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
-	mouse_screen(0) {
+	raw_mouse_screen(0) {
 	//init ui
 	{
 		windowContainer = Container::Stacked({});
@@ -53,8 +49,11 @@ Client::Client() :
 								if (list_states[i]) {
 									auto const &cont = InterfaceContent::publicInterfaces[i];
 
+									auto sp = cont.second(*this);
+									interfaceWindows.push_back(std::weak_ptr<InterfaceContent>(sp));
+
 									windowContainer->Add(Window({
-											.inner = cont.second(*this),
+											.inner = sp,
 											.title = cont.first,
 											.left = i * 7 % 50,
 											.top = i * 7 % 50,
@@ -90,12 +89,10 @@ Client::Client() :
 		*	a indicator.
 		*/
 
-		static bool wasWinSelected = false;
-
 		//put this with any new containers
 		auto windowFocusDetect = CatchEvent([&](Event e) {
 			if (e.is_mouse()) {
-				if (e.mouse_screen().button == Mouse::None)
+				if (e.mouse().button == Mouse::None)
 					isWindowSelected = false;
 
 				return true;
@@ -105,19 +102,29 @@ Client::Client() :
 		});
 
 		auto windowContainer_wrapper = windowContainer | CatchEvent([&](Event e) {
+			static bool wasWinSelected = false;
 
 			if (isWindowSelected != wasWinSelected) {
 				wasWinSelected = isWindowSelected;
 
+				Events::ClientEvent::observer.invokeEvent<>(
+					isWindowSelected ? 
+						Events::ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS 
+					:	Events::ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS
+				);
+
 				Events::ClientEvent::observer.invokeEvent<std::string>(
 					Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-					isWindowSelected ? "win selected" : "other selected");
+					isWindowSelected ? "window selected" : "other selected"
+				);
 			}
 
 			if (!isWindowSelected && !showNewWindowModal) {
-				if (e.is_mouse() && e.mouse_screen().button != Mouse::None) {
+				if (e.is_mouse()) {
 					OnMouse(std::move(e));
-					return true;
+
+					if(e.mouse().button != Mouse::None)
+						return true;
 				}
 
 				if (e.is_character()) {
@@ -126,11 +133,17 @@ Client::Client() :
 				}
 			}
 
-			if (e.is_mouse() && e.mouse_screen().button == Mouse::None)
+			if (e.is_mouse() && e.mouse().button == Mouse::None)
 				isWindowSelected = true;
 
 			return false;
 		});
+
+		/*for (int i = 0; i < windowContainer->ChildCount(); i++) {
+			auto cat = windowContainer->ChildAt(i);
+			if (cat->ChildCount() == 0)
+				cat->Detach();
+		}*/
 
 		mainContainer = Container::Stacked({
 				clientStats,
@@ -372,8 +385,8 @@ void Client::Draw(Canvas& c) {//play renderer
 		
 		for (int i = 1; i < l; i++) {
 			c.DrawPointEllipse(
-				w2 + (mouse_screen.x - w2) *i*i / w2,
-				h2 + (mouse_screen.y - h2) *i*i / h2,
+				w2 + (raw_mouse_screen.x - w2) *i*i / w2,
+				h2 + (raw_mouse_screen.y - h2) *i*i / h2,
 				transX * i,
 				transY * i
 			);
@@ -387,26 +400,22 @@ void Client::SetNewWindowDialogue(bool c) {
 
 void Client::OnMouse(Event e) {
 	assert(e.is_mouse());
-	
-	//idk what the mouse pos is relative too but these offsets get it to 
-	//	where the cursor is
-	Vec2_i pos = { e.mouse_screen().x * 2, e.mouse_screen().y * 4 };
 
 	Vec2_i dm(
-		(e.mouse_screen().x - 1) * 2 - mouse_screen.x,
-		(e.mouse_screen().y - 1) * 4 - mouse_screen.y
+		(e.mouse().x - 1) * 2 - raw_mouse_screen.x,
+		(e.mouse().y - 1) * 4 - raw_mouse_screen.y
 	);
 
 	Vec2 mouseOnGrid;
 
-	mouse_screen += dm;
-	cam.mouse_screen = mouse_screen;
+	raw_mouse_screen += dm;
+	cam.mouse_screen = raw_mouse_screen;
 	cam.mouse_screen.x += 3;
 	cam.mouse_screen.y += 4;
 
-	switch (e.mouse_screen().button) {
+	switch (e.mouse().button) {
 		case Mouse::Left: {
-				ship->transform.position = cam.screenToGrid(pos);
+				ship->transform.position = cam.screenToGrid(cam.mouse_screen);
 			}break;
 		case Mouse::Middle: {
 				cam.offX() += dm.x;
@@ -419,10 +428,12 @@ void Client::OnMouse(Event e) {
 				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(cam.mouse_screen, *this);
 				former = ops;
 
+				interfaceWindows.push_back(ops);
+
 				windowContainer->Add(Window({
-					.inner = ops,
-					.left = e.mouse_screen().x,
-					.top = e.mouse_screen().y,
+						.inner = ops,
+						.left = e.mouse().x,
+						.top = e.mouse().y,
 					}));
 			}
 
@@ -456,20 +467,9 @@ void Client::OnMouse(Event e) {
 
 			break;
 		}
-	}
 
-	/*switch (e.mouse_screen().button) {
-		case Mouse::Left:
-		case Mouse::Middle:
-		case Mouse::Right:
-		case Mouse::WheelUp:
-		case Mouse::WheelDown:
-			Events::ClientEvent::observer.invokeEvent(
-				Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-				"scale : " + (std::string)cam.getScaleVec() +
-				"\noffset: " + (std::string)cam.getOffVec()
-			);
-	}*/
+		default: break;
+	}
 }
 
 template<typename T>
@@ -529,6 +529,36 @@ void Client::initEvents() {
 			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, std::to_string(a++));
 		}));
 
+	auto on_window_focous = addListener(MakeListener<>(
+		[&] {
+			for (auto it = interfaceWindows.begin(); it != interfaceWindows.end();) {
+				auto sp = it->lock();
+				if (!sp) {
+					interfaceWindows.erase(it);
+					continue;
+				}
+
+				sp->OnFocus();
+
+				it++;
+			}
+		}));
+
+	auto on_window_unfocous = addListener(MakeListener<>(
+		[&] {
+			for (auto it = interfaceWindows.begin(); it != interfaceWindows.end();) {
+				auto sp = it->lock();
+				if (!sp) {
+					interfaceWindows.erase(it);
+					continue;
+				}
+
+				sp->OnUnfocus();
+
+				it++;
+			}
+		}));
+
 	auto open_new_window_dialogue = addListener(MakeListener(
 		[&] {
 			showNewWindowModal = !showNewWindowModal;
@@ -578,7 +608,10 @@ void Client::initEvents() {
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DEBUG_btn, DEBUG_send_ship_update);
-
+	
+	ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS, on_window_focous);
+	ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS, on_window_unfocous);
+	
 	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);
 
 }
