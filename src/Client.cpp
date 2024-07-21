@@ -440,13 +440,14 @@ void Client::OnMouse(Event e) {
 
 			}break;
 		case Mouse::WheelUp: {
+			//static const float minzoom = std::pow(10, -14);//-14 : AU
 
 			mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
 
 			cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
-			cam.trans.scaleX() = std::max(0.000'001f, cam.trans.scaleX());
+			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX());
 			cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
-			cam.trans.scaleY() = std::max(0.000'001f, cam.trans.scaleY());
+			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY());
 
 			goto scaleChange;
 			}break;

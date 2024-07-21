@@ -73,17 +73,17 @@ void Transform::applyAccele(float magnitude, float radian) {
 }
 
 std::string gs::getPrettyString(float n) {
-	static const int maxD = 3;
-	static const int imaxD = 1 / maxD;
+	static constexpr int maxD = 3;
+	static constexpr float imaxD = 1 / (float)maxD;
 
-	//d : exact number of difits
+	if (n == 0)
+		return "0e0.0";
+
 	int d = static_cast<int>(std::log10f(std::abs(n)));
 
-	//ad : number of steps, and a special case to have at least a 1's place
-	int ad = d * imaxD * maxD - (d < 0) * maxD;
+	int ad = (int)(d * imaxD - (d <= 0 && n < 1)) * maxD;
 
-	//adjusts decimal to the step accounting that step != #digits
-	n *= std::pow(10, -d + d - ad);
+	n *= std::pow(10, -ad);
 
 	//cant figure out how to insert maxD automatically
 	return std::format("{:02d}e{:03.1f}", ad, n);
