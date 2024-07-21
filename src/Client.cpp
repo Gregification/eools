@@ -10,13 +10,12 @@ Client::Client() :
 	//init ui
 	{
 		windowContainer = Container::Stacked({});
-		//windowContainer->Add(passThroughWindow);
 
 		clientStats = Renderer([&] {
 			static Element buffer = text("pester your cat");
 			static int i = 0;
-			if (i++ % 100 == 0)//less visually distracting if its not jittering all the time. used a arbitrary #.
-				buffer = text(std::format(" ~pkts:{:3.0f} | rps:{:3.0f} | ping:", avgPackets, refreshesPS)
+			if (i++ % 50 == 0)//less visually distracting if its not jittering all the time. used a arbitrary #.
+				buffer = text(std::format(" ~pkts:{:3.0f} | fps:{:3.0f} | ping:", avgPackets, refreshesPS)
 					+ (m_connection->isConnected() ? std::to_string(m_connection->pingTime) : "LOST CONNECTION"));
 
 			return buffer;
@@ -392,12 +391,14 @@ void Client::SetNewWindowDialogue(bool c) {
 void Client::OnMouse(Event e) {
 	assert(e.is_mouse());
 
+	//i fogot why Client::raw_mouse_screen exists since cam::mouse_screen does the 
+	//		exact same thing for the mose part
 	Vec2_i dm(
 		(e.mouse().x - 1) * 2 - raw_mouse_screen.x,
 		(e.mouse().y - 1) * 4 - raw_mouse_screen.y
 	);
 
-	Vec2 mouseOnGrid;
+	Vec2 mog_zoomRefrence;
 
 	raw_mouse_screen += dm;
 	cam.mouse_screen = raw_mouse_screen;
@@ -426,7 +427,9 @@ void Client::OnMouse(Event e) {
 			static std::weak_ptr<IFOptions> former;
 
 			if (former.expired()) {
-				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(cam.mouse_screen, *this);
+				const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5};
+
+				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, *this);
 				former = ops;
 
 				interfaceWindows.push_back(ops);
@@ -440,20 +443,16 @@ void Client::OnMouse(Event e) {
 
 			}break;
 		case Mouse::WheelUp: {
-			//static const float minzoom = std::pow(10, -14);//-14 : AU
+			mog_zoomRefrence = cam.screenToGrid(cam.mouse_screen);
 
-			mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
-
-			cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
-			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX());
-			cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
-			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY());
+			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX() * 0.2f);
+			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY() * 0.2f);
 
 			goto scaleChange;
 			}break;
 		case Mouse::WheelDown: {
 
-			mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
+			mog_zoomRefrence = cam.screenToGrid(cam.mouse_screen);
 
 			cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
 			cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
@@ -464,7 +463,7 @@ void Client::OnMouse(Event e) {
 		{
 		scaleChange:
 			//adjust cam to matching position
-			auto mos = cam.gridToScreen(mouseOnGrid) - cam.mouse_screen;
+			auto mos = cam.gridToScreen(mog_zoomRefrence) - cam.mouse_screen;
 
 			cam.offX() = -mos.x;
 			cam.offY() = -mos.y;
@@ -582,6 +581,13 @@ void Client::initEvents() {
 			showNewWindowModal = !showNewWindowModal;
 		}));
 
+	auto add_new_window = addListener(MakeListener<std::function<Component(Client&)>>(
+		[&] (auto f){
+			Component comp = f(*this);
+			windowContainer->Add(comp);
+			comp->TakeFocus();
+		}));
+
 	auto delete_selected_window = addListener(MakeListener(
 		[&] {
 			if (windowContainer->ChildCount() > 0){
@@ -614,9 +620,19 @@ void Client::initEvents() {
 	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DEBUG_btn, DEBUG_send_ship_update);
 	
-	ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS, on_window_focous);
-	ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS, on_window_unfocous);
-	
+	ClientEvent::observer.AddListenerToEvent(
+		ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS,
+		on_window_focous
+	);
+	ClientEvent::observer.AddListenerToEvent(
+		ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS, 
+		on_window_unfocous
+	);
+	ClientEvent::observer.AddListenerToEvent(
+		ClientEvent::CLIENT_EVENT::ADD_TO_WINDOW_CONTAINER, 
+		add_new_window
+	);
+
 	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);
 
 }

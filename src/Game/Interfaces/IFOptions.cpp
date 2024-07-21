@@ -8,17 +8,21 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
         std::vector<Component> comps;
         for (auto& v : InterfaceContent::publicInterfaces) {
             comps.push_back(
-                Button(
-                    v.first,
-                    [&] {
-                        client.windowContainer->Add(Window({
-                            .inner = v.second(client),
-                            .title = v.first,
-                            .left = mousePos.x,
-                            .top = mousePos.y,
-                        }));
+                Button( v.first,
+                    [mousePos, v] {
+                        using namespace Events;
+                        ClientEvent::observer.invokeEvent<std::function<Component(Client&)>>(
+                            ClientEvent::CLIENT_EVENT::ADD_TO_WINDOW_CONTAINER,
+                            [mousePos, v](auto& c) {
+                                return Window({
+                                    .inner = v.second(c),
+                                    .title = v.first,
+                                    .left = mousePos.x,
+                                    .top = mousePos.y,
+                                });
+                            });
                     }
-                )
+                , ButtonOption::Ascii())
             );
         }
 
@@ -26,14 +30,15 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
     }
 
 
-	auto comp =  Scroller(Container::Vertical({
-        //Collapsible("Windows", Inner({windowsInner})),
-		Collapsible("B", Empty()),
+	auto comp =  //Scroller(
+        Container::Vertical({
+        Collapsible("Windows", Inner({windowsInner})),
+		Collapsible("Movement", Empty()),
 		Collapsible("C", 
             Inner({
                 Collapsible("Collapsible 1.1",
                     Inner({
-                        Collapsible("Collapsible 1.1.1", Empty()),
+                        Collapsible("Collapsible 1.1.1", Button("meow", [] {})),
                         Collapsible("Collapsible 1.1.2", Empty()),
                         Collapsible("Collapsible 1.1.3", Empty()),
                 })),
@@ -50,7 +55,7 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
                         Collapsible("Collapsible 1.3.3", Empty()),
                     })),
         })),
-	}));
+	});
 
 	Add(comp);
 }
