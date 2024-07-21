@@ -2,6 +2,7 @@
 #include "../Events/Events.hpp"
 #include "InterfaceInclude.hpp"
 
+using namespace Events;
 
 const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces = { {
 	{"Message Viewer",[](Client&) {
@@ -25,8 +26,8 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 	{"Helm",[](Client& c) {
 		auto mv = ftxui::Make<IFHelm>();
 
-		Events::ClientEvent::observer.AddListenerToEvent(
-			Events::ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
+		ClientEvent::observer.AddListenerToEvent(
+			ClientEvent::CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			mv->addListener(Events::MakeListener< std::shared_ptr<Ship>>(
 				[p = mv](std::shared_ptr<Ship> s) {
 					p->setShip(s);
@@ -40,6 +41,19 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 	}},
 	{"Controlls",[](Client& c) {
 		return ftxui::Make<IFControlls>();
+	}},
+	{"Inspector",[](Client& c) {
+		auto fi = ftxui::Make<IFInspector>();
+
+		ClientEvent::observer.AddListenerToEvent(
+			ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+			fi->addListener(Events::MakeListener<GameObjPtr>(
+				[p = fi] (auto g){
+					p->setInspectedObject(g);
+				}))
+		);
+
+		return fi;
 	}},
 } };
 

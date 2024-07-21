@@ -22,7 +22,7 @@ class Grid : public NetGameObject<Grid> {
 			GameObjPtr go;
 		};
 
-		void Draw(Canvas& c, Transformation_2D& trf) const override;
+		void Draw(Canvas& c, Transformation_2D trf) const override;
 
 		void packMessage(Message&, MsgDiffType = 0) override;
 		void unpackMessage(Message&, MsgDiffType = 0) override;
@@ -38,6 +38,8 @@ class Grid : public NetGameObject<Grid> {
 		std::optional<GameObjPtr> FindObject(Instance_Id);
 		/*clears objs*/
 		void RemoveAllObjects();
+
+		GameObjPtr ObjectAt(Vec2 gridPos);
 
 		const std::vector<GOObj> getObjVec() const;
 

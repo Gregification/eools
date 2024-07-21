@@ -17,6 +17,7 @@ class InterfaceContent;
 
 class Client : public App, public net::client_interface<NetMsgType> {
 	friend class Camera;
+	friend class IFOptions;
 
 public:
 	Client();

@@ -52,17 +52,27 @@ public:
 	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
 	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
 
-	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D&) const;
+	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D) const;
 
 	virtual std::string GetDescription() const;
 
 	virtual Class_Id GetClassId() const;
 
+	//javadoc ftw, didnt realize it works on non java things
+	/**
+	* checks if the point relative to the GO is within the GO.
+	* does not check AABB or any higherlevel generalizations
+	* 
+	* @param point Point relative to gameobject
+	* @return true if point is within the GO's body
+	*/	
+	virtual bool ContainsPoint(const Vec2_f& point) const;
+
 protected:
 	void addSynchronizationTarget(SyncTarget);
 
 	Instance_Id _instId;
-	std::string _displayName;
+	std::string _displayName = "default go dispaly name";
 
 	SyncCollection _syncCollection;
 };

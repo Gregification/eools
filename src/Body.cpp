@@ -4,28 +4,29 @@ using namespace gs;
 
 void Body::recalAABB() {
 
-	if (coverage.getArea() == 0 && verticies.size() > 0) {
-		coverage.pos = coverage.size = verticies[0];
+	coverage.pos = coverage.size = verticies[0];
 
-		for (int i = 1; i < verticies.size(); i++) {
-			//std::max\min isnt happy with templates
+	for (int i = 1; i < verticies.size(); i++) {
+		//std::max\min isnt happy with templates
 
-			//coverage.pos  (NW): smallest x, largest y
-			//coverage.size (SE): largest x, smallest y
+		//coverage.pos  (NW): smallest xy
+		//coverage.size (SE): largest xy
 
-			if (coverage.pos.x > verticies[i].x)
-				coverage.pos.x = verticies[i].x;
-			else if (coverage.size.x < verticies[i].x)
-				coverage.size.x = verticies[i].x;
+		if (coverage.pos.x > verticies[i].x)
+			coverage.pos.x = verticies[i].x;
+		else if (coverage.size.x < verticies[i].x)
+			coverage.size.x = verticies[i].x;
 
-			if (coverage.pos.y < verticies[i].y)
-				coverage.pos.y = verticies[i].y;
-			else if (coverage.size.y > verticies[i].y)
-				coverage.size.y = verticies[i].y;
-		}
-
-		coverage.size -= coverage.pos;
+		if (coverage.pos.y > verticies[i].y)
+			coverage.pos.y = verticies[i].y;
+		else if (coverage.size.y < verticies[i].y)
+			coverage.size.y = verticies[i].y;
 	}
+
+	//global max to size
+	coverage.size -= coverage.pos;
+
+	auto rawsize = coverage.size;
 
 	//adjust so that it coveragean be rotated however
 	// pythagorean
@@ -33,6 +34,9 @@ void Body::recalAABB() {
 	coverage.size *= 2;
 	coverage.size.x = std::sqrtf(coverage.size.x);
 	coverage.size.y = std::sqrtf(coverage.size.y);
+
+	//adjust to center
+	coverage.pos -= (coverage.size - rawsize) / 2;
 }
 
 gs::Rectangle Body::getAABB() {

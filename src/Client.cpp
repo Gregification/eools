@@ -89,17 +89,6 @@ Client::Client() :
 		*	a indicator.
 		*/
 
-		//put this with any new containers
-		auto windowFocusDetect = CatchEvent([&](Event e) {
-			if (e.is_mouse()) {
-				if (e.mouse().button == Mouse::None)
-					isWindowSelected = false;
-
-				return true;
-			}
-
-			return false;
-		});
 
 		auto windowContainer_wrapper = windowContainer | CatchEvent([&](Event e) {
 			static bool wasWinSelected = false;
@@ -111,11 +100,6 @@ Client::Client() :
 					isWindowSelected ? 
 						Events::ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS 
 					:	Events::ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS
-				);
-
-				Events::ClientEvent::observer.invokeEvent<std::string>(
-					Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-					isWindowSelected ? "window selected" : "other selected"
 				);
 			}
 
@@ -139,12 +123,18 @@ Client::Client() :
 			return false;
 		});
 
-		/*for (int i = 0; i < windowContainer->ChildCount(); i++) {
-			auto cat = windowContainer->ChildAt(i);
-			if (cat->ChildCount() == 0)
-				cat->Detach();
-		}*/
+		//put this with any new containers
+		auto windowFocusDetect = CatchEvent([&](Event e) {
+			if (e.is_mouse()) {
+				if (e.mouse().button == Mouse::None)
+					isWindowSelected = false;
 
+				return true;
+			}
+
+			return false;
+		});
+		
 		mainContainer = Container::Stacked({
 				clientStats,
 				modalContainer,
@@ -228,7 +218,6 @@ void Client::run(ScreenInteractive& screen) {
 		while(!loop.HasQuitted()) {
 			start = steady_clock::now();
 
-			loop.RunOnce();
 
 			numPkt = Update();
 
@@ -238,6 +227,8 @@ void Client::run(ScreenInteractive& screen) {
 					i--;
 				}
 			}
+
+			loop.RunOnce();
 
 			if (currentGrid) {
 				SceneManager::processGrid(
@@ -415,13 +406,23 @@ void Client::OnMouse(Event e) {
 
 	switch (e.mouse().button) {
 		case Mouse::Left: {
-				ship->transform.position = cam.screenToGrid(cam.mouse_screen);
+				//ship->transform.position = cam.screenToGrid(cam.mouse_screen);
+			using namespace Events;
+
+			ClientEvent::observer.invokeEvent<GameObjPtr>(
+				ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+				currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen))
+			);
+
 			}break;
 		case Mouse::Middle: {
-				cam.offX() += dm.x;
-				cam.offY() += dm.y;
+
+			cam.offX() += dm.x;
+			cam.offY() += dm.y;
+
 			}break;
 		case Mouse::Right: {
+
 			static std::weak_ptr<IFOptions> former;
 
 			if (former.expired()) {
@@ -432,29 +433,31 @@ void Client::OnMouse(Event e) {
 
 				windowContainer->Add(Window({
 						.inner = ops,
-						.left = e.mouse().x,
-						.top = e.mouse().y,
+						.left = e.mouse().x - 5,
+						.top = e.mouse().y - 5,
 					}));
 			}
 
 			}break;
 		case Mouse::WheelUp: {
-				mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
 
-				cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
-				cam.trans.scaleX() = std::max(0.000'001f, cam.trans.scaleX());
-				cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
-				cam.trans.scaleY() = std::max(0.000'001f, cam.trans.scaleY());
+			mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
 
-				goto scaleChange;
+			cam.trans.scaleX() -= cam.trans.scaleX() * 0.2f;
+			cam.trans.scaleX() = std::max(0.000'001f, cam.trans.scaleX());
+			cam.trans.scaleY() -= cam.trans.scaleY() * 0.2f;
+			cam.trans.scaleY() = std::max(0.000'001f, cam.trans.scaleY());
+
+			goto scaleChange;
 			}break;
 		case Mouse::WheelDown: {
-				mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
 
-				cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
-				cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
+			mouseOnGrid = cam.screenToGrid(cam.mouse_screen);
 
-				goto scaleChange;
+			cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
+			cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
+
+			goto scaleChange;
 			}break;
 
 		{
@@ -531,32 +534,46 @@ void Client::initEvents() {
 
 	auto on_window_focous = addListener(MakeListener<>(
 		[&] {
-			for (auto it = interfaceWindows.begin(); it != interfaceWindows.end();) {
-				auto sp = it->lock();
+			for (int i = 0; i < interfaceWindows.size(); i++) {
+				auto sp = interfaceWindows[i].lock();
 				if (!sp) {
-					interfaceWindows.erase(it);
+					interfaceWindows.erase(interfaceWindows.begin() + i);
+					i--;
 					continue;
 				}
 
 				sp->OnFocus();
-
-				it++;
 			}
 		}));
 
 	auto on_window_unfocous = addListener(MakeListener<>(
 		[&] {
-			for (auto it = interfaceWindows.begin(); it != interfaceWindows.end();) {
-				auto sp = it->lock();
+			for (int i = 0; i < interfaceWindows.size(); i++) {
+				auto sp = interfaceWindows[i].lock();
 				if (!sp) {
-					interfaceWindows.erase(it);
+					interfaceWindows.erase(interfaceWindows.begin() + i);
+					i--;
 					continue;
 				}
 
 				sp->OnUnfocus();
-
-				it++;
 			}
+
+			/* some interfaces may get detached but that dosent mean the window itself 
+			* is detached, this goes through a and removes windows that are empty 
+			*/
+			unresolvedResponder.push_back([&](Client&) -> bool {
+				for (int i = 0; i < windowContainer->ChildCount(); i++) {
+					auto c = windowContainer->ChildAt(i);
+
+					if (c->ChildCount() == 0) {
+						c->Detach();
+						i--;
+					}
+				}
+
+				return true;
+			 });
 		}));
 
 	auto open_new_window_dialogue = addListener(MakeListener(
@@ -566,24 +583,11 @@ void Client::initEvents() {
 
 	auto delete_selected_window = addListener(MakeListener(
 		[&] {
-			std::string message;
-
-			int count = windowContainer->ChildCount();
-
-			if (windowContainer->ChildCount() == 0) {
-				message = "no children of window";
-			} else {
+			if (windowContainer->ChildCount() > 0){
 				auto ac = windowContainer->ActiveChild();
-				if (ac) {
-					message = "detached a window!";
+				if (ac)
 					ac->Detach();
-				}
-				else {
-					message = "no window selected! :(";
-				}
 			}
-
-			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, message);
 		}));
 
 	/***********************************************************************************************************

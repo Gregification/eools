@@ -22,13 +22,12 @@ public:
 	/*called once if it was just formerly the focoused tab*/
 	virtual void OnUnfocus() {}
 
-	static const int NUM_INTERFACES = 3;//yeah
-	typedef std::array<
-		std::pair<
+	static const int _pitsize = 4;
+	typedef std::array<std::pair<
 			std::string,
 			std::function<std::shared_ptr<InterfaceContent>(Client&)>
-		>, NUM_INTERFACES 
-	> PublicInterfacesType;
+	>, _pitsize>
+		PublicInterfacesType;
 
 	static const PublicInterfacesType publicInterfaces;
 

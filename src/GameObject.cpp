@@ -29,14 +29,25 @@ void GameObject::FixedUpdate(float dt) {
 	transform.Update(dt);
 }
 
-void GameObject::Draw(Canvas& c, Transformation_2D& trfmat) const {
-	Vec2 pos = transform.position;
-	trfmat.applyTo(pos);
-	c.DrawBlock(pos.x, pos.y, true);
+void GameObject::Draw(Canvas& c, Transformation_2D t) const {
+	t.mat = t.mul(transform.getRotationTransformation());
+
+	Vec2_f a = t.applyTo(verticies[verticies.size() - 1] + transform.position);
+	for (auto& tb : verticies) {
+		Vec2_f b = t.applyTo(tb + transform.position);
+
+		c.DrawBlockLine(a.x, a.y, b.x, b.y, Color::Blue);
+
+		a = b;
+	}
 };
 
 Class_Id GameObject::GetClassId() const {
 	return IdGen<GameObject>::gof.class_id;
+}
+
+bool GameObject::ContainsPoint(const Vec2_f& p) const {
+	return gs::IsPointInPoly(verticies, p - transform.position, transform.getRotationTransformation());
 }
 
 void GameObject::packMessage(Message& msg, MsgDiffType) {

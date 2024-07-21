@@ -17,21 +17,17 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 		bl(pos.x, pos.y + size.y),
 		br(pos.x + size.x, pos.y + size.y)
 	;
-
-	tl = trans.applyTo(tl);
+	
+	/*tl = trans.applyTo(tl);
 	bl = trans.applyTo(bl);
 	tr = trans.applyTo(tr);
 	br = trans.applyTo(br);
-
 	c.DrawPointLine(bl.x, bl.y, tl.x, tl.y, Color::Green);
 	c.DrawPointLine(bl.x, bl.y, br.x, br.y, Color::Green);
 	c.DrawPointLine(tr.x, tr.y, br.x, br.y, Color::Green);
 	c.DrawPointLine(tr.x, tr.y, tl.x, tl.y, Color::Green);
-
 	c.DrawPointLine(tl.x, tl.y, br.x, br.y, Color::Blue);
-	c.DrawPointLine(bl.x, bl.y, tr.x, tr.y, Color::Orange1);
-
-	//c.DrawBlockCircleFilled(mouse.x, mouse.y, 9);
+	c.DrawPointLine(bl.x, bl.y, tr.x, tr.y, Color::Orange1);*/
 
 	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(g->id()));
 	c.DrawText(20, 30, "# children: " + std::to_string(g->_go_vec.size()));
@@ -47,8 +43,10 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 		c.DrawText(25, y += 10, "id: " + std::to_string(v.id) + "?" + (v.go ? ("exists@(" + std::to_string(v.go->transform.position.x) + "," + std::to_string(v.go->transform.position.y) + ")") : "dne"));
 		if (!v.go) continue;
 
-		v.go->Draw(c, trans);
+		v.go->Draw(c, trans);		
 	}
+	auto gp = trans.applyTo(Vec2(0));
+	c.DrawBlock(gp.x, gp.y, true);
 }
 
 Vec2 Camera::screenToGrid(Vec2_i p) {

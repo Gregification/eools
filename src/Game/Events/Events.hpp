@@ -26,7 +26,7 @@ namespace Events {
 
 	struct ListenerBase { virtual ~ListenerBase() = default; };
 
-	template<typename ARG = DiscountVoid>
+	template<typename ARG = _DEFAULT_TYPE>
 	struct Listener : ListenerBase {
 	public:
 		typedef std::function<void(ARG)> WrappedFunc;
@@ -39,11 +39,11 @@ namespace Events {
 	};
 
 	//a "cleaner" way to setup listeners (have fun writing std::shared_ptr... everywhere!)
-	template<typename T = DiscountVoid>
+	template<typename T = _DEFAULT_TYPE>
 	std::shared_ptr<Events::Listener<T>> MakeListener(std::function<void()> callback) {
 		return std::make_shared<Events::Listener<T>>(callback);
 	}
-	template<typename T = DiscountVoid>
+	template<typename T = _DEFAULT_TYPE>
 	std::shared_ptr<Events::Listener<T>> MakeListener(std::function<void(T)> callback) {
 		return std::make_shared<Events::Listener<T>>(callback);
 	}
@@ -173,7 +173,8 @@ namespace Events {
 			EVENT_MESSAGE,	//expected std::string
 			ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			ON_WINDOW_FOCUS,
-			ON_WINDOW_UNFOCUS
+			ON_WINDOW_UNFOCUS,
+			ON_GAMEOBJECT_SELECT //expected GameObjPtr
 		);
 		typedef BE_CLIENT_EVENT::_enumerated CLIENT_EVENT;
 

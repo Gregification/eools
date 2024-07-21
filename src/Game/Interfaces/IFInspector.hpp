@@ -11,7 +11,7 @@ public:
 			int targType = -1;
 
 			if (auto go = selectedObject.lock()) {
-				id		= go->id();
+				id		= std::to_string(go->id());
 				name	= go->getDisplayName();
 				targType = static_cast<int>(go->GetClassId());
 			} else {
@@ -19,7 +19,7 @@ public:
 				name	= "no selection";
 			}
 
-			return flexbox(
+			return vbox(
 				{ 
 					text(name),
 					text(id),
@@ -28,7 +28,7 @@ public:
 		}));
 	}
 
-	void inspectObject(std::weak_ptr<GameObject>);
+	void setInspectedObject(std::weak_ptr<GameObject>);
 	
 
 private:

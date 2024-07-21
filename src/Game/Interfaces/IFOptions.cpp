@@ -1,8 +1,33 @@
 #include "IFOptions.hpp"
+#include "../../ftxui extras/scroller.hpp"
+
 
 IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
-	auto comp = ftxui::Container::Vertical({
-		Collapsible("A", Empty()),
+    Component windowsInner;
+    {
+        std::vector<Component> comps;
+        for (auto& v : InterfaceContent::publicInterfaces) {
+            comps.push_back(
+                Button(
+                    v.first,
+                    [&] {
+                        client.windowContainer->Add(Window({
+                            .inner = v.second(client),
+                            .title = v.first,
+                            .left = mousePos.x,
+                            .top = mousePos.y,
+                        }));
+                    }
+                )
+            );
+        }
+
+        windowsInner = Inner(comps);
+    }
+
+
+	auto comp =  Scroller(Container::Vertical({
+        //Collapsible("Windows", Inner({windowsInner})),
 		Collapsible("B", Empty()),
 		Collapsible("C", 
             Inner({
@@ -25,7 +50,7 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
                         Collapsible("Collapsible 1.3.3", Empty()),
                     })),
         })),
-	});
+	}));
 
 	Add(comp);
 }

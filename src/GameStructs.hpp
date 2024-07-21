@@ -12,39 +12,19 @@
 
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
+	template<typename T>
+	struct Vec2_T;
+	struct Transformation_2D;
 
-	static std::string getPrettyString(float n) {
-		static const int maxD = 3;
-		static const int imaxD = 1 / maxD;
-
-		//d : exact number of difits
-		int d = static_cast<int>(std::log10f(std::abs(n)));
-
-		//ad : number of steps, and a special case to have at least a 1's place
-		int ad = d * imaxD * maxD - (d < 0) * maxD;
-
-		//adjusts decimal to the step accounting that step != #digits
-		n *= std::pow(10, -d + d - ad);
-
-		//cant figure out how to insert maxD automatically
-		return std::format("{:02d}e{:03.1f}", ad, n);
-	}
+	extern std::string getPrettyString(float);
 
 	/* quick inverse squareroot using defined behavior
 	 see reply on stack overlfow of original author https://stackoverflow.com/questions/24405129/how-to-implement-fast-inverse-sqrt-without-undefined-behavior
 	*/
-	static float Q_inverseSqrt(float number) {
-		static_assert(std::numeric_limits<float>::is_iec559,
-			"fast inverse square root requires IEEE-comliant 'float'");
-		static_assert(sizeof(float) == sizeof(std::uint32_t),
-			"fast inverse square root requires 'float' to be 32-bit");
-		float x2 = number * 0.5F, y = number;
-		std::uint32_t i;
-		std::memcpy(&i, &y, sizeof(float));
-		i = 0x5f3759df - (i >> 1);
-		std::memcpy(&y, &i, sizeof(float));
-		return y * (1.5F - (x2 * y * y));
-	}
+	extern float Q_inverseSqrt(float);
+
+	template<typename T>
+	extern bool DoVecsIntersect(const Vec2_T<T>& a1, const Vec2_T<T>& a2, const Vec2_T<T>& b1, const Vec2_T<T>& b2);
 
 	template<typename T>
 	struct Vec2_T {
@@ -146,9 +126,21 @@ namespace gs {
 	static_assert(std::is_standard_layout<Vec2_i>::value);
 
 	struct Rectangle {
-		Vec2_f pos, size;
+		Vec2 pos;
+		Vec2_f size;
 
-		inline float getArea() const { return size.x * size.y; }
+		float getArea() const { return size.x * size.y; }
+
+		//linker explodes if this is anywhere else
+		template<typename T>
+		bool ContainsPoint(const Vec2_T<T>& p) const {
+			auto a = p.x >= pos.x;
+			auto b = p.x <= pos.x + size.x;
+			auto c = p.y >= pos.y;
+			auto d = p.y <= pos.y + size.y;
+
+			return a && b && c && d;
+		}
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
@@ -156,9 +148,6 @@ namespace gs {
 	using Arr3 = std::array<float, 3>;
 	using Mat3x3 = std::array<Arr3, 3>;
 	struct Transformation_2D {
-		Transformation_2D() : Transformation_2D(identity) {}
-		Transformation_2D(Mat3x3 mat) : mat(mat) {}
-
 		// | A B C |   | X |   | X |
 		// | D E F | * | Y | = | Y |
 		// | G H I |   | Z |   | Z |
@@ -258,44 +247,13 @@ namespace gs {
 		}
 
 		//shouldnt need anything larger than this
-		Arr3 mul(const Arr3& arr) const {
-			// | A B C |   | X |   | X |
-			// | D E F | * | Y | = | Y |
-			// | G H I |   | Z |   | Z |
-			//  [this]     [arr]   [out]
-			Arr3 out;
+		Arr3 mul(const Arr3& arr) const;
 
-			out[0] =
-				  PT(mat, 0, 0) * arr[0]  //ax
-				+ PT(mat, 1, 0) * arr[1]  //by
-				+ PT(mat, 2, 0) * arr[2]; //cz
-			out[1] =
-				  PT(mat, 0, 1) * arr[0]  //dx
-				+ PT(mat, 1, 1) * arr[1]  //ey
-				+ PT(mat, 2, 1) * arr[2]; //fz
-			out[2] =
-				  PT(mat, 0, 2) * arr[0]  //gx
-				+ PT(mat, 1, 2) * arr[1]  //hy
-				+ PT(mat, 2, 2) * arr[2]; //iz
+		Mat3x3 mul(const Transformation_2D&);
 
-			return out;
-		}
-
-		static constexpr Mat3x3 identity = {{
-				{{1,0,0}},	//double stuffed oreo
-				{{0,1,0}},
-				{{0,0,1}}	//Z = 1
-			}};
-		static constexpr Mat3x3 clear = {{
-				{{0,0,0}},
-				{{0,0,0}},
-				{{0,0,1}}	//for consistency
-			}};
-		static constexpr Mat3x3 zero = { {
-				{{0,0,0}},
-				{{0,0,0}},
-				{{0,0,0}}
-			} };
+		static Transformation_2D identity;
+		static Transformation_2D clear;
+		static Transformation_2D zero;
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
@@ -322,7 +280,7 @@ namespace gs {
 		}
 
 		Transformation_2D getRotationTransformation() const {
-			Transformation_2D ret;
+			Transformation_2D ret = Transformation_2D::identity;
 			ret.rotateBy(rotation);
 			return ret;
 		}
@@ -330,4 +288,31 @@ namespace gs {
 		void applyAccele(float magnitude, float radian);
 	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);
+
+	//linker explodes when defining this elsewhere
+	template<typename T, typename U>
+	bool IsPointInPoly(
+		const std::vector<Vec2_T<T>>& v,
+		const Vec2_T<U>& p,
+		const Transformation_2D& t = Transformation_2D::identity
+	) {
+		if (v.size() == 0) return false;
+
+		bool even = true;
+
+		//line from 'a' to 'b'
+		auto a = t.applyTo(v[v.size() - 1]);
+		for (const auto& tb : v) {
+			auto b = t.applyTo(tb);
+
+			//from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+			if ((a.y > p.y != b.y > p.y) &&
+				(p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x))
+				even = !even;
+
+			a = b;
+		}
+
+		return even;
+	}
 }

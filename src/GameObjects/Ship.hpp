@@ -11,7 +11,7 @@ class Ship : public NetGameObject<Ship> {
 	public:
 		using NetGameObject::NetGameObject;
 
-		void Draw(Canvas& c, Transformation_2D& transform) const override;
+		void Draw(Canvas& c, Transformation_2D transform) const override;
 		void packMessage(Message&, MsgDiffType) override;
 		void unpackMessage(Message&, MsgDiffType) override;
 

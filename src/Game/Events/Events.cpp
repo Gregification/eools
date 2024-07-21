@@ -66,6 +66,7 @@ Observer<ClientEvent::CLIENT_EVENT> ClientEvent::observer = { {
 	{CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS, {"on operable ship select", "triggered when a operable ship is selected"}},
 	{CLIENT_EVENT::ON_WINDOW_FOCUS, {"on window focus", ""}},
 	{CLIENT_EVENT::ON_WINDOW_UNFOCUS, {"on window unfocus", ""}},
+	{CLIENT_EVENT::ON_GAMEOBJECT_SELECT, {"on gameobject select", ""}},
 } };
 
 Observer<Network::NETWORK_EVENT> Network::observer = { {

@@ -5,7 +5,7 @@
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
 
-void Grid::Draw(Canvas& c, Transformation_2D& trf) const {
+void Grid::Draw(Canvas& c, Transformation_2D trf) const {
 	
 }
 
@@ -33,6 +33,17 @@ void Grid::unpackMessage(Message& msg, MsgDiffType) {
 void Grid::RemoveAllObjects() {
 	_go_vec.clear();
 	_go_map.clear();
+}
+
+//TODO: bvh setup https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
+//		also link it to the renderer somehow
+GameObjPtr Grid::ObjectAt(Vec2 gridPos)
+{
+	for(const auto& v : _go_vec)
+		if(v.go && v.go->getAABB().ContainsPoint(gridPos))// && v.go->ContainsPoint(gridPos))
+			return GameObjPtr(v.go);
+
+	return GameObjPtr();
 }
 
 const std::vector<Grid::GOObj> Grid::getObjVec() const {
