@@ -434,10 +434,15 @@ void Client::OnMouse(Event e) {
 
 				interfaceWindows.push_back(ops);
 
+				GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
+
 				windowContainer->Add(Window({
 						.inner = ops,
+						.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
 						.left = e.mouse().x - 5,
 						.top = e.mouse().y - 5,
+						.width = 30,
+						.height = 10,
 					}));
 			}
 
@@ -445,8 +450,8 @@ void Client::OnMouse(Event e) {
 		case Mouse::WheelUp: {
 			mog_zoomRefrence = cam.screenToGrid(cam.mouse_screen);
 
-			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX() * 0.2f);
-			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY() * 0.2f);
+			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX() * 0.80f);
+			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY() * 0.80f);
 
 			goto scaleChange;
 			}break;
@@ -454,8 +459,8 @@ void Client::OnMouse(Event e) {
 
 			mog_zoomRefrence = cam.screenToGrid(cam.mouse_screen);
 
-			cam.trans.scaleX() += cam.trans.scaleX() * 0.2f;
-			cam.trans.scaleY() += cam.trans.scaleY() * 0.2f;
+			cam.trans.scaleX() = std::max(0.0f, cam.trans.scaleX() * 1.2f);
+			cam.trans.scaleY() = std::max(0.0f, cam.trans.scaleY() * 1.2f);
 
 			goto scaleChange;
 			}break;

@@ -30,6 +30,7 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
     }
 
 
+
 	auto comp =  //Scroller(
         Container::Vertical({
         Collapsible("Windows", Inner({windowsInner})),
