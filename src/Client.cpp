@@ -147,6 +147,17 @@ std::shared_ptr<Ship> Client::getShip() const {
 	return ship;
 }
 
+void Client::removeEmptyWindows() {
+	for (int i = 0; i < windowContainer->ChildCount(); i++) {
+		auto c = windowContainer->ChildAt(i);
+
+		if (c->ChildCount() == 0) {
+			c->Detach();
+			i--;
+		}
+	}
+}
+
 /*
 	handles 
 		- network connection.
@@ -429,12 +440,13 @@ void Client::OnMouse(Event e) {
 			if (former.expired()) {
 				const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5};
 
-				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, *this);
+				GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
+
+				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, go, *this);
 				former = ops;
 
 				interfaceWindows.push_back(ops);
 
-				GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
 
 				windowContainer->Add(Window({
 						.inner = ops,
@@ -565,18 +577,10 @@ void Client::initEvents() {
 			}
 
 			/* some interfaces may get detached but that dosent mean the window itself 
-			* is detached, this goes through a and removes windows that are empty 
+			* is detached
 			*/
 			unresolvedResponder.push_back([&](Client&) -> bool {
-				for (int i = 0; i < windowContainer->ChildCount(); i++) {
-					auto c = windowContainer->ChildAt(i);
-
-					if (c->ChildCount() == 0) {
-						c->Detach();
-						i--;
-					}
-				}
-
+				removeEmptyWindows();
 				return true;
 			 });
 		}));

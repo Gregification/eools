@@ -29,6 +29,11 @@ public:
 
 	std::shared_ptr<Ship> getShip() const;
 
+	/**
+	* removes windows without content
+	*/
+	void removeEmptyWindows();
+
 	Camera cam;
 
 protected:

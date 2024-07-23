@@ -22,7 +22,7 @@ using namespace gs;
 /*
 * physics & game-stat related details are in the Body subclass
 */
-class GameObject : public IdGen<GameObject> , virtual public Body {
+class GameObject : public IdGen<GameObject> , virtual public Body, virtual public Messageable {
 public:
 	GameObject(Instance_Id id = BAD_ID) :
 		Body()
@@ -49,8 +49,8 @@ public:
 	virtual void Update(float);
 	virtual void FixedUpdate(float);
 
-	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
-	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
+	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 
 	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D) const;
 

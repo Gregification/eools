@@ -56,6 +56,12 @@ typedef BE_NetMsgType::_enumerated NetMsgType;
 typedef net::message<NetMsgType>
 	Message;
 
+//interface 
+struct Messageable {
+	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) = 0;
+	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) = 0;
+};
+
 //////////////////////////////////////////////////////////////////////////////
 //	standarized syncing
 //////////////////////////////////////////////////////////////////////////////

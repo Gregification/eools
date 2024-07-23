@@ -4,7 +4,7 @@
 
 class IFOptions : public InterfaceContent {
 public:
-	IFOptions(Vec2_i mousePos, Client& client);
+	IFOptions(Vec2_i mousePos, GameObjPtr, Client&);
 
 	void OnUnfocus() override;
 

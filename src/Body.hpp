@@ -19,7 +19,12 @@ public:
 	Unit mass = .01 * KT;
 
 	gs::Transform transform;
-	std::vector<gs::Vec2_f> verticies{ {-5,-5}, {-5, 5}, {5, 5}, {5, -5} };
+	std::vector<gs::Vec2_f> verticies{
+		{ 0,  5},
+		{ 5,  -5},
+		{ 0,  -2},
+		{ -5, -5}
+	};
 
 	gs::Transformation_2D nonRotatedTransformation;
 

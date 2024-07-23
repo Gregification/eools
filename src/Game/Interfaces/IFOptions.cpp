@@ -2,7 +2,7 @@
 #include "../../ftxui extras/scroller.hpp"
 
 
-IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
+IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
     Component windowsInner;
     {
         std::vector<Component> comps;
@@ -29,12 +29,16 @@ IFOptions::IFOptions(Vec2_i mousePos, Client& client) {
         windowsInner = Inner(comps);
     }
 
+    Component movementInner;
+    {
+
+    }
 
 
-	auto comp =  //Scroller(
+	auto comp =  //Scroller( //disables the collapsibles for some reason
         Container::Vertical({
         Collapsible("Windows", Inner({windowsInner})),
-		Collapsible("Movement", Empty()),
+		Collapsible("Movement", movementInner),
 		Collapsible("C", 
             Inner({
                 Collapsible("Collapsible 1.1",

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-message("PLEASE USE A FULL UNICODE FONT, PREFERIABLY CASCADIA")
+message("PLEASE USE A FULL UNICODE FONT, PREFERIABLY CASCADIA") # remember cascadia
 
 project(eools 
     LANGUAGES CXX
