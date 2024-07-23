@@ -38,9 +38,10 @@ namespace Navigation {
 
 	//structs because it implies these arnt unique classes or what ever (also convient)
 	/**
-	* navigation interface. this is intended to navigate a single object, and lets 
-	*	children cache values that would other wise make navigation calculations 
-	*	slow.
+	* navigation interface. this is intended to navigate a single 'Ship', and lets 
+	*	children cache values to allow for more complex nav processes. this means 
+	*	this that its probebly faster to use a single 'NavBase' per 'Ship' rather 
+	*	than a single 'NavBase' directing mutiple 'Ship's.
 	*/
 	struct NavBase : Messageable {
 		std::shared_ptr<Ship> getShip() { return ship.lock(); }

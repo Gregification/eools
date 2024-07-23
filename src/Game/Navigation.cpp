@@ -19,7 +19,7 @@ Navigation::stateToNavigator{
 	{TRAVEL_STATE::ORBIT,				[] { return  std::make_unique<ORBIT>(); }},
 };
 
-//its either this or you use 2 monitors side by side
+//its either this or give up split screen
 constexpr TRAVEL_STATE::_enumerated ALIGN::getTravelState() { 
 				return TRAVEL_STATE::ALIGN; };
 constexpr TRAVEL_STATE::_enumerated ALIGN_TO::getTravelState() { 
@@ -32,12 +32,28 @@ constexpr TRAVEL_STATE::_enumerated ORBIT::getTravelState() {
 				return TRAVEL_STATE::ORBIT; };
 
 
-void NavInfo::packMessage(Message& msg, MsgDiffType) {
+void NavInfo::packMessage(Message& msg, MsgDiffType mdt) {
 	if (navPattern) {
+		//cast should be unecessary but i dont trust i'll forget to update this later
+		msg << (TRAVEL_STATE::_enumerated)navPattern->getTravelState();
 
+		navPattern->packMessage(msg, mdt);
+	} else {
+		msg << TRAVEL_STATE::_enumerated::NONE;
 	}
 }
-void NavInfo::unpackMessage(Message& msg, MsgDiffType) {}
+void NavInfo::unpackMessage(Message& msg, MsgDiffType mdt) {
+	TRAVEL_STATE::_enumerated ts;
+	msg >> ts;
+
+	if (ts == TRAVEL_STATE::_enumerated::NONE) 
+		return;
+
+	//tests should have ensured every state has associated pattern
+	navPattern = stateToNavigator[ts]();
+
+	navPattern->unpackMessage(msg, mdt);
+}
 
 /***********************************************************************************
 * actual nav pattern implimentations
