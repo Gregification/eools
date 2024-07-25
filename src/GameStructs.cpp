@@ -22,6 +22,8 @@ Transformation_2D Transformation_2D::zero   = { .mat = {{
         {{0,0,0}}
     }}};
 
+
+
 Arr3 Transformation_2D::mul(const Arr3& arr) const {
 	// | A B C |   | X |   | X |
 	// | D E F | * | Y | = | Y |
@@ -68,9 +70,55 @@ Mat3x3 Transformation_2D::mul(const Transformation_2D& o) {
 	return out;
 }
 
-void Transform::applyAccele(float magnitude, float radian) {
-	acceleration += Vec2_f::Rot({ magnitude }, { 0 }, radian);
+void Transform::applyAccele(float mag, float rot) {
+	acceleration += Vec2_f::Rot({ mag }, { 0 }, rot);
 }
+
+void RotationHandler::SetRotationMatTo(const float& radians, Mat2x2& mat){
+	float
+		sin = std::sinf(radians),
+		cos = std::cosf(radians);
+
+	PT(mat, 0, 0) = cos;
+	PT(mat, 1, 1) = cos;
+	PT(mat, 1, 0) = -sin;
+	PT(mat, 0, 1) = sin;
+}
+
+void RotationHandler::rotateBy(const float& dr) {
+	setRotation(_rotation + dr);
+}
+
+void RotationHandler::setRotation(const float& rot) {
+	//_rotation = rot % (2 * Pi)
+	float nr = rot - static_cast<int>(rot * M_1_PI * 0.5f) * rot;
+	
+	if(!isMatBad)
+		isMatBad = nr != _rotation;
+
+	_rotation = nr;
+}
+
+void RotationHandler::refreshRotMat() {
+	isMatBad = false;
+
+	SetRotationMatTo(_rotation, mat);
+}
+
+RotationHandler& RotationHandler::getUTD() {
+	if (isMatBad) refreshRotMat();
+	return *this;
+}
+
+//void RotationHandler::applyTo(Transformation_2D& t) {
+//	//overlay it as a scaler, ignore if is zero so not 
+//	// to effect the transforms other properties
+//
+//	if(PT(mat, 0, 0)) PT(t.mat, 0, 0) *= PT(mat, 0, 0);
+//	if(PT(mat, 1, 0)) PT(t.mat, 1, 0) *= PT(mat, 1, 0);
+//	if(PT(mat, 0, 1)) PT(t.mat, 0, 1) *= PT(mat, 0, 1);
+//	if(PT(mat, 1, 1)) PT(t.mat, 1, 1) *= PT(mat, 1, 1);
+//}
 
 std::string gs::getPrettyString(float n) {
 	static constexpr int maxD = 3;

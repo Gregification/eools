@@ -7,6 +7,8 @@ using namespace Navigation;
 /***********************************************************************************
 * setup 
 *  - semi boiler plate
+*  - fiddle around with this if your trying to do something like have a pattern 
+*		be interperted as another for non-local systems
 ***********************************************************************************/
 
 std::unordered_map<TRAVEL_STATE::_enumerated, std::function<std::unique_ptr<NavBase>()>> 
@@ -57,29 +59,45 @@ void NavInfo::unpackMessage(Message& msg, MsgDiffType mdt) {
 
 /***********************************************************************************
 * actual nav pattern implimentations
+*  - more boiler plate!!! keep reading for explinations
+*  - the message un/packing is something worth considering since these structs 
+*		are intended to cache values and may hold non standard layout objects
+*		which means it cant just be shuffled into a 'Message' with ship operator.
+*		DO NOT USE THE SHIFT OP FOR MESSAGES. these are not standard layout structs
+*		because they inherit abstract stuff.
 ***********************************************************************************/
 
-void ALIGN::packMessage(Message& msg, MsgDiffType) {}
-void ALIGN::unpackMessage(Message& msg, MsgDiffType) {}
-void ALIGN::refresh() {}
-void ALIGN::nav_update(float) {}
+void ALIGN::packMessage(Message& msg, MsgDiffType) {
+	msg << targetRot;
+}
+void ALIGN::unpackMessage(Message& msg, MsgDiffType) {
+	msg >> targetRot;
+}
+void ALIGN::refresh() {
 
-void ALIGN_TO::packMessage(Message& msg, MsgDiffType) {}
-void ALIGN_TO::unpackMessage(Message& msg, MsgDiffType) {}
+}
+void ALIGN::nav_update(float dt) {
+	if (auto s = ship.lock()) {
+		s->transform.rotation.rotateBy(targetRot - s->transform.rotation.getRotation());
+	}
+}
+
+void ALIGN_TO::packMessage(Message& msg, MsgDiffType) { }
+void ALIGN_TO::unpackMessage(Message& msg, MsgDiffType) { }
 void ALIGN_TO::refresh() {}
-void ALIGN_TO::nav_update(float) {}
+void ALIGN_TO::nav_update(float dt) {}
 
-void APPROACH::packMessage(Message& msg, MsgDiffType) {}
-void APPROACH::unpackMessage(Message& msg, MsgDiffType) {}
+void APPROACH::packMessage(Message& msg, MsgDiffType) { }
+void APPROACH::unpackMessage(Message& msg, MsgDiffType) { }
 void APPROACH::refresh() {}
-void APPROACH::nav_update(float) {}
+void APPROACH::nav_update(float dt) {}
 
-void MAINTAIN_DISTANCE::packMessage(Message& msg, MsgDiffType) {}
-void MAINTAIN_DISTANCE::unpackMessage(Message& msg, MsgDiffType) {}
+void MAINTAIN_DISTANCE::packMessage(Message& msg, MsgDiffType) { }
+void MAINTAIN_DISTANCE::unpackMessage(Message& msg, MsgDiffType) { }
 void MAINTAIN_DISTANCE::refresh() {}
-void MAINTAIN_DISTANCE::nav_update(float) {}
+void MAINTAIN_DISTANCE::nav_update(float dt) {}
 
-void ORBIT::packMessage(Message& msg, MsgDiffType) {}
-void ORBIT::unpackMessage(Message& msg, MsgDiffType) {}
+void ORBIT::packMessage(Message& msg, MsgDiffType) {  }
+void ORBIT::unpackMessage(Message& msg, MsgDiffType) { }
 void ORBIT::refresh() {}
-void ORBIT::nav_update(float) {}
+void ORBIT::nav_update(float dt) {}

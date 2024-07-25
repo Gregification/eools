@@ -46,12 +46,11 @@ ftxui::Component IFHelm::getShipView() const {
 			}
 			else {
 				const auto& v = s->verticies;
-				auto mod = s->effectiveTransformation();
 
-				auto f = getP((Vec2_f)v[0]);
+				Vec2_f f = getP((Vec2_f)v[0]);
 
 				for (int i = 1; i < v.size() + 1; i++) {
-					auto p = getP((Vec2_f)v[i % v.size()]);
+					Vec2_f p = getP((Vec2_f)v[i % v.size()]);
 
 					c.DrawBlockLine(f.x, f.y, p.x, p.y, Color::Red);
 

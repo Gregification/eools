@@ -260,7 +260,10 @@ void Client::run(ScreenInteractive& screen) {
 			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
 			refreshesPS = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
 
-			//screen.PostEvent(Event::Custom);
+			screen.PostEvent(Event::Custom);
+
+			ship->transform.rotation.rotateBy(M_PI_4 * 0.001f * dt);
+			ship->transform.rotation.getUTD();
 		}
 	}
 }

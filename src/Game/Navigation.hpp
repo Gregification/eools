@@ -52,6 +52,8 @@ namespace Navigation {
 		*/
 		virtual void refresh() = 0;
 
+		//some concerns on how to effeciently access the target ship, for now just 
+		//	brute force it by getting a shared_ptr from the weak_ptr each update
 		/**
 		* updates the selected ship for the nav pattern
 		*/
@@ -59,7 +61,7 @@ namespace Navigation {
 
 		virtual constexpr TRAVEL_STATE::_enumerated getTravelState() = 0;
 
-	private:
+	protected:
 		/** thing to navigate*/
 		std::weak_ptr<Ship> ship;
 	};

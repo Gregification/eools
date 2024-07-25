@@ -46,16 +46,6 @@ gs::Rectangle Body::getAABB() {
 	return coverage;
 }
 
-Transformation_2D Body::effectiveTransformation() {
-	if (transform.rotation != rotation_cached) {
-		rotatedTransformation = nonRotatedTransformation;
-		rotatedTransformation.rotateBy(transform.rotation);
-		rotation_cached = transform.rotation;
-	}
-
-	return rotatedTransformation;
-}
-
 /*
 * code taken from 
 * https://wrfranklin.org/Research/Short_Notes/pnpoly.html

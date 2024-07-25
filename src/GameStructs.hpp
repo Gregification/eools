@@ -47,7 +47,7 @@ namespace gs {
 			return ret;
 		}
 
-		static Vec2_T Rot(const Vec2_T& point, const Vec2_T& pivot, const float radian) {
+		static Vec2_T Rot(const Vec2_T& point, const Vec2_T& pivot, const float& radian) {
 			float s = std::sinf(radian);
 			float c = std::cosf(radian);
 			
@@ -144,9 +144,13 @@ namespace gs {
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
 
-	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
 	using Arr3 = std::array<float, 3>;
+	using Arr2 = std::array<float, 2>;
 	using Mat3x3 = std::array<Arr3, 3>;
+	using Mat2x2 = std::array<Arr2, 2>;
+
+	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
+	//does not handle rotation (though it can)
 	struct Transformation_2D {
 		// | A B C |   | X |   | X |
 		// | D E F | * | Y | = | Y |
@@ -163,18 +167,7 @@ namespace gs {
 		inline float & transX()	{ return PT(mat, 2, 0); }
 		inline float & transY() { return PT(mat, 2, 1); }
 		inline float & shearX() { return PT(mat, 1, 0); }
-		inline float & shearY() { return PT(mat, 0, 1); } 
-
-		void rotateBy(float rad) {
-			float
-				sin = std::sinf(rad),
-				cos = std::cosf(rad);
-
-			PT(mat, 0, 0) = cos;
-			PT(mat, 1, 1) = cos;
-			PT(mat, 1, 0) = -sin;
-			PT(mat, 0, 1) = sin;
-		}
+		inline float & shearY() { return PT(mat, 0, 1); }
 
 		float inline getDeterminant_2D() const{
 			return DETERMINANT_2x2(
@@ -257,35 +250,76 @@ namespace gs {
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
+	struct RotationHandler {
+		Mat2x2 mat;
+
+		/** rotation in radians */
+		float _rotation;
+		bool isMatBad;
+
+		RotationHandler() :
+			mat{ {{1,0},{0,1}} }, //identity
+			_rotation(0),
+			isMatBad(false)
+		{};
+
+		static void SetRotationMatTo(const float& radians, Mat2x2& mat);
+
+		template<typename T>
+		static Vec2_T<T> RotateThenTranslate(const Vec2_T<T> point, const Transformation_2D& t, const RotationHandler& r) {
+			return t.applyTo(r.applyTo<T>(point));
+		}
+
+		/** rotates according to current rotation */
+		void rotateBy(const float& relative_radians);
+
+		const float getRotation() const { return _rotation; }
+
+		/** sets rotation, flags rotation-mat as bad */
+		void setRotation(const float& newRotation_radians);
+
+		/** updates the rotation matrix */
+		void refreshRotMat();
+
+		/** returns self, updates it if needed*/
+		RotationHandler& getUTD();
+
+		template<typename T>
+		Vec2_T<T> applyTo(const Vec2_T<T>& point, const Vec2_T<T>& pivot = {0}) const {
+			float dx = point.x - pivot.x; //easier to look at, and compiler likely handles this better
+			float dy = point.y - pivot.y;
+
+			return Vec2_T<T>{
+                  PT(mat, 0, 0) * dx
+                + PT(mat, 1, 0) * dy,
+				  PT(mat, 0, 1) * dx
+				+ PT(mat, 1, 1) * dy
+			} + pivot;
+		}
+	};
+
 	struct Transform {
-		float rotation;//radians. i dont know enough to make it effeciently use some matrix stuff, cant figure how to read back the angle
+		RotationHandler rotation;
+	
 		float angularVelocity;
 
-		Vec2 acceleration;
-
-		Vec2 position, velocity;
+		Vec2 position, velocity, acceleration;
 
 		Transform() :
 			acceleration(0),
-			rotation(0),
 			angularVelocity(0)
 		{}
 
 		void Update(float dt) {
-			rotation += angularVelocity * dt;
+
+			rotation.rotateBy(angularVelocity * dt);
 
 			velocity += acceleration * dt;
 
 			position += velocity * dt;
 		}
-
-		Transformation_2D getRotationTransformation() const {
-			Transformation_2D ret = Transformation_2D::identity;
-			ret.rotateBy(rotation);
-			return ret;
-		}
 		
-		void applyAccele(float magnitude, float radian);
+		void applyAccele(float magnitude, float direction_rot);
 	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);
 
@@ -294,16 +328,16 @@ namespace gs {
 	bool IsPointInPoly(
 		const std::vector<Vec2_T<T>>& v,
 		const Vec2_T<U>& p,
-		const Transformation_2D& t = Transformation_2D::identity
+		const RotationHandler& r = RotationHandler()
 	) {
 		if (v.size() == 0) return false;
 
-		bool even = true;
+		bool even = false;
 
 		//line from 'a' to 'b'
-		auto a = t.applyTo(v[v.size() - 1]);
+		auto a = r.applyTo<T>(v[v.size() - 1]);
 		for (const auto& tb : v) {
-			auto b = t.applyTo(tb);
+			auto b = r.applyTo<T>(tb);
 
 			//from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
 			if ((a.y > p.y != b.y > p.y) &&

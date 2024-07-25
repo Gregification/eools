@@ -40,7 +40,7 @@ void Grid::RemoveAllObjects() {
 GameObjPtr Grid::ObjectAt(Vec2 gridPos)
 {
 	for(const auto& v : _go_vec)
-		if(v.go && v.go->getAABB().ContainsPoint(gridPos))// && v.go->ContainsPoint(gridPos))
+		if(v.go && v.go->getAABB().ContainsPoint(gridPos) && v.go->ContainsPoint(gridPos - v.go->transform.position))
 			return GameObjPtr(v.go);
 
 	return GameObjPtr();

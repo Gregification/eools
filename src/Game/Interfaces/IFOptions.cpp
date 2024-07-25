@@ -31,7 +31,11 @@ IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
 
     Component movementInner;
     {
-
+        movementInner = Inner({
+                        Collapsible("Collapsible 1.1.1", Button("meow", [] {})),
+                        Collapsible("Collapsible 1.1.2", Empty()),
+                        Collapsible("Collapsible 1.1.3", Empty()),
+            });
     }
 
 

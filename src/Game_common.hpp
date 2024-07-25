@@ -34,7 +34,7 @@ typedef uint8_t
 
 
 /******************************************************************************
-* game stuff
+* stuff
 ******************************************************************************/
 
 /*miliseconds since epoch*/
@@ -45,6 +45,11 @@ time_t inline GetTime() {
 //keep incase want to go back to 32 bit 
 float inline GetDT(time_t dt) {
 	return dt / 1000.0;
+}
+
+template <typename T>
+int signum(T val) {
+	return (T(0) < val) - (val < T(0));
 }
 
 //should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates
