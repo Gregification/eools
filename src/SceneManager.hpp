@@ -34,7 +34,7 @@ namespace SceneManager {
 	void processGrid(
 		Grid*,
 		time_t,
-		std::function<void(Message)>,
+		std::function<void(const Message&)>,
 		std::function<bool(GameObject*)>
 	);
 

@@ -37,13 +37,29 @@ void Grid::RemoveAllObjects() {
 
 //TODO: bvh setup https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf
 //		also link it to the renderer somehow
-GameObjPtr Grid::ObjectAt(Vec2 gridPos)
-{
+GameObjPtr Grid::ObjectAt(const Vec2& gridPos) const {
+
 	for(const auto& v : _go_vec)
-		if(v.go && v.go->getAABB().ContainsPoint(gridPos) && v.go->ContainsPoint(gridPos - v.go->transform.position))
+		if(v.go 
+			&& v.go->getAABB().containsPoint(gridPos)
+			&& v.go->containsPoint(static_cast<Vec2_f>(gridPos - v.go->transform.position))
+			)
 			return GameObjPtr(v.go);
 
 	return GameObjPtr();
+}
+
+std::vector<GameObjPtr> Grid::ObjectsWithin(const gs::Rectangle& gridArea) const {
+	std::vector<GameObjPtr> ret{};
+
+	for (const auto& v : _go_vec)
+		if (v.go
+			&& gridArea.overlaps(v.go->getAABB())
+			&& gridArea.overlaps(v.go->verticies)
+			)
+			ret.push_back(v.go);
+
+	return ret;
 }
 
 const std::vector<Grid::GOObj> Grid::getObjVec() const {

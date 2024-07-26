@@ -11,7 +11,6 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 		if(rand() < RAND_MAX / 50)
 			mv->Post_Message("We've been trying to reach you about your ship's extended warranty...");
 
-		//I LOVE NAME SPACES!!!
 		Events::ClientEvent::observer.AddListenerToEvent(
 			Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
 			mv->addListener(Events::MakeListener<std::string>(

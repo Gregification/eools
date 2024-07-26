@@ -244,7 +244,7 @@ void Client::run(ScreenInteractive& screen) {
 				SceneManager::processGrid(
 					currentGrid.get(),
 					target,
-					[&](Message m) { Send(std::move(m)); },
+					[&](const Message& m) { Send(m); },
 					[ship = ship.get()](GameObject* g) { return g == ship; }
 				);
 			}
@@ -261,9 +261,6 @@ void Client::run(ScreenInteractive& screen) {
 			refreshesPS = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
 
 			screen.PostEvent(Event::Custom);
-
-			ship->transform.rotation.rotateBy(M_PI_4 * 0.001f * dt);
-			ship->transform.rotation.getUTD();
 		}
 	}
 }
@@ -398,6 +395,12 @@ void Client::Draw(Canvas& c) {//play renderer
 	}
 }
 
+std::shared_ptr<Ship> Client::GetSelectedShip() const {
+	if (auto lock = selectedShip.lock())
+		return lock;
+	return ship;
+}
+
 void Client::SetNewWindowDialogue(bool c) {
 	showNewWindowModal = c;
 }
@@ -454,8 +457,8 @@ void Client::OnMouse(Event e) {
 				windowContainer->Add(Window({
 						.inner = ops,
 						.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
-						.left = e.mouse().x - 5,
-						.top = e.mouse().y - 5,
+						.left = e.mouse().x - 2,
+						.top = e.mouse().y - 1,
 						.width = 30,
 						.height = 10,
 					}));
@@ -620,6 +623,18 @@ void Client::initEvents() {
 			);
 		}));
 
+	auto on_go_select = addListener(MakeListener<GameObjPtr>(
+		[&] (auto g){
+			if (!g) return;
+
+			if (auto dp = dynamic_cast<Ship*>(g.get())) {
+				ClientEvent::observer.invokeEvent<std::string>(
+					ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+					"ship!"
+				);
+			}
+		}));
+
 	/***********************************************************************************************************
 	* bindings
 	***********************************************************************************************************/
@@ -627,11 +642,18 @@ void Client::initEvents() {
 	//ClientEvent::observer.AddListenerToEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, DEBUG_beep_string);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_add_new_demo_window);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_message_event);
-	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, open_new_window_dialogue);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
-	KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, delete_selected_window);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DEBUG_btn, DEBUG_send_ship_update);
+	KeyBinds::observer.AddListenerToEvent(
+		KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW,
+		open_new_window_dialogue
+	);
+	KeyBinds::observer.AddListenerToEvent(
+		KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW,
+		delete_selected_window
+	);
 	
+
 	ClientEvent::observer.AddListenerToEvent(
 		ClientEvent::CLIENT_EVENT::ON_WINDOW_FOCUS,
 		on_window_focous
@@ -639,6 +661,10 @@ void Client::initEvents() {
 	ClientEvent::observer.AddListenerToEvent(
 		ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS, 
 		on_window_unfocous
+	);
+	ClientEvent::observer.AddListenerToEvent(
+		ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+		on_go_select
 	);
 	ClientEvent::observer.AddListenerToEvent(
 		ClientEvent::CLIENT_EVENT::ADD_TO_WINDOW_CONTAINER, 

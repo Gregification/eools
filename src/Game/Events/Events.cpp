@@ -60,7 +60,8 @@ Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
 	{CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE, {"decrease drive output",""}},
 }};
 
-//there really isnt much point to this
+//this is somewhat pointless since the client wont care and this is for ui
+//keep it around for organization reasons
 Observer<ClientEvent::CLIENT_EVENT> ClientEvent::observer = { {
 	{CLIENT_EVENT::EVENT_MESSAGE, {"general events", "forwards events that the user may find usefull"}},
 	{CLIENT_EVENT::ON_SHIP_OPERABLE_SHIP_FOCOUS, {"on operable ship select", "triggered when a operable ship is selected"}},

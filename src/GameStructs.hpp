@@ -12,6 +12,11 @@
 
 //using structs to meet standard layout requirement as needed by 
 namespace gs {
+	using Arr3 = std::array<float, 3>;
+	using Arr2 = std::array<float, 2>;
+	using Mat3x3 = std::array<Arr3, 3>;
+	using Mat2x2 = std::array<Arr2, 2>;
+	
 	template<typename T>
 	struct Vec2_T;
 	struct Transformation_2D;
@@ -64,8 +69,10 @@ namespace gs {
 		T magnitude()				const { return std::sqrtf(magnitudeSquared()); }
 		T magnitudeSquared()		const { return x * x + y * y; }
 		T sum()						const { return x + y; }
-		T dot(const Vec2_T& other)	const { return ((*this) * other).sum(); }
-
+		T slope()					const { return y / x; }
+		T dot(const Vec2_T& o)		const { return ((*this) * o).sum(); }
+		T cross(const Vec2_T& o)	const { return x * o.y - y * o.x; }
+		
 		template<typename U,
 			typename std::enable_if<std::is_convertible<U, T>::value, int>::type = 0>
 		Vec2_T& operator=(const Vec2_T<U>& rhs) {
@@ -126,28 +133,27 @@ namespace gs {
 	static_assert(std::is_standard_layout<Vec2_i>::value);
 
 	struct Rectangle {
-		Vec2 pos;
+		Vec2_f pos;
 		Vec2_f size;
 
 		float getArea() const { return size.x * size.y; }
 
 		//linker explodes if this is anywhere else
 		template<typename T>
-		bool ContainsPoint(const Vec2_T<T>& p) const {
-			auto a = p.x >= pos.x;
-			auto b = p.x <= pos.x + size.x;
-			auto c = p.y >= pos.y;
-			auto d = p.y <= pos.y + size.y;
-
-			return a && b && c && d;
+		bool containsPoint(const Vec2_T<T>& p) const {
+			return p.x >= pos.x
+				&& p.x <= pos.x + size.x
+				&& p.y >= pos.y
+				&& p.y <= pos.y + size.y;
 		}
+
+		/** returns true if overlaping AREA exists*/
+		bool overlaps(const gs::Rectangle&) const;
+
+		/** returns true if overlap exists, complete unlayered check*/
+		bool overlaps(const std::vector<Vec2_f>&) const;
 	};
 	static_assert(std::is_standard_layout<gs::Rectangle>::value);
-
-	using Arr3 = std::array<float, 3>;
-	using Arr2 = std::array<float, 2>;
-	using Mat3x3 = std::array<Arr3, 3>;
-	using Mat2x2 = std::array<Arr2, 2>;
 
 	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
 	//does not handle rotation (though it can)
@@ -348,5 +354,65 @@ namespace gs {
 		}
 
 		return even;
+	}
+
+	//https://www.youtube.com/watch?v=5FkOO1Wwb8w
+	/** 
+	* returns the respective scalers for the direcitonal vectors.
+	*	if is colinear then returns 0 for both scalers. acceptable use
+	*	of 0,0 because that shouldnt be a thing that happens in the 
+	*	context of this program anyways.
+	* 
+	* values '0 <= x <= 1' for either vector indicate a collision within 
+	*	their bounds. if both vectors have a collision in bounds 
+	*	then a valid interseciton exists.
+	* 
+	* e.g: a line with start and end points of, respectively; A,B.
+	*	the first 2 arguements would then be (A, B - A, ... ).
+	*	to find the point of interseciton then would be, using 
+	*	the scaler result R, A + (B - A) * R
+	*/
+	template<typename T>
+	std::optional<std::array<T, 2>> GetIntersectionScalers(
+		const Vec2_T<T>& A,
+		const Vec2_T<T>& AB,
+		const Vec2_T<T>& C,
+		const Vec2_T<T>& CD
+	) {
+		T ab_cd = A.cross(AB);
+
+		//probably not ever happening with float percision loss
+		//if is colinear
+		if (ab_cd == 0) {
+
+			//if its colinear then |slope(A->B)| == |slope(C->D)| == |slope(B->C)|
+			float sab = std::abs(AB.slope());
+			float sbc = std::abs((C - (A + AB)).slope());
+
+			//if is colinear parallel, or close enough too 
+			//	'close enough' scaling of epsilon is determined by how similar
+			//	the magnitueds are (because this is a space sim!).
+			//	so the relation is
+			//		similar magnitudes -> larger E => easier to be colinear
+			//		large diff in magnitudes -> smaller => very easy to not be colinear
+			// tldr: didnt do this here but should when i ever get to pin analysis 
+			
+			if (std::abs(sab - sbc) < 0.0001f) {
+
+				//if the colinear lines intersect then
+				return std::optional<std::array<T, 2>>({ T(0),T(0) });
+			}
+
+			return std::nullopt;
+		}
+
+		T i_ab_cd = 1.0f / ab_cd;
+
+		Vec2_T<T> AC = C - A;
+
+		T ac_cd = AC.cross(CD);
+		T ab_ac = AB.cross(AC);
+
+		return std::optional<std::array<T, 2>>({ ac_cd * i_ab_cd, -ab_ac * i_ab_cd});
 	}
 }

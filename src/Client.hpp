@@ -37,6 +37,7 @@ public:
 	Camera cam;
 
 protected:
+	std::weak_ptr<Ship> selectedShip;
 	std::shared_ptr<Ship> ship;
 	std::shared_ptr<Grid> currentGrid;
 
@@ -85,12 +86,8 @@ private:
 public:
 	/****************************************************************
 	* game controlls
-	*  > most of these already have a corrosponding event and so 
-	* dont actually need to be a defined method. done so anyways
-	* incase I need access for something later 
+	*  - also see client events for closely related things
 	****************************************************************/
 
-	void GoToGrid(Vec2 mapPos, Vec2 gridPos) {
-
-	}
+	std::shared_ptr<Ship> GetSelectedShip() const;
 };

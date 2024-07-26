@@ -54,13 +54,14 @@ int signum(T val) {
 
 //should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates
 //	maybe use the BVH setup as the coordinates? could aleivate the issue in some cases
-typedef float Unit;
+typedef double Unit;
 
 //units : multiply the num by these ratios to get their respective values
 //see https://en.wikipedia.org/wiki/Standard_gravitational_parameter
-#define KM 1
-#define KT 1
-#define KJ 1e-9
-#define LS KM * 299'792.458
-#define AU KM * 14'959'787.069'1
-#define GRAV_CONST 6.67430e-11 //needs adjusted if KM & KT arnt the same scale
+
+constexpr Unit KM = 1e-3;
+constexpr Unit KT = 1e-3;
+constexpr Unit KJ = 1e-6;
+constexpr Unit LS = KM * 299'792.458;
+constexpr Unit AU = KM * 14'959'787.069'1;
+constexpr Unit GRAV_CONST = 6.67430e-11; //needs adjusted if KM & KT arnt the same scale

@@ -8,12 +8,12 @@ using namespace Navigation;
 * setup 
 *  - semi boiler plate
 *  - fiddle around with this if your trying to do something like have a pattern 
-*		be interperted as another for non-local systems
+*		be interperted as another for some reason
 ***********************************************************************************/
 
 std::unordered_map<TRAVEL_STATE::_enumerated, std::function<std::unique_ptr<NavBase>()>> 
 Navigation::stateToNavigator{
-	{TRAVEL_STATE::NONE,				[] { return  nullptr; }},
+	{TRAVEL_STATE::NONE,				[] { return  nullptr; }},//special case
 	{TRAVEL_STATE::ALIGN,				[] { return  std::make_unique<ALIGN>(); }},
 	{TRAVEL_STATE::ALIGN_TO,			[] { return  std::make_unique<ALIGN_TO>(); }},
 	{TRAVEL_STATE::APPROACH,			[] { return  std::make_unique<APPROACH>(); }},
@@ -62,9 +62,10 @@ void NavInfo::unpackMessage(Message& msg, MsgDiffType mdt) {
 *  - more boiler plate!!! keep reading for explinations
 *  - the message un/packing is something worth considering since these structs 
 *		are intended to cache values and may hold non standard layout objects
-*		which means it cant just be shuffled into a 'Message' with ship operator.
-*		DO NOT USE THE SHIFT OP FOR MESSAGES. these are not standard layout structs
-*		because they inherit abstract stuff.
+*		which means it cant just be shuffled into a 'Message' using the shift 
+*		operator. DO NOT USE THE SHIFT OP FOR MESSAGES. these are not standard
+*		layout structs because they have vitrual stuff, therefore shift operator
+*		will be putting out garbage! gigo.
 ***********************************************************************************/
 
 void ALIGN::packMessage(Message& msg, MsgDiffType) {

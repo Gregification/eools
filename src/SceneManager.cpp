@@ -41,7 +41,7 @@ std::optional<GameObjPtr> SceneManager::find(ID id) {
 	}
 }
 
-void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(Message)> send, std::function<bool(GameObject*)> canSend){
+void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(const Message&)> send, std::function<bool(GameObject*)> canSend){
 	time_t 
 		rn = GetTime(), 
 		dt;

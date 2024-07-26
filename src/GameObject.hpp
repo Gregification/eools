@@ -61,12 +61,15 @@ public:
 	//javadoc ftw, didnt realize it works on non java things
 	/**
 	* checks if the point relative to the GO is within the GO.
-	* does not check AABB or any higherlevel generalizations
+	* does not check AABB or any higherlevel generalizations.
+	* 
+	* forces a flot conversion since this should be relative 
+	*	the body wich shoudl be relatively small.
 	* 
 	* @param point Point relative to gameobject
 	* @return true if point is within the GO's body
-	*/	
-	virtual bool ContainsPoint(const Vec2_f& point) const;
+	*/
+	virtual bool containsPoint(const Vec2_f& point) const;
 
 protected:
 	void addSynchronizationTarget(SyncTarget);

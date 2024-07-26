@@ -48,7 +48,7 @@ Class_Id GameObject::GetClassId() const {
 	return IdGen<GameObject>::gof.class_id;
 }
 
-bool GameObject::ContainsPoint(const Vec2_f& p) const {
+bool GameObject::containsPoint(const Vec2_f& p) const {
 	return gs::IsPointInPoly(verticies, p - transform.position, transform.rotation);
 }
 

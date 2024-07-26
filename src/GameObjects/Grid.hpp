@@ -39,7 +39,9 @@ class Grid : public NetGameObject<Grid> {
 		/*clears objs*/
 		void RemoveAllObjects();
 
-		GameObjPtr ObjectAt(Vec2 gridPos);
+		GameObjPtr ObjectAt(const Vec2& gridPos) const;
+
+		std::vector<GameObjPtr> ObjectsWithin(const gs::Rectangle& gridArea) const;
 
 		const std::vector<GOObj> getObjVec() const;
 
