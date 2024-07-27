@@ -170,12 +170,13 @@ namespace Events {
 	/*game/ui/user events*/
 	namespace ClientEvent {
 		BETTER_ENUM(BE_CLIENT_EVENT, int, 
-			EVENT_MESSAGE,			//expected std::string
+			ADD_TO_WINDOW_CONTAINER,	//expected ftunction<Component(Client&)>
+			ADD_RESOLVEABLE_RESPONDER,	//expected ResolveableResponder
+			EVENT_MESSAGE,				//expected std::string
 			ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			ON_WINDOW_FOCUS,
 			ON_WINDOW_UNFOCUS,
-			ADD_TO_WINDOW_CONTAINER,//expected ftunction<Component(Client&)>
-			ON_GAMEOBJECT_SELECT	//expected GameObjPtr
+			ON_GAMEOBJECT_SELECT		//expected GameObjPtr
 		);
 		typedef BE_CLIENT_EVENT::_enumerated CLIENT_EVENT;
 

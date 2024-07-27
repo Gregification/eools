@@ -45,7 +45,7 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 
 		v.go->Draw(c, trans);		
 	}
-	auto gp = trans.applyTo(Vec2(0));
+	auto gp = trans.applyTo(Vec2_f(0));
 	c.DrawBlock(gp.x, gp.y, true);
 }
 

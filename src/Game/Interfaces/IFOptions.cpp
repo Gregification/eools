@@ -1,6 +1,7 @@
 #include "IFOptions.hpp"
-#include "../../ftxui extras/scroller.hpp"
 
+#include "../../ftxui extras/scroller.hpp"
+#include "../Input Controllers/ICSelectGridRectangle.hpp"
 
 IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
     Component windowsInner;
@@ -31,11 +32,33 @@ IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
 
     Component movementInner;
     {
-        movementInner = Inner({
-                        Collapsible("Collapsible 1.1.1", Button("meow", [] {})),
-                        Collapsible("Collapsible 1.1.2", Empty()),
-                        Collapsible("Collapsible 1.1.3", Empty()),
-            });
+        std::vector<Component> comps;
+
+        for (int i = 1; i < Navigation::TRAVEL_STATE::_size_constant; i++) {
+            typedef Navigation::TRAVEL_STATE TS;
+            TS ts = TS::_from_index(i);
+
+            comps.push_back(
+                Button(
+                    ts._to_string(),
+                    [mousePos] {
+                        using namespace Events;
+                        ClientEvent::observer.invokeEvent<ResolveableResponder>(
+                            ClientEvent::CLIENT_EVENT::ADD_RESOLVEABLE_RESPONDER,
+                            [mousePos](Client& c) -> bool{
+                                InputController ic = std::make_shared<ICSelectGridRectangle>();
+                                
+                                c.addInputController(true, true, ic);
+
+                                return true;
+                            });
+                    }
+                    , ButtonOption::Ascii())
+            );
+
+        }
+
+        movementInner = Inner(comps);
     }
 
 

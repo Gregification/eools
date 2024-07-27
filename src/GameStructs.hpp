@@ -10,7 +10,6 @@
 #include "NetCommon/eol_net.hpp"
 #include "Game_common.hpp"
 
-//using structs to meet standard layout requirement as needed by 
 namespace gs {
 	using Arr3 = std::array<float, 3>;
 	using Arr2 = std::array<float, 2>;
@@ -132,15 +131,39 @@ namespace gs {
 	typedef Vec2_T<int> Vec2_i;
 	static_assert(std::is_standard_layout<Vec2_i>::value);
 
-	struct Rectangle {
-		Vec2_f pos;
-		Vec2_f size;
+	template<typename T>
+	struct Rectangle_T {
+		Vec2_T<T> pos, size;
 
 		float getArea() const { return size.x * size.y; }
 
-		//linker explodes if this is anywhere else
-		template<typename T>
-		bool containsPoint(const Vec2_T<T>& p) const {
+		/** 
+		* @return rectangle representing the overlapping volume. 
+		*	a negative size.x or size.y implies no overlap
+		*/
+		template<typename U>
+		Rectangle_T<T> And(const Rectangle_T<U>& o) const {
+			Rectangle_T<T> ret;
+
+			std::pair<T,T> 
+				mmx = std::minmax<T>(o.pos.x, pos.x),
+				mmy = std::minmax<T>(o.pos.y + o.size.y, pos.y + size.y);
+			ret.size.x = mmx.first - mmx.second;
+			ret.size.y = mmy.first - mmy.second;
+			ret.pos.x =  mmx.second;
+			ret.pos.y =  mmy.second;
+
+			return ret;
+		}
+
+		Vec2_T<T> OverlapSize(const Rectangle_T<T>& o) const {
+			auto x = std::minmax(o.pos.x, pos.x);
+			auto y = std::minmax(o.pos.y + o.size.y, pos.y + size.y);
+			return { x.first - x.second, y.first - y.second};
+		}
+
+		template<typename U>
+		bool containsPoint(const Vec2_T<U>& p) const {
 			return p.x >= pos.x
 				&& p.x <= pos.x + size.x
 				&& p.y >= pos.y
@@ -148,12 +171,70 @@ namespace gs {
 		}
 
 		/** returns true if overlaping AREA exists*/
-		bool overlaps(const gs::Rectangle&) const;
+		template<typename U>
+		bool overlaps(const Rectangle_T<U>& o) const {
+			//a N b. top, left, right, top, bottom
+			U al = pos.x;
+			U ar = pos.x + size.x;
+			U at = pos.y;
+			U ab = pos.y + size.y;
+			U bl = o.pos.x;
+			U br = o.pos.x + o.size.x;
+			U bt = o.pos.y;
+			U bb = o.pos.y + o.size.y;
+
+			return al < br && ar > bl && at < bb && ab > bt;
+		}
 
 		/** returns true if overlap exists, complete unlayered check*/
-		bool overlaps(const std::vector<Vec2_f>&) const;
+		template<typename U>
+		bool overlaps(const std::vector<Vec2_T<U>>& poly) const {
+			typedef Vec2_T<U> V2;
+			//cant find a algorithm that does it without extra data structs
+			//	so heres the homebrew mess that does
+
+			const std::array<const V2, 4> rectPts{ {
+					static_cast<V2>(pos),		//tl
+					static_cast<V2>(pos + size),//br
+					{U(pos.x), U(pos.y + size.y)},	//bl
+					{U(pos.x + size.x), U(pos.y)}		//tr
+				} };
+
+			for (int i = 0; i < poly.size(); i++) {
+				auto pa = poly[i];
+				auto pb = poly[(i + 1) % poly.size()];
+
+				//if a polygons poitn is inside the rect
+				if (containsPoint(pa))
+					return true;
+
+				//check for intersection of verticies
+				for (int j = 0; j < rectPts.size(); j++) {
+					auto ra = rectPts[j];
+					auto rb = rectPts[(j + 1) % rectPts.size()];
+
+					//interseciton of any rect verts to current poly vert.
+					const auto op = GetIntersectionScalers(pa, (pb - pa), ra, (rb - ra));
+					if (op) {
+						const auto arr = *op;
+
+						//if interseciton within line bounds, 0 <= x <= 1
+						if (std::abs(arr[0]) <= 1 && std::abs(arr[1]) <= 1)
+							return true;
+					}
+				}
+			}
+
+			return false;
+		}
 	};
-	static_assert(std::is_standard_layout<gs::Rectangle>::value);
+
+	typedef Rectangle_T<Unit> Rectangle;
+	static_assert(std::is_standard_layout<Rectangle>::value);
+	typedef Rectangle_T<float> Rectangle_f;
+	static_assert(std::is_standard_layout<Rectangle_f>::value);
+	typedef Rectangle_T<int> Rectangle_i;
+	static_assert(std::is_standard_layout<Rectangle_i>::value);
 
 	//Affine transformations. https://en.wikipedia.org/wiki/Affine_transformation
 	//does not handle rotation (though it can)

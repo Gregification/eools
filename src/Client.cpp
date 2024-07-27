@@ -103,6 +103,10 @@ Client::Client() :
 			}
 
 			if (!isWindowSelected && !showNewWindowModal) {
+				if (InputControllers.size() > 0)
+					if (InputControllers[InputControllers.size() - 1].ic->OnEvent(e))
+						return true;
+
 				if (e.is_mouse()) {
 					OnMouse(std::move(e));
 
@@ -158,6 +162,16 @@ void Client::removeEmptyWindows() {
 	}
 }
 
+void Client::addInputController(bool cas, bool ddcas, InputController iic){
+	InConOptions ico = {
+		.ic = std::move(iic),
+		.cascade = cas,
+		.drawDuringCascade = ddcas,
+	};
+
+	InputControllers.push_back(ico);
+}
+
 /*
 	handles 
 		- network connection.
@@ -187,7 +201,7 @@ void Client::run(ScreenInteractive& screen) {
 		msg << gr;
 		Send(msg);
 
-		unresolvedResponder.push_back([pos = gr.pos, this](Client&)->bool {
+		unresolvedResponders.push_back([pos = gr.pos, this](Client&)->bool {
 				auto g = SceneManager::GridAt(pos);
 				if (g) {
 					currentGrid = g.value();
@@ -231,9 +245,9 @@ void Client::run(ScreenInteractive& screen) {
 
 			numPkt = Update();
 
-			for (int i = 0; i < unresolvedResponder.size(); i++) {
-				if (unresolvedResponder[i](*this)) {
-					unresolvedResponder.erase(unresolvedResponder.begin() + i);
+			for (int i = 0; i < unresolvedResponders.size(); i++) {
+				if (unresolvedResponders[i](*this)) {
+					unresolvedResponders.erase(unresolvedResponders.begin() + i);
 					i--;
 				}
 			}
@@ -250,6 +264,16 @@ void Client::run(ScreenInteractive& screen) {
 			}
 
 			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
+			
+			if (InputControllers.size() != 0) {
+				int i = InputControllers.size() - 1;
+
+				InputControllers[i].ic->Update(dt);
+
+				if (InputControllers[i].ic->IsDone()) {
+					InputControllers.pop_back();
+				}
+			}
 
 			if (false && dt < target) {
 				std::this_thread::sleep_for(milliseconds(target - dt));
@@ -258,7 +282,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			avgElapse = avgElapse + (dt - avgElapse) * weight;
 			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
-			refreshesPS = 1000.0 / avgElapse + target * 0.1;//counter is a bit janky
+			refreshesPS = 1000.0f / avgElapse + target * 0.1f;//counter is a bit janky
 
 			screen.PostEvent(Event::Custom);
 		}
@@ -362,6 +386,19 @@ Component Client::Renderer_inventory() {
 void Client::Draw(Canvas& c) {//play renderer
 	if (currentGrid){
 		cam.Draw(c, currentGrid);
+		
+		if (InputControllers.size() != 0) {
+			int i = InputControllers.size() - 1;
+			InputControllers[i].ic->Draw(cam, c);
+
+			c.DrawText(
+				0,
+				c.height() - 1,
+				InputControllers[i].ic->GetDescription(),
+				Color::Yellow
+			);
+		}
+
 	} else {
 		c.DrawText(5,5, "play renderer, grid is not yet ready");
 		using namespace std::chrono;
@@ -585,7 +622,7 @@ void Client::initEvents() {
 			/* some interfaces may get detached but that dosent mean the window itself 
 			* is detached
 			*/
-			unresolvedResponder.push_back([&](Client&) -> bool {
+			unresolvedResponders.push_back([&](Client&) -> bool {
 				removeEmptyWindows();
 				return true;
 			 });
@@ -612,6 +649,11 @@ void Client::initEvents() {
 			}
 		}));
 
+	auto add_unresolved_responder = addListener(MakeListener<ResolveableResponder>(
+		[&] (auto v){
+			unresolvedResponders.push_back(v);
+		}));
+
 	/***********************************************************************************************************
 	* game
 	***********************************************************************************************************/
@@ -627,11 +669,8 @@ void Client::initEvents() {
 		[&] (auto g){
 			if (!g) return;
 
-			if (auto dp = dynamic_cast<Ship*>(g.get())) {
-				ClientEvent::observer.invokeEvent<std::string>(
-					ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
-					"ship!"
-				);
+			if (auto dp = dynamic_pointer_cast<Ship>(g)) {
+				selectedShip = dp;
 			}
 		}));
 
@@ -669,6 +708,10 @@ void Client::initEvents() {
 	ClientEvent::observer.AddListenerToEvent(
 		ClientEvent::CLIENT_EVENT::ADD_TO_WINDOW_CONTAINER, 
 		add_new_window
+	);
+	ClientEvent::observer.AddListenerToEvent(
+		ClientEvent::CLIENT_EVENT::ADD_RESOLVEABLE_RESPONDER,
+		add_unresolved_responder
 	);
 
 	//Network::observer.AddListenerToEvent(Network::NETWORK_EVENT::SEND_MESSAGE, network_send_message);

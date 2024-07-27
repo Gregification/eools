@@ -23,61 +23,6 @@ Transformation_2D Transformation_2D::zero   = { .mat = {{
     }}};
 
 
-bool gs::Rectangle::overlaps(const gs::Rectangle& o) const {
-	//a N b. top, left, right, top, bottom
-	float al = pos.x;
-	float ar = pos.x + size.x;
-	float at = pos.y;
-	float ab = pos.y + size.y;
-	float bl = o.pos.x;
-	float br = o.pos.x + o.size.x;
-	float bt = o.pos.y;
-	float bb = o.pos.y + o.size.y;
-
-	return al < br && ar > bl && at < bb && ab > bt;
-}
-
-
-bool gs::Rectangle::overlaps(const std::vector<Vec2_f>& poly) const {
-	//cant find a algorithm that does it without extra data structs
-	//	so heres the homebrew mess that does
-
-	unsigned int even = 0;
-	const std::array<Vec2_f, 4> rectPts{ {
-			pos,						//tl
-			pos + size,					//br
-			{pos.x, pos.y + size.y},	//bl
-			{pos.x + size.x, pos.y}		//tr
-		}};
-
-	for (int i = 0; i < poly.size(); i++) {
-		auto pa = poly[i];
-		auto pb = poly[(i + 1) % poly.size()];
-
-		//if a polygons poitn is inside the rect
-		if (containsPoint(pa))
-			return true;
-
-		//check for intersection of verticies
-		for (int j = 0; j < rectPts.size(); j++) {
-			auto ra = rectPts[j];
-			auto rb = rectPts[(j+1) % rectPts.size()];
-
-			//interseciton of any rect verts to current poly vert.
-			const auto op = GetIntersectionScalers(pa, (pb - pa), ra, (rb - ra));
-			if (op) {
-				const auto arr = *op;
-				
-				//if interseciton within line bounds, 0 <= x <= 1
-				if (std::abs(arr[0]) <= 1 && std::abs(arr[1]) <= 1)
-					return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 Arr3 Transformation_2D::mul(const Arr3& arr) const {
 	// | A B C |   | X |   | X |
 	// | D E F | * | Y | = | Y |
@@ -163,16 +108,6 @@ RotationHandler& RotationHandler::getUTD() {
 	if (isMatBad) refreshRotMat();
 	return *this;
 }
-
-//void RotationHandler::applyTo(Transformation_2D& t) {
-//	//overlay it as a scaler, ignore if is zero so not 
-//	// to effect the transforms other properties
-//
-//	if(PT(mat, 0, 0)) PT(t.mat, 0, 0) *= PT(mat, 0, 0);
-//	if(PT(mat, 1, 0)) PT(t.mat, 1, 0) *= PT(mat, 1, 0);
-//	if(PT(mat, 0, 1)) PT(t.mat, 0, 1) *= PT(mat, 0, 1);
-//	if(PT(mat, 1, 1)) PT(t.mat, 1, 1) *= PT(mat, 1, 1);
-//}
 
 std::string gs::getPrettyString(float n) {
 	static constexpr int maxD = 3;
