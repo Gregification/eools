@@ -133,10 +133,11 @@ namespace Events {
 	* actual stuff
 	**********************************************************************************************************************************************/
 
-	/*keybinds*/
+	/*more so user controls*/
 	namespace KeyBinds {
 		BETTER_ENUM(BE_CONTROL_EVENT, int,
 			DEBUG_btn,
+			ESCAPE,
 			DISPLAY_NEW_WINDOW,
 			DISPLAY_TOGGLE_MOVEMENT_OVERLAY,
 			DISPLAY_REMOVE_WINDOW,
@@ -149,13 +150,15 @@ namespace Events {
 		typedef BE_CONTROL_EVENT::_enumerated CONTROL_EVENT;
 
 		struct _WrapperHasher {
-			size_t operator()(const ftxui::Event& w) const {
-				return std::hash<std::string>()(w.input());
+			size_t operator()(const ftxui::Event& e) const {
+				return std::hash<std::string>()(e.input());
 			}
 		};
-
+		/** 
+		* @return true if the event shouldn't be presisted
+		*/
 		/*returns true if the key was accepted. false if it was denied or is not tied to anything*/
-		size_t sendKey(ftxui::Event);
+		bool sendKey(ftxui::Event);
 		/*returns true if event was added, false if already exists*/
 		bool registerCtrlEvent(ftxui::Event, CONTROL_EVENT);
 		/*returns true if event was removed, false if didnt exist*/

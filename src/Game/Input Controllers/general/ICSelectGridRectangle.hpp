@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../InputControl.hpp"
+#include "../ICWrapperInclude.hpp"
 
 class ICSelectGridRectangle : public InputControl<gs::Rectangle> {
 public:
@@ -9,15 +9,17 @@ public:
 	gs::Rectangle rect;
 
 	std::optional<gs::Rectangle> GetResult() override;
-	void Draw(const Camera&, Canvas&) const override;
-	bool OnEvent(const ftxui::Event&, Camera&) override;
+	void Draw(Camera&, Canvas&) const override;
+	bool OnEvent(ftxui::Event&, Camera&) override;
 	bool IsDone() const override;
 	bool IsSuccessful() const override;
+	void reset();
 
 private:
-	enum class STATE {
+	enum class STATE : int{
 		PICK_LOWERBOUNDS,
-		PICK_UPPERBOUNDS
+		PICK_UPPERBOUNDS,
+		FINISHED
 	};
 	STATE state;
 

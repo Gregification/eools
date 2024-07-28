@@ -5,6 +5,7 @@
 
 #include "../GameStructs.hpp"
 #include "../GameObject.hpp"
+#include "InputControl.hpp"
 
 class Ship;
 
@@ -12,9 +13,9 @@ namespace Navigation {
 	#define Nav_Base_OverrideFuncs  \
 		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
 		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
-		void refresh() override; \
+		void reset() override; \
 		void nav_update(float) override; \
-		constexpr TRAVEL_STATE::_enumerated getTravelState() override;
+		TRAVEL_STATE::_enumerated getTravelState() const override;
 
 	using namespace gs;
 
@@ -31,10 +32,16 @@ namespace Navigation {
 	);
 
 	struct NavBase;
+
 	extern std::unordered_map<
 		TRAVEL_STATE::_enumerated,
 		std::function<std::unique_ptr<NavBase>()>
 	> stateToNavigator;
+
+	extern std::unordered_map<
+		TRAVEL_STATE::_enumerated,
+		std::function<InputControl<NavBase>()>
+	> stateToNavigatorIC;
 
 	//structs because it implies these arnt unique classes or what ever (also convient)
 	/**
@@ -45,21 +52,26 @@ namespace Navigation {
 	*/
 	struct NavBase : Messageable {
 		std::shared_ptr<Ship> getShip() { return ship.lock(); }
-		void setShip(std::weak_ptr<Ship> s) { ship = s; }
+		void setShip(std::weak_ptr<Ship> s) { ship = s; reset(); }
 
 		/**
 		* resets what ever cache variables there are
 		*/
-		virtual void refresh() = 0;
+		virtual void reset() {};
 
 		//some concerns on how to effeciently access the target ship, for now just 
 		//	brute force it by getting a shared_ptr from the weak_ptr each update
 		/**
 		* updates the selected ship for the nav pattern
 		*/
-		virtual void nav_update(float) = 0;
+		virtual void nav_update(float) {};
 
-		virtual constexpr TRAVEL_STATE::_enumerated getTravelState() = 0;
+		virtual TRAVEL_STATE::_enumerated getTravelState() const { return TRAVEL_STATE::NONE; };
+		
+		virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override 
+			{}
+		virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override
+			{}
 
 	protected:
 		/** thing to navigate*/
@@ -68,6 +80,8 @@ namespace Navigation {
 	
 	struct NavInfo : Messageable {
 		std::unique_ptr<NavBase> navPattern;
+
+		void setNavPattern(NavBase);
 
 		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;

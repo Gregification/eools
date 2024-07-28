@@ -12,6 +12,9 @@ public:
 	~Camera() = default;
 	
 	Vec2_i mouse_screen;
+	Transformation_2D trans;
+
+	const Transformation_2D& getTransformationInverse();
 
 	inline float& offX();
 	inline float& offY();
@@ -21,8 +24,18 @@ public:
 
 	void Draw(Canvas& c, std::shared_ptr<Grid> g);
 
-	Vec2 screenToGrid(Vec2_i);
-	Vec2_i gridToScreen(Vec2);
+	template<typename T>
+	Vec2 screenToGrid(Vec2_T<T> p) {
+		return getTransformationInverse().applyTo(static_cast<Vec2>(p));
+	}
 
-	Transformation_2D trans;
+	template<typename T>
+	Vec2_f gridToScreen(Vec2_T<T> p) {
+		return static_cast<Vec2_f>(trans.applyTo(p));
+	}
+
+private:
+	Transformation_2D 
+		c_d_trans,//former trans, used to tell if a change occured
+		c_i_trans;//cached inverse
 };

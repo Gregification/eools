@@ -2,6 +2,15 @@
 
 using namespace gs;
 
+const Transformation_2D& Camera::getTransformationInverse() {
+	if (c_d_trans != trans) {
+		c_d_trans = trans;
+		c_i_trans = trans.getInverse();
+	}
+
+	return c_i_trans;
+}
+
 inline float& Camera::offX() { return trans.transX(); }
 inline float& Camera::offY() { return trans.transY(); }
 
@@ -47,12 +56,4 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 	}
 	auto gp = trans.applyTo(Vec2_f(0));
 	c.DrawBlock(gp.x, gp.y, true);
-}
-
-Vec2 Camera::screenToGrid(Vec2_i p) {
-	return trans.getInverse().applyTo(static_cast<Vec2>(p));
-}
-
-Vec2_i Camera::gridToScreen(Vec2 p) {
-	return (Vec2_i)(trans.applyTo(p) - getOffVec());
 }

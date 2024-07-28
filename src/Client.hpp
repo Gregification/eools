@@ -103,10 +103,13 @@ private:
 	void Draw(Canvas& c);
 	
 public:
+	std::vector<std::weak_ptr<GameObject>> selectedObjects;
+
 	/****************************************************************
 	* game controlls
 	*  - also see client events for closely related things
 	****************************************************************/
 
 	std::shared_ptr<Ship> GetSelectedShip() const;
+	std::vector<std::shared_ptr<Ship>> GetSelectedShips() const;
 };

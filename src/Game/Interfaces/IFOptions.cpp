@@ -1,7 +1,7 @@
 #include "IFOptions.hpp"
 
 #include "../../ftxui extras/scroller.hpp"
-#include "../Input Controllers/ICSelectGridRectangle.hpp"
+#include "../Input Controllers/general/ICSelectGridRectangle.hpp"
 
 IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
     Component windowsInner;
@@ -41,14 +41,29 @@ IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
             comps.push_back(
                 Button(
                     ts._to_string(),
-                    [mousePos] {
+                    [mousePos, ts] {
                         using namespace Events;
                         ClientEvent::observer.invokeEvent<ResolveableResponder>(
                             ClientEvent::CLIENT_EVENT::ADD_RESOLVEABLE_RESPONDER,
-                            [mousePos](Client& c) -> bool{
-                                InputController ic = std::make_shared<ICSelectGridRectangle>();
-                                
-                                c.addInputController(true, true, ic);
+                            [mousePos, ts](Client& postClient) -> bool{
+                                auto inster = Navigation::stateToNavigatorIC[ts];
+                                auto inst = inster();
+                                auto ic = std::make_shared<InputControl<Navigation::NavBase>>(
+                                        inst
+                                    );
+
+                                ic->onFinish = [tis = ic](InputControl_Base*, Client& c) {
+                                    //if the IC got something useable
+                                    if(tis && tis->IsSuccessful()){
+                                        auto nav = tis->GetResult();
+                                        if (nav) {
+
+                                            //apply to all ships
+                                            for (auto v : c.GetSelectedShips())
+                                                v->navinfo.setNavPattern(*nav);
+                                        }
+                                    }
+                                };
 
                                 return true;
                             });

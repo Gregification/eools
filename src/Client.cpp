@@ -92,6 +92,7 @@ Client::Client() :
 		auto windowContainer_wrapper = windowContainer | CatchEvent([&](Event e) {
 			static bool wasWinSelected = false;
 
+
 			if (isWindowSelected != wasWinSelected) {
 				wasWinSelected = isWindowSelected;
 
@@ -104,7 +105,7 @@ Client::Client() :
 
 			if (!isWindowSelected && !showNewWindowModal) {
 				if (InputControllers.size() > 0)
-					if (InputControllers[InputControllers.size() - 1].ic->OnEvent(e))
+					if (InputControllers[InputControllers.size() - 1].ic->OnEvent(e, cam))
 						return true;
 
 				if (e.is_mouse()) {
@@ -112,12 +113,8 @@ Client::Client() :
 
 					if(e.mouse().button != Mouse::None)
 						return true;
-				}
-
-				if (e.is_character()) {
-					Events::KeyBinds::sendKey(std::move(e));
-					return true;
-				}
+				} else
+					return Events::KeyBinds::sendKey(std::move(e));
 			}
 
 			if (e.is_mouse() && e.mouse().button == Mouse::None)
@@ -270,7 +267,11 @@ void Client::run(ScreenInteractive& screen) {
 
 				InputControllers[i].ic->Update(dt);
 
-				if (InputControllers[i].ic->IsDone()) {
+				if (InputControllers[i].ic->IsFinished()) {
+
+					if (InputControllers[i].ic->onFinish)
+						InputControllers[i].ic->onFinish(InputControllers[i].ic.get(), *this);
+
 					InputControllers.pop_back();
 				}
 			}
@@ -387,16 +388,25 @@ void Client::Draw(Canvas& c) {//play renderer
 	if (currentGrid){
 		cam.Draw(c, currentGrid);
 		
-		if (InputControllers.size() != 0) {
-			int i = InputControllers.size() - 1;
-			InputControllers[i].ic->Draw(cam, c);
+		int i = InputControllers.size() - 1;
 
+		if (i >= 0) {
 			c.DrawText(
 				0,
 				c.height() - 1,
-				InputControllers[i].ic->GetDescription(),
+				std::to_string(i+1) + " | " + InputControllers[i].ic->GetDescription(),
 				Color::Yellow
 			);
+			InputControllers[i].ic->Draw(cam, c);
+		}
+
+		for (; i > 0; --i) {
+
+			if(InputControllers[i].drawDuringCascade)
+				InputControllers[i].ic->Draw(cam, c);
+
+			if (!InputControllers[i].cascade)
+				break;
 		}
 
 	} else {
@@ -438,6 +448,18 @@ std::shared_ptr<Ship> Client::GetSelectedShip() const {
 	return ship;
 }
 
+std::vector<std::shared_ptr<Ship>> Client::GetSelectedShips() const {
+	std::vector<std::shared_ptr<Ship>> ret{ship};
+
+	for (auto& v : selectedObjects) {
+		if (auto s = dynamic_pointer_cast<Ship>(v.lock())) {
+			ret.push_back(s);
+		}
+	}
+
+	return ret;
+}
+
 void Client::SetNewWindowDialogue(bool c) {
 	showNewWindowModal = c;
 }
@@ -458,48 +480,65 @@ void Client::OnMouse(Event e) {
 	cam.mouse_screen = raw_mouse_screen;
 	cam.mouse_screen.x += 3;
 	cam.mouse_screen.y += 4;
+	
+	switch (e.mouse().motion) {
+	/*case Mouse::Pressed: {
+		switch (e.mouse().button) {
+			default: break;
+		}
+	} break;*/
 
-	switch (e.mouse().button) {
-		case Mouse::Left: {
+	case Mouse::Released: {
+		switch (e.mouse().button) {
+			case Mouse::Left: {
 				//ship->transform.position = cam.screenToGrid(cam.mouse_screen);
-			using namespace Events;
+				using namespace Events;
 
-			ClientEvent::observer.invokeEvent<GameObjPtr>(
-				ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
-				currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen))
-			);
+				ClientEvent::observer.invokeEvent<GameObjPtr>(
+					ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+					currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen))
+				);
 
 			}break;
+			case Mouse::Right: {
+
+				static std::weak_ptr<IFOptions> former;
+
+				if (former.expired()) {
+					const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5 };
+
+					GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
+
+					std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, go, *this);
+					former = ops;
+
+					interfaceWindows.push_back(ops);
+
+
+					windowContainer->Add(Window({
+							.inner = ops,
+							.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
+							.left = e.mouse().x - 2,
+							.top = e.mouse().y - 1,
+							.width = 30,
+							.height = 10,
+						}));
+				}
+
+			}break;
+
+			default: break;
+		}
+	} break;
+
+	default: break;
+	}
+
+	switch (e.mouse().button) {
 		case Mouse::Middle: {
 
 			cam.offX() += dm.x;
 			cam.offY() += dm.y;
-
-			}break;
-		case Mouse::Right: {
-
-			static std::weak_ptr<IFOptions> former;
-
-			if (former.expired()) {
-				const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5};
-
-				GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
-
-				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, go, *this);
-				former = ops;
-
-				interfaceWindows.push_back(ops);
-
-
-				windowContainer->Add(Window({
-						.inner = ops,
-						.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
-						.left = e.mouse().x - 2,
-						.top = e.mouse().y - 1,
-						.width = 30,
-						.height = 10,
-					}));
-			}
 
 			}break;
 		case Mouse::WheelUp: {
@@ -523,7 +562,7 @@ void Client::OnMouse(Event e) {
 		{
 		scaleChange:
 			//adjust cam to matching position
-			auto mos = cam.gridToScreen(mog_zoomRefrence) - cam.mouse_screen;
+			auto mos = cam.gridToScreen(mog_zoomRefrence) - cam.getOffVec() - cam.mouse_screen;
 
 			cam.offX() = -mos.x;
 			cam.offY() = -mos.y;
@@ -545,7 +584,7 @@ void Client::initEvents() {
 	using namespace Events;
 	/***********************************************************************************************************
 	* rules
-	* - no inline Listeners (for readability)
+	* - no inline Listeners when assigning to a observer (for readability)
 	* - idc length of the lambda names, make it intutively descriptive
 	* - under_score_naming_scheme
 	* - debugging funcitons must have a name that starts with "DEBUG_" 
@@ -576,7 +615,7 @@ void Client::initEvents() {
 		}));
 
 	/***********************************************************************************************************
-	* client event
+	* client & keyboard events
 	***********************************************************************************************************/
 
 	auto DEBUG_add_new_demo_window = addListener(MakeListener<>(
@@ -590,6 +629,16 @@ void Client::initEvents() {
 		[&] {
 			static int a = 0;
 			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, std::to_string(a++));
+		}));
+
+	auto on_escape = addListener(MakeListener<>(
+		[&] {
+
+			for (auto& v : InputControllers)
+				v.ic->forceFinish();
+			InputControllers.clear();
+
+			selectedObjects.clear();
 		}));
 
 	auto on_window_focous = addListener(MakeListener<>(
@@ -683,6 +732,10 @@ void Client::initEvents() {
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW, DEBUG_message_event);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, DEBUG_beep);
 	//KeyBinds::observer.AddListenerToEvent(KeyBinds::CONTROL_EVENT::DEBUG_btn, DEBUG_send_ship_update);
+	KeyBinds::observer.AddListenerToEvent(
+		KeyBinds::CONTROL_EVENT::ESCAPE,
+		on_escape
+	);
 	KeyBinds::observer.AddListenerToEvent(
 		KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW,
 		open_new_window_dialogue

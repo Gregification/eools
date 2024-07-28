@@ -2,12 +2,13 @@
 
 using namespace Events;
 
-size_t KeyBinds::sendKey(ftxui::Event e) {		
-	size_t ret = 0;
-	auto& arr = KeyMap[e];
+bool KeyBinds::sendKey(ftxui::Event e) {
+	const auto& arr = KeyMap[e];
+
 	for(auto& a : arr)
 		observer.invokeEvent(a);
-	return ret;
+
+	return arr.size() != 0;
 }
 
 bool KeyBinds::registerCtrlEvent(ftxui::Event e, CONTROL_EVENT c) {
@@ -30,18 +31,22 @@ void KeyBinds::unregisterCtrlEvent(ftxui::Event e, CONTROL_EVENT c) {
 
 /*****************************************************************************************************************
 * default keybinds
+* - unable to refrence special ftxui::Event's directly because they are assigned
+*		at runtime after this namespace. therefore th 'input_' will be empty.
+*		solution is to hardcode the value.
 *****************************************************************************************************************/
 
 KeyBinds::Key2ControlEvents KeyBinds::KeyMap = {
-	{ftxui::Event::Character('o'),	{KeyBinds::CONTROL_EVENT::DEBUG_btn}  },
-	{ftxui::Event::Character('n'),	{KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW}  },
-	{ftxui::Event::Character('m'),	{KeyBinds::CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY}  },
-	{ftxui::Event::Character('t'),	{KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW}},
-	{ftxui::Event::Character('s'),	{KeyBinds::CONTROL_EVENT::ENGR_INCREASE_PSU}  },
-	{ftxui::Event::Character('x'),	{KeyBinds::CONTROL_EVENT::ENGR_DECREASE_PSU}  },
-	{ftxui::Event::Character('q'),	{KeyBinds::CONTROL_EVENT::MOVEMENT_ALIGN_TO}  },
-	{ftxui::Event::Character('a'),	{KeyBinds::CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE}  },
-	{ftxui::Event::Character('z'),	{KeyBinds::CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE}  },
+	{ftxui::Event::Character('o'),		{KeyBinds::CONTROL_EVENT::DEBUG_btn}  },
+	{ftxui::Event::Special("\x1B"),		{KeyBinds::CONTROL_EVENT::ESCAPE}  },
+	{ftxui::Event::Character('n'),		{KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW}  },
+	{ftxui::Event::Character('m'),		{KeyBinds::CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY}  },
+	{ftxui::Event::Special("\x1B[3~"),	{KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW}},
+	{ftxui::Event::Character('s'),		{KeyBinds::CONTROL_EVENT::ENGR_INCREASE_PSU}  },
+	{ftxui::Event::Character('x'),		{KeyBinds::CONTROL_EVENT::ENGR_DECREASE_PSU}  },
+	{ftxui::Event::Character('q'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_ALIGN_TO}  },
+	{ftxui::Event::Character('a'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE}  },
+	{ftxui::Event::Character('z'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE}  },
 };
 
 /*****************************************************************************************************************
@@ -50,6 +55,7 @@ KeyBinds::Key2ControlEvents KeyBinds::KeyMap = {
 
 Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
 	{CONTROL_EVENT::DEBUG_btn, {"debug button", "a button for debugging"}},
+	{CONTROL_EVENT::ESCAPE, {"excape", "cancels pending actions and what ever"}},
 	{CONTROL_EVENT::DISPLAY_NEW_WINDOW, {"open new window", "shows windows avalible to open"}},
 	{CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY, {"toggle movement overlay", "shows directional vectors of the specified object"}},
 	{CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, {"remove selected window", "removes the latest selected window"}},

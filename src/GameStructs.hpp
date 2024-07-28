@@ -334,6 +334,12 @@ namespace gs {
 		static Transformation_2D identity;
 		static Transformation_2D clear;
 		static Transformation_2D zero;
+
+		bool operator==(const Transformation_2D& o) const {
+			return mat[0] == o.mat[0]
+				&& mat[1] == o.mat[1]
+				&& mat[2] == o.mat[2];
+		}
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
