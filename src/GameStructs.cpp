@@ -84,13 +84,23 @@ void RotationHandler::SetRotationMatTo(const float& radians, Mat2x2& mat){
 	PT(mat, 0, 1) = sin;
 }
 
+float RotationHandler::RotDiff(const float& a, const float& b) {
+	float tr = RotScale(a - b);
+	return tr > M_PI ? M_PI - tr : tr;
+}
+
+inline float RotationHandler::RotScale(const float& rot) {
+	//_rotation = rot % (2 * Pi)
+	static constexpr float topi = M_PI * 2.0f;
+	return std::fmodf(rot, topi);
+}
+
 void RotationHandler::rotateBy(const float& dr) {
 	setRotation(_rotation + dr);
 }
 
 void RotationHandler::setRotation(const float& rot) {
-	//_rotation = rot % (2 * Pi)
-	float nr = rot - static_cast<int>(rot * M_1_PI * 0.5f) * rot;
+	float nr = RotScale(rot);
 	
 	if(!isMatBad)
 		isMatBad = nr != _rotation;

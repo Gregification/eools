@@ -1,18 +1,20 @@
 #pragma once
 
 #include "../ICWrapperInclude.hpp"
-#include "../../Navigation.hpp"
 
-class ICNavAlign : public InputControl<Navigation::ALIGN> {
+//must inherit 'Navigation::Base' for IC compatiability reasons
+
+class ICNavAlign : public Navigation::ICNavWrapper {
 public:
 	ICNavAlign();
 
-	std::optional<Navigation::ALIGN> GetResult() override;
+	std::unique_ptr<Navigation::NavBase> GetResult() override;
 	void Draw(Camera&, Canvas&) const override;
 	bool OnEvent(ftxui::Event&, Camera&) override;
 	bool IsDone() const override;
 	bool IsSuccessful() const override;
 	void reset();
+	void Update(const float& dt) override;
 
 	void updateDescription();
 

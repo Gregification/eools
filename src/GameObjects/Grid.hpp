@@ -22,7 +22,7 @@ class Grid : public NetGameObject<Grid> {
 			GameObjPtr go;
 		};
 
-		void Draw(Canvas& c, Transformation_2D trf) const override;
+		void Draw(Canvas& c, Transformation_2D trf) override;
 
 		void packMessage(Message&, MsgDiffType = 0) override;
 		void unpackMessage(Message&, MsgDiffType = 0) override;

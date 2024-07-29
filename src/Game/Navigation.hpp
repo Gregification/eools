@@ -1,20 +1,16 @@
 #pragma once
 
-#include <unordered_map>
-#include <functional>
-
+#include "../better-enums/enum.h"
 #include "../GameStructs.hpp"
-#include "../GameObject.hpp"
+#include "../GameObjects/Ship.hpp"
 #include "InputControl.hpp"
-
-class Ship;
 
 namespace Navigation {
 	#define Nav_Base_OverrideFuncs  \
 		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
 		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
 		void reset() override; \
-		void nav_update(float) override; \
+		void nav_update(float, Ship&) override; \
 		TRAVEL_STATE::_enumerated getTravelState() const override;
 
 	using namespace gs;
@@ -40,7 +36,7 @@ namespace Navigation {
 
 	extern std::unordered_map<
 		TRAVEL_STATE::_enumerated,
-		std::function<InputControl<NavBase>()>
+		std::function<InputController()>
 	> stateToNavigatorIC;
 
 	//structs because it implies these arnt unique classes or what ever (also convient)
@@ -51,42 +47,20 @@ namespace Navigation {
 	*	than a single 'NavBase' directing mutiple 'Ship's.
 	*/
 	struct NavBase : Messageable {
-		std::shared_ptr<Ship> getShip() { return ship.lock(); }
-		void setShip(std::weak_ptr<Ship> s) { ship = s; reset(); }
-
 		/**
 		* resets what ever cache variables there are
 		*/
-		virtual void reset() {};
+		virtual void reset();
 
 		//some concerns on how to effeciently access the target ship, for now just 
 		//	brute force it by getting a shared_ptr from the weak_ptr each update
 		/**
 		* updates the selected ship for the nav pattern
 		*/
-		virtual void nav_update(float) {};
+		virtual void nav_update(float, Ship&);
 
-		virtual TRAVEL_STATE::_enumerated getTravelState() const { return TRAVEL_STATE::NONE; };
-		
-		virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override 
-			{}
-		virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override
-			{}
-
-	protected:
-		/** thing to navigate*/
-		std::weak_ptr<Ship> ship;
+		virtual TRAVEL_STATE::_enumerated getTravelState() const;
 	};
-	
-	struct NavInfo : Messageable {
-		std::unique_ptr<NavBase> navPattern;
-
-		void setNavPattern(NavBase);
-
-		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
-		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
-	};
-
 
 	struct ALIGN : NavBase {
 		Nav_Base_OverrideFuncs

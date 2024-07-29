@@ -5,12 +5,14 @@ ICNavAlign::ICNavAlign()
 	reset();
 }
 
-std::optional<Navigation::ALIGN> ICNavAlign::GetResult()
+std::unique_ptr<Navigation::NavBase> ICNavAlign::GetResult()
 {
-	Navigation::ALIGN a;
-	a.targetRot = std::atan2f(_to.x - _from.x, _to.y - _from.y);
+	auto a = std::make_unique< Navigation::ALIGN>();
 
-	return std::optional<Navigation::ALIGN>(a);
+	//looks strange but remember the coordinate system
+	a->targetRot = std::atan2f(_from.x - _to.x, -(_from.y - _to.y));
+
+	return a;
 }
 
 void ICNavAlign::Draw(Camera&, Canvas& can) const 
@@ -49,8 +51,6 @@ bool ICNavAlign::OnEvent(ftxui::Event& e, Camera& c)
 			default:
 				break;
 		}
-
-		return true;
 	}
 
 	return false;
@@ -71,6 +71,8 @@ void ICNavAlign::reset()
 	state = STATE::UNSTARTED;
 
 	_from = _to = { 0 };
+
+	updateDescription();
 }
 
 void ICNavAlign::updateDescription()
@@ -91,4 +93,8 @@ void ICNavAlign::updateDescription()
 	default:
 		break;
 	}
+}
+
+void ICNavAlign::Update(const float& dt)
+{
 }

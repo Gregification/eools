@@ -358,6 +358,12 @@ namespace gs {
 
 		static void SetRotationMatTo(const float& radians, Mat2x2& mat);
 
+		/** smallest rotation to span */
+		static float RotDiff(const float& from, const float& to);
+
+		/** mods to valud rotation value */
+		static inline float RotScale(const float&);
+
 		template<typename T>
 		static Vec2_T<T> RotateThenTranslate(const Vec2_T<T> point, const Transformation_2D& t, const RotationHandler& r) {
 			return t.applyTo(r.applyTo<T>(point));
@@ -378,16 +384,13 @@ namespace gs {
 		RotationHandler& getUTD();
 
 		template<typename T>
-		Vec2_T<T> applyTo(const Vec2_T<T>& point, const Vec2_T<T>& pivot = {0}) const {
-			float dx = point.x - pivot.x; //easier to look at, and compiler likely handles this better
-			float dy = point.y - pivot.y;
-
-			return Vec2_T<T>{
-                  PT(mat, 0, 0) * dx
-                + PT(mat, 1, 0) * dy,
-				  PT(mat, 0, 1) * dx
-				+ PT(mat, 1, 1) * dy
-			} + pivot;
+		Vec2_T<T> applyTo(const Vec2_T<T>& point) const {
+			return {
+				  PT(mat, 0, 0) * point.x
+				+ PT(mat, 1, 0) * point.y,
+				  PT(mat, 0, 1) * point.x
+				+ PT(mat, 1, 1) * point.y
+			};
 		}
 	};
 

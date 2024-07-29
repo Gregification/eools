@@ -29,9 +29,9 @@ void GameObject::FixedUpdate(float dt) {
 	transform.Update(dt);
 }
 
-void GameObject::Draw(Canvas& c, Transformation_2D t) const {
+void GameObject::Draw(Canvas& c, Transformation_2D t) {
 	Vec2_f a = t.applyTo(
-		transform.rotation.applyTo(verticies[verticies.size() - 1])
+		transform.rotation.getUTD().applyTo(verticies[verticies.size() - 1])
 		+ transform.position
 	);
 

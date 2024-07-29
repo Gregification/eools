@@ -13,14 +13,14 @@ using namespace Navigation;
 *		be interperted as another for some reason
 ***********************************************************************************/
 
-std::unordered_map<TRAVEL_STATE::_enumerated, std::function<InputControl<NavBase>()>>
+std::unordered_map<TRAVEL_STATE::_enumerated, std::function<InputController()>>
 Navigation::stateToNavigatorIC{
-	{TRAVEL_STATE::NONE,				[] { return InputControl<NavBase>{ICNavAlign()}; }},
-	{TRAVEL_STATE::ALIGN,				[] { return InputControl<NavBase>{ICNavAlign()}; }},
-	{TRAVEL_STATE::ALIGN_TO,			[] { return InputControl<NavBase>{ICNavAlign()}; }},
-	{TRAVEL_STATE::APPROACH,			[] { return InputControl<NavBase>{ICNavAlign()}; }},
-	{TRAVEL_STATE::ORBIT,				[] { return InputControl<NavBase>{ICNavAlign()}; }},
-	{TRAVEL_STATE::MAINTAIN_DISTANCE,	[] { return InputControl<NavBase>{ICNavAlign()}; }},
+	{TRAVEL_STATE::NONE,				[] { return std::make_shared<ICNavAlign>(); }},
+	{TRAVEL_STATE::ALIGN,				[] { return std::make_shared<ICNavAlign>(); }},
+	{TRAVEL_STATE::ALIGN_TO,			[] { return std::make_shared<ICNavAlign>(); }},
+	{TRAVEL_STATE::APPROACH,			[] { return std::make_shared<ICNavAlign>(); }},
+	{TRAVEL_STATE::ORBIT,				[] { return std::make_shared<ICNavAlign>(); }},
+	{TRAVEL_STATE::MAINTAIN_DISTANCE,	[] { return std::make_shared<ICNavAlign>(); }},
 };
 
 std::unordered_map<TRAVEL_STATE::_enumerated, std::function<std::unique_ptr<NavBase>()>> 
@@ -46,10 +46,10 @@ TRAVEL_STATE::_enumerated ORBIT::getTravelState() const {
 				return TRAVEL_STATE::ORBIT; };
 
 
-void Navigation::NavInfo::setNavPattern(NavBase nnp)
+void NavInfo::setNavPattern(std::unique_ptr<NavBase> nnp)
 {
 	navPattern.release();
-	navPattern = std::make_unique<NavBase>(std::move(nnp));
+	navPattern = std::move(nnp);
 }
 
 void NavInfo::packMessage(Message& msg, MsgDiffType mdt) {
@@ -95,28 +95,43 @@ void ALIGN::unpackMessage(Message& msg, MsgDiffType) {
 void ALIGN::reset() {
 
 }
-void ALIGN::nav_update(float dt) {
-	if (auto s = ship.lock()) {
-		s->transform.rotation.rotateBy(targetRot - s->transform.rotation.getRotation());
-	}
+void ALIGN::nav_update(float dt, Ship& s) {
+	float ar = s.transform.rotation.getRotation();
+	float dr = RotationHandler::RotDiff(
+		targetRot,
+		ar);
+	s.transform.rotation.rotateBy(dr * dt);
 }
 
 void ALIGN_TO::packMessage(Message& msg, MsgDiffType) { }
 void ALIGN_TO::unpackMessage(Message& msg, MsgDiffType) { }
 void ALIGN_TO::reset() {}
-void ALIGN_TO::nav_update(float dt) {}
+void ALIGN_TO::nav_update(float dt, Ship& s) {}
 
 void APPROACH::packMessage(Message& msg, MsgDiffType) { }
 void APPROACH::unpackMessage(Message& msg, MsgDiffType) { }
 void APPROACH::reset() {}
-void APPROACH::nav_update(float dt) {}
+void APPROACH::nav_update(float dt, Ship& s) {}
 
 void MAINTAIN_DISTANCE::packMessage(Message& msg, MsgDiffType) { }
 void MAINTAIN_DISTANCE::unpackMessage(Message& msg, MsgDiffType) { }
 void MAINTAIN_DISTANCE::reset() {}
-void MAINTAIN_DISTANCE::nav_update(float dt) {}
+void MAINTAIN_DISTANCE::nav_update(float dt, Ship& s) {}
 
 void ORBIT::packMessage(Message& msg, MsgDiffType) {  }
 void ORBIT::unpackMessage(Message& msg, MsgDiffType) { }
 void ORBIT::reset() {}
-void ORBIT::nav_update(float dt) {}
+void ORBIT::nav_update(float dt, Ship& s) {}
+
+void Navigation::NavBase::reset()
+{
+}
+
+void Navigation::NavBase::nav_update(float, Ship&)
+{
+}
+
+TRAVEL_STATE::_enumerated Navigation::NavBase::getTravelState() const
+{
+	return TRAVEL_STATE::NONE;
+}

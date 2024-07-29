@@ -1,9 +1,8 @@
 #pragma once
 
-
 #include "Ship.hpp"
 
-void Ship::Draw(Canvas& c, Transformation_2D t) const {
+void Ship::Draw(Canvas& c, Transformation_2D t) {
 	GameObject::Draw(c, t);
 
 	auto pos = t.applyTo(transform.position);
@@ -29,7 +28,8 @@ void Ship::unpackMessage(Message& msg, MsgDiffType diff) {
 }
 
 void Ship::Update(float dt){
-	
+	if (navinfo.navPattern)
+		navinfo.navPattern->nav_update(dt, *this);
 }
 
 const std::vector<Vec2_f> Ship::getBody() const

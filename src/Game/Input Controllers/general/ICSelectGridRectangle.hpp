@@ -8,7 +8,7 @@ public:
 
 	gs::Rectangle rect;
 
-	std::optional<gs::Rectangle> GetResult() override;
+	std::unique_ptr<gs::Rectangle> GetResult() override;
 	void Draw(Camera&, Canvas&) const override;
 	bool OnEvent(ftxui::Event&, Camera&) override;
 	bool IsDone() const override;

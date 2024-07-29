@@ -52,7 +52,7 @@ public:
 	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 
-	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D) const;
+	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D);
 
 	virtual std::string GetDescription() const;
 

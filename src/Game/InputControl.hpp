@@ -46,17 +46,17 @@ public:
 	/**
 	* account for dt during events, only occures when active
 	*/
-	virtual void Update(const float& dt) {};
+	virtual void Update(const float&);
 
 	/**
 	* draws the overlay
 	*/
-	virtual void Draw(Camera&, Canvas&) const {};
+	virtual void Draw(Camera&, Canvas&) const;
 
 	/** 
 	* @return true if event should be presisted
 	*/
-	virtual bool OnEvent(ftxui::Event&, Camera&) { return false; };
+	virtual bool OnEvent(Event&, Camera&);
 
 	/**
 	* description to indicate what the user is controling and their progress;
@@ -67,14 +67,14 @@ public:
 	/**
 	* @return true if the conroller is finished
 	*/
-	virtual bool IsDone() const { return false; };
+	virtual bool IsDone() const;
 
 	/**
 	* @return true if the controller has finished, and done so successfuly.
 	*/
-	virtual bool IsSuccessful() const { return IsDone(); };
+	virtual bool IsSuccessful() const;
 
-	virtual void reset() {};
+	virtual void reset();
 
 	/** 
 	* @return true if the controller is marked as finished
@@ -92,13 +92,5 @@ protected:
 template<typename R>
 class InputControl : virtual public InputControl_Base {
 public:
-	InputControl() = default;
-	InputControl(InputControl const&) = default;
-	InputControl(InputControl&&) = default;
-
-	template<typename U, std::enable_if_t<std::is_base_of_v<R, U>, std::nullptr_t> = nullptr>
-	InputControl(InputControl<U> const& o)
-		{}
-
-	virtual std::optional<R> GetResult() { return std::nullopt; };
+	virtual std::unique_ptr<R> GetResult() { return std::unique_ptr<R>();};
 };

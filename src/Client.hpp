@@ -9,13 +9,12 @@
 #include "Camera.hpp"
 #include "Game/Events/Events.hpp"
 #include "Game/InputControl.hpp"
-#include "GameObjects/Ship.hpp"
 #include "NetCommon/eol_net.hpp"
 #include "NetMessageType.hpp"
 #include "SceneManager.hpp"
 
+class Ship;
 class InterfaceContent;
-class Client;
 
 typedef std::function<bool(Client&)> ResolveableResponder;
 

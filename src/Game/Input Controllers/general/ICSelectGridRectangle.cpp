@@ -4,7 +4,7 @@ ICSelectGridRectangle::ICSelectGridRectangle(){
 	reset();
 }
 
-std::optional<gs::Rectangle> ICSelectGridRectangle::GetResult() {
+std::unique_ptr<gs::Rectangle> ICSelectGridRectangle::GetResult() {
 	if (rect.size.x < 0) {
 		rect.pos.x += rect.size.x;
 		rect.size.x = std::abs(rect.size.x);
@@ -14,7 +14,7 @@ std::optional<gs::Rectangle> ICSelectGridRectangle::GetResult() {
 		rect.size.y = std::abs(rect.size.y);
 	}
 
-	return std::optional(rect);
+	return std::make_unique<gs::Rectangle>(rect);
 }
 
 void ICSelectGridRectangle::Draw(Camera& cam, Canvas& can ) const {

@@ -3,10 +3,12 @@
 #include "Game/Interfaces/InterfaceContent.hpp"
 #include <ftxui/component/component.hpp>
 #include "Game/Interfaces/IFOptions.hpp"
+#include "GameObjects/Ship.hpp"
 
 Client::Client() : 
 	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
 	raw_mouse_screen(0) {
+	cam.trans.scaleX() = cam.trans.scaleY() = 1.0 / KM;
 	//init ui
 	{
 		windowContainer = Container::Stacked({});
