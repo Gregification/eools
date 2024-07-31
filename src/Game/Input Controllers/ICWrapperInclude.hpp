@@ -3,6 +3,13 @@
 #include "../Navigation.hpp"
 #include "../../Client.hpp"
 
+/*
+* explination for code bellow
+* 
+* cheese workaround for IFOptions to dynamicslly get useable Navigator 
+* options 
+*/
+
 namespace Navigation {
 	/**
 	* wrapper for generic IC use, solves the issue of upcasting templates

@@ -11,10 +11,8 @@
 #include "Game_common.hpp"
 
 namespace gs {
-	using Arr3 = std::array<float, 3>;
-	using Arr2 = std::array<float, 2>;
-	using Mat3x3 = std::array<Arr3, 3>;
-	using Mat2x2 = std::array<Arr2, 2>;
+	using Mat3x3 = std::array<ARR(3), 3>;
+	using Mat2x2 = std::array<ARR(2), 2>;
 	
 	template<typename T>
 	struct Vec2_T;
@@ -327,7 +325,7 @@ namespace gs {
 		}
 
 		//shouldnt need anything larger than this
-		Arr3 mul(const Arr3& arr) const;
+		ARR(3) mul(const ARR(3)& arr) const;
 
 		Mat3x3 mul(const Transformation_2D&);
 

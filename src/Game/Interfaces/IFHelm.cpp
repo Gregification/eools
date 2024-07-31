@@ -4,6 +4,9 @@ IFHelm::IFHelm() {
 	auto rdTransform = Renderer([&]() {
 		auto s = _ship.lock();
 
+		if (!s)
+			return vbox({text("!!! ship disappeared?")});
+
 		return ftxui::vbox({
 			text("pos:" + (std::string)s->transform.position),
 			text("vls:" + (std::string)s->transform.velocity),
@@ -11,7 +14,10 @@ IFHelm::IFHelm() {
 		});
 	});
 
-	Add(rdTransform);
+	Add(Container::Vertical({ 
+		rdTransform,
+		getShipView(),
+	}));
 }
 
 void IFHelm::setShip(std::shared_ptr<Ship> sp) {
@@ -34,9 +40,9 @@ ftxui::Component IFHelm::getShipView() const {
 			cov.pos.x = std::abs(cov.pos.x);
 			Vec2_i centered = r / 2;
 
-			//returns b scaled to r
-			const auto getP = [cov, centered](Vec2_f b) -> Vec2_f {
-				b = b / cov.size * r;
+			//returns b scaled to r & rotated
+			const auto getP = [cov, centered, &s](Vec2_f b) -> Vec2_f {
+				b = s->transform.rotation.applyTo(b / cov.size * r);
 				b += centered + off;
 				return b;
 				};

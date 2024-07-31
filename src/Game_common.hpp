@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <chrono>
+#include <assert.h>
 
 #define SERVER_PORT 60000
 #define STD_PARTITION_SIZE 10'000'000 //100 mill => ~200 unique parts
@@ -32,6 +33,7 @@ typedef uint8_t
 #define DETERMINANT_2x2(ii, i, iii, iv) (ii * iv - i * iii)
 #define PT(MAT,X,Y) MAT[Y][X]
 
+#define ARR(N) std::array<float,N>
 
 /******************************************************************************
 * stuff
@@ -50,6 +52,26 @@ float inline GetDT(time_t dt) {
 template <typename T>
 int signum(T val) {
 	return (T(0) < val) - (val < T(0));
+}
+
+template<typename T = float>
+T lerp(const T& a, const T& b, const T& r) {
+	return a * (1.0f - r) + (b * r);
+}
+
+constexpr long long ct_fratorial(long long n) {
+	//recursion cringe
+	long long r = 1;
+	for (; n > 0; n--)
+		r *= n;
+	return r;
+}
+
+constexpr long long ct_binomial_coef(long long n, long long k) {
+	assert(k >= 0 && n >= k);
+
+	//i could be smart about this but eh.
+	return ct_fratorial(n) / (ct_fratorial(k) * ct_fratorial(n - k));
 }
 
 //should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates

@@ -23,13 +23,21 @@ void printMat3x3(const Mat3x3& mat) {
 	}
 }
 
-void printArr(Arr3 p) {
+void printArr(ARR(3) p) {
 	for (int i = 0; i < p.size(); i++)
 		std::cout << "" << p[i] << " ";
 	std::cout << std::endl;
 }
 
 TEST_CASE("am i stupid?") {
+	SECTION("brain damage of sorts?") {
+		REQUIRE(ct_fratorial(0) == 1);
+		REQUIRE(ct_fratorial(6) == 720);
+		REQUIRE(ct_fratorial(9) == 362880);
+
+		REQUIRE(ct_binomial_coef(10,5) == 252);
+		REQUIRE(ct_binomial_coef(9, 7) == 36);
+	}
 
 	SECTION("transformations mult works") {
 		Transformation_2D t(Transformation_2D::identity);
@@ -40,7 +48,7 @@ TEST_CASE("am i stupid?") {
 	}
 
 	SECTION("transformations bijections") {
-		Arr3 point{ 1,2,3 };
+		ARR(3) point{ 1,2,3 };
 
 		Transformation_2D t{{{
 			{{-1,-2, 2}},
@@ -72,7 +80,7 @@ TEST_CASE("am i stupid?") {
 		//the z value defaults to 1 and seems to work itself out,
 		//		"if its not broke dont fix it" - mark twawawain
 		for(int i = 0; i < point.size(); i++)
-			//if they are equal (accoutn for percision loss)
+			//if they are equal (accoutn for percision loss - eyeballed)
 			REQUIRE(std::abs(point[i] - untranslated[i]) < 0.000'001f);
 	}
 }

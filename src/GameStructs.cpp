@@ -23,12 +23,12 @@ Transformation_2D Transformation_2D::zero   = { .mat = {{
     }}};
 
 
-Arr3 Transformation_2D::mul(const Arr3& arr) const {
+ARR(3) Transformation_2D::mul(const ARR(3)& arr) const {
 	// | A B C |   | X |   | X |
 	// | D E F | * | Y | = | Y |
 	// | G H I |   | Z |   | Z |
 	//  [this]     [arr]   [out]
-	Arr3 out;
+	ARR(3) out;
 
 	out[0] =
 		PT(mat, 0, 0) * arr[0]  //ax
@@ -54,7 +54,7 @@ Mat3x3 Transformation_2D::mul(const Transformation_2D& o) {
 
 	Mat3x3 out;
 
-	Arr3 tmpthis;
+	ARR(3) tmpthis;
 
 	//assuming [y][x] setup
 	for (int y = 0; y < 3; y++) {

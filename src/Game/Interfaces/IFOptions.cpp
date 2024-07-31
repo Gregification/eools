@@ -72,8 +72,8 @@ IFOptions::IFOptions(Vec2_i mousePos, GameObjPtr go, Client& client) {
 
 	auto comp =  //Scroller( //disables the collapsibles for some reason
         Container::Vertical({
-        Collapsible("Windows", Inner({windowsInner})),
-		Collapsible("Movement", movementInner),
+        Collapsible("Displays", Inner({windowsInner})),
+		Collapsible("Navigation", movementInner),
 		Collapsible("C", 
             Inner({
                 Collapsible("Collapsible 1.1",

@@ -93,13 +93,12 @@ void ALIGN::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> targetRot;
 }
 void ALIGN::reset() {
-
+	targetRot = 0;
 }
 void ALIGN::nav_update(float dt, Ship& s) {
-	float ar = s.transform.rotation.getRotation();
 	float dr = RotationHandler::RotDiff(
 		targetRot,
-		ar);
+		s.transform.rotation.getRotation());
 	s.transform.rotation.rotateBy(dr * dt);
 }
 
