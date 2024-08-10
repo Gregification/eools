@@ -3,16 +3,18 @@
 #include <iostream>
 #include <cassert>
 
-typedef int Class_Id;
-typedef int MsgDiffType;
-typedef int Message;
+#include "../NetMessageType.hpp"
+
+//typedef int Class_Id;
+//typedef int MsgDiffType;
+//typedef int Message;
+//class Messageable {
+//	virtual void packMessage(Message&, MsgDiffType) = 0;
+//	virtual void unpackMessage(Message&, MsgDiffType) = 0;
+//};
 
 #define _FACTORY_BAD_CLASS_ID -1;
 
-class Messageable {
-	virtual void packMessage(Message&, MsgDiffType) = 0;
-	virtual void unpackMessage(Message&, MsgDiffType) = 0;
-};
 
 /** 
 * NOTE: developed using MSVC/14.39 . please check that it compiles first
