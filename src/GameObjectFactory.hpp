@@ -29,12 +29,12 @@ public:
 		static_assert(std::is_base_of<GameObject, T>::value, "attempted to register non gameobject class to the game object factory");
 		
 		//this dosent actually modify the ClassList vector before runtime(even though it does execute)
-		//see (links work if posted in discord. no more quick & free file storage :( )
-		//	https://media.discordapp.net/attachments/1257155491663187978/1257157911122018384/image.png?ex=66840bca&is=6682ba4a&hm=0f81408680cfe7282083240f40eadbe6052994b19b6a01ada82ee7f92ba365c9&=&format=webp&quality=lossless
-		//	https://media.discordapp.net/attachments/1257155491663187978/1257157911386525717/image.png?ex=66840bca&is=6682ba4a&hm=6ba0710cea198a0c0bb3133ed83c700f8bcfe8975c588e52b8de5e898e8d10d4&=&format=webp&quality=lossless
-		
-		//this seems to execute dependent on the compiler used. GOInit class solves this at the cost of not being dynamic :(
+		//	seems to execute dependent on the compiler used. GOInit class solves this at the cost of not being dynamic :(
 		//
+
+		//packisar[class_id] = [](Message& msg, MsgDiffType diff, GameObject* go) { //packer
+		//		((T*)go)->T::packMessage(msg, diff);
+		//	};
 	}
 
 	static GameObjPtr GetInstance(Class_Id);

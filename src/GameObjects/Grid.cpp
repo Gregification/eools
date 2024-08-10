@@ -10,10 +10,10 @@ void Grid::Draw(Canvas& c, Transformation_2D trf) {
 }
 
 void Grid::packMessage(Message& msg, MsgDiffType) {
-	packArray<GOObj, Instance_Id> (
+	packArray<GOObj> (
 		msg,
 		_go_vec,
-		[](GOObj& obj) {return obj.id; }
+		[](Message& m, GOObj& obj) { m << obj.id; }
 	);
 
 	msg << gridPos;
@@ -21,13 +21,14 @@ void Grid::packMessage(Message& msg, MsgDiffType) {
 
 void Grid::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> gridPos;	
-
+	
 	std::vector<Instance_Id> objs;
 	unpackArray<Instance_Id>(msg,
 		objs,
 		[](net::message<NetMsgType>& msg)
 		{ Instance_Id id; msg >> id; return id; }
 	);
+	//TODO: add the id's if they dont exist
 }
 
 void Grid::RemoveAllObjects() {

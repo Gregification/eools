@@ -92,38 +92,83 @@ struct SyncTargetHash {
 typedef std::unordered_set<SyncTarget, SyncTargetHash>
 	SyncCollection; //the collection type that synch requests are buffered in
 
-template<typename ELE, typename TARG = ELE>
+/**
+* puts array content into Message object in a standardarized fashion.
+* no default implimenetation
+* @param insrtEle inserts <ELE> into the the message
+*/
+template<typename ELE>
 void packArray(
 	Message& msg,
 	std::vector<ELE>& vec,
-	std::function<TARG(ELE&)> getVal = [](ELE& e) -> TARG { return e; }
+	std::function<void(Message&, ELE&)> insrtEle
 ) {
-	static_assert(std::is_standard_layout<TARG>::value);
-
 	for (auto rit = vec.rbegin(); rit != vec.rend(); ++rit)
-		msg << getVal(*rit);
+		insrtEle(msg, *rit);
 
-	msg << vec.size();
+	msg << (size_t)(vec.size());
+}
+
+/**
+* puts array content into Message object in a standardarized fashion.
+* case:
+*	- not [shared/unique_ptr]
+*	- not [Messageable] but is [std layout]
+*/
+template<typename ELE, typename ELE_T = ELE>
+typename std::enable_if<
+	    std::is_standard_layout<ELE>::value
+	&& !std::is_same<ELE, std::shared_ptr<typename std::remove_pointer<ELE_T>::type>>::value
+	&& !std::is_same<ELE, std::unique_ptr<typename std::remove_pointer<ELE_T>::type>>::value
+	&& !std::is_base_of<Messageable, ELE>::value
+	, void>::type
+packArray(Message& msg, std::vector<ELE>& vec) {
+	packArray<ELE>(msg, vec,
+		[](Message& msg, ELE& e) {
+			msg << e;
+		}
+	);
 }
 
 template<typename T>
 void unpackArray(
 	Message& msg,
 	std::vector<T>& arr,
-	std::function<T(Message&)> getVal = [](Message& msg) -> T { T a; msg << a; return a; }
+	std::function<T(Message&)> getVal
 ) {
 	if (msg.size() < sizeof(size_t)) return;
 
 	size_t len;
 	msg >> len;
 
-	//reserving ahead of time actually seems to give +~4 fps ... sad that its come to this...
 	int off = len - (arr.capacity() - arr.size());
 	if(off > 0)
 		arr.reserve(off);
 
 	for (size_t i = 0; i < len; i++)
 		arr.push_back(getVal(msg));
+}
+
+/**
+* default case:
+*	- not [shared/unique_ptr]
+*	- not [Messageable] but is [std layout]
+*/
+template<typename T, typename T_T = T>
+typename std::enable_if<
+	    std::is_standard_layout<T>::value
+	&& !std::is_base_of<Messageable, T>::value
+	&& !std::is_same<T, std::shared_ptr<typename std::remove_pointer<T_T>::type>>::value
+	&& !std::is_same<T, std::unique_ptr<typename std::remove_pointer<T_T>::type>>::value
+	, void>::type
+unpackArray(Message& msg,std::vector<T>& vec) {
+	unpackArray<T>(msg, vec,
+		[](Message& msg) -> T {
+			T t;
+			msg >> t;
+			return t;
+		}
+	);
 }
 
 //////////////////////////////////////////////////////////////////////////////

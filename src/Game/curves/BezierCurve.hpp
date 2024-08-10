@@ -2,11 +2,11 @@
 
 #include <array>
 
-#include "../ScalerCurve.hpp"
+#include "../NormalCurve.hpp"
 
 /**
 * 4th order rational bezier curve.
-* shouldnt need anything higher, if you do the algorithms in 'evaluate(...)'
+* shouldnt need anything higher, if you do, the main algorithms in the 'evaluate(...)' function
 * just make the weights 0 to get a lower order.
 * 
 * see for visualization
@@ -18,7 +18,7 @@
 *		- suggested layout, red@(0,0), blue@(1,1). do what ever with orange and green
 *		- output is y axis
 */
-struct BezierCurve : public ScalerCurve {
+struct BezierCurve : public virtual NormalCurve {
 	#define BC_N 4
 
 	std::array<float, BC_N> points {0,	0.25f,	0.75f,	1};//defaults to linear

@@ -9,7 +9,10 @@ project(eools
 )
 
 set(TEST_EXE_NAME "test")
+set(FACTORY_COMPILER_TEST_NAME "factory_compiler_test")
+
 set(PROJECT_MAIN "${CMAKE_SOURCE_DIR}/src/main.cpp")
+set(FACTORY_COMPILER_TEST_MAIN "${CMAKE_SOURCE_DIR}/src/factory/compiler_test_main.cpp")
 
 #target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
@@ -60,14 +63,15 @@ file(GLOB_RECURSE SRCS
     src/*.cpp
 )
 list(REMOVE_ITEM SRCS ${PROJECT_MAIN})
+list(REMOVE_ITEM SRCS ${FACTORY_COMPILER_TEST_MAIN})
 
 file(GLOB_RECURSE TESTS
     tests/*.cpp
 )
 
-
 add_executable(${PROJECT_NAME} ${SRCS} ${PROJECT_MAIN} "src/main.cpp")
 add_executable(${TEST_EXE_NAME} ${SRCS} ${TESTS} "Tests/test.cpp")
+add_executable(${FACTORY_COMPILER_TEST_NAME} ${SRCS} "src/factory/compiler_test_main.cpp")
 
 set(LIBS 
     ftxui::screen
@@ -80,3 +84,4 @@ set(LIBS
 
 target_link_libraries(${PROJECT_NAME}   PRIVATE ${LIBS})
 target_link_libraries(${TEST_EXE_NAME}  PRIVATE ${LIBS})
+target_link_libraries(${FACTORY_COMPILER_TEST_NAME}  PRIVATE ${LIBS})

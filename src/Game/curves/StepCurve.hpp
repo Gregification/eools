@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../ScalerCurve.hpp"
+#include "../NormalCurve.hpp"
 
 /**
-* steped funciton, follows a y=x trend.
+* a linear steped funciton. 
 * not guarenteed out put of 1@1 .
 * guarenteed output of 0@0 .
 * 
@@ -13,7 +13,7 @@
 *	- stepDown equation : y=1-\frac{\operatorname{floor}\left(x\cdot s\right)}{s}
 *	- s : slider for # of steps
 */
-struct StepCurve : public ScalerCurve {
+struct StepCurve : public virtual NormalCurve {
 	bool stepUp = true;
 	float numSteps = 2.01f;//a 2 step but does 1@1
 

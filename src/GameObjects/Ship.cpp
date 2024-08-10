@@ -13,7 +13,7 @@ void Ship::packMessage(Message& msg, MsgDiffType diff) {
 	switch (diff) {
 		default:
 		case DEFAULT_MsgDiff_EVERYTHING: {
-			packArray<Vec2_f, Vec2_f>(msg, _body);
+			packArray<Vec2_f>(msg, _body);
 		} break;
 	}
 }
