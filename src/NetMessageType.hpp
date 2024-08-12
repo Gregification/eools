@@ -92,6 +92,10 @@ struct SyncTargetHash {
 typedef std::unordered_set<SyncTarget, SyncTargetHash>
 	SyncCollection; //the collection type that synch requests are buffered in
 
+template <typename T, typename U = void> struct is_shared_or_unique_ptr : std::false_type {};
+template <typename U> struct is_shared_or_unique_ptr<std::shared_ptr<U>, void> : std::true_type {};
+template <typename U> struct is_shared_or_unique_ptr<std::unique_ptr<U>, void> : std::true_type {};
+
 /**
 * puts array content into Message object in a standardarized fashion.
 * no default implimenetation
@@ -109,6 +113,22 @@ void packArray(
 	msg << (size_t)(vec.size());
 }
 
+//there shouldnt be a shared pointer version, that goes into instance synching territory
+template<typename T> void packArray(
+	Message& msg,
+	std::vector<std::unique_ptr<T>>& vec,
+	std::function<void(Message&, T*)> insrtEle
+) {
+	size_t count = 0;
+	for (auto rit = vec.rbegin(); rit != vec.rend(); ++rit)
+		if (rit->get()) {
+			insrtEle(msg, rit->get());
+			count++;
+		}
+
+	msg << count;
+}
+
 /**
 * puts array content into Message object in a standardarized fashion.
 * case:
@@ -118,8 +138,7 @@ void packArray(
 template<typename ELE, typename ELE_T = ELE>
 typename std::enable_if<
 	    std::is_standard_layout<ELE>::value
-	&& !std::is_same<ELE, std::shared_ptr<typename std::remove_pointer<ELE_T>::type>>::value
-	&& !std::is_same<ELE, std::unique_ptr<typename std::remove_pointer<ELE_T>::type>>::value
+	&& !is_shared_or_unique_ptr<ELE>::value
 	&& !std::is_base_of<Messageable, ELE>::value
 	, void>::type
 packArray(Message& msg, std::vector<ELE>& vec) {
@@ -141,7 +160,26 @@ void unpackArray(
 	size_t len;
 	msg >> len;
 
-	int off = len - (arr.capacity() - arr.size());
+	const int off = len - (arr.capacity() - arr.size());
+	if (off > 0)
+		arr.reserve(off);
+
+	for (size_t i = 0; i < len; i++)
+		arr.push_back(getVal(msg));
+}
+
+template<typename T>
+void unpackArray(
+	Message& msg,
+	std::vector<std::unique_ptr<T>>& arr,
+	std::function<std::unique_ptr<T>(Message&)> getVal
+) {
+	if (msg.size() < sizeof(size_t)) return;
+
+	size_t len;
+	msg >> len;
+
+	const int off = len - (arr.capacity() - arr.size());
 	if(off > 0)
 		arr.reserve(off);
 
@@ -158,8 +196,7 @@ template<typename T, typename T_T = T>
 typename std::enable_if<
 	    std::is_standard_layout<T>::value
 	&& !std::is_base_of<Messageable, T>::value
-	&& !std::is_same<T, std::shared_ptr<typename std::remove_pointer<T_T>::type>>::value
-	&& !std::is_same<T, std::unique_ptr<typename std::remove_pointer<T_T>::type>>::value
+	&& !is_shared_or_unique_ptr<T>::value
 	, void>::type
 unpackArray(Message& msg,std::vector<T>& vec) {
 	unpackArray<T>(msg, vec,

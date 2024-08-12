@@ -3,6 +3,7 @@
 #include <array>
 
 #include "../NormalCurve.hpp"
+#include "../../factory/Factory.hpp"
 
 /**
 * 4th order rational bezier curve.
@@ -18,7 +19,7 @@
 *		- suggested layout, red@(0,0), blue@(1,1). do what ever with orange and green
 *		- output is y axis
 */
-struct BezierCurve : public virtual NormalCurve {
+struct BezierCurve : public virtual NormalCurve, public Factory::FactoryInstable<NormalCurve, BezierCurve> {
 	#define BC_N 4
 
 	std::array<float, BC_N> points {0,	0.25f,	0.75f,	1};//defaults to linear

@@ -1,7 +1,12 @@
 #pragma once
 
+#include <unordered_map>
+#include <functional>
+#include <vector>
+#include <typeindex>
+#include <typeinfo>
 #include <iostream>
-#include <cassert>
+#include <memory>
 
 #include "../NetMessageType.hpp"
 
@@ -33,26 +38,30 @@
 *	compile time. this is done buy assigning each derived class a unique id that
 *	can be a part of the data packet, this id can then be used to reconstruct
 *	the class on the other end.
-*
+* this uses a gimic with templated constructors to assign unique numbers instead
+*	of type_info because this generates the id's during dynamic initialization 
+*	and not runtime. this removes the human responsibility to initialize things 
+*	in a predefined order, it just happens automatically. 
+* 
 * STUFF TO KNOW
 *	- all instances and the base class must have a default constructor.
-*	- derived class are identified by a `Class_Id` that is unique to the base 
-*		class.
+*	- derived class are identified by a automatically generated `Class_Id` that 
+*		is unique to the base class.`
 *	- the unique `Class_Id` relies on a feature I know to be part of the 
-*		MSVC/14.39 compiler, but not some others.
+*		MSVC/14.39 compiler, but not some others. (see `InstFactory` constructor)
 *	- if getting vector access errors on run may be due to a gimic some compilers
 *		that require the constructor of `FactoryInstable<T>` be reachable.
 *		more of a me issue since i cant figure out the feature responsible for
 *		that behavior.
-*	- it gets tricky to handle the diamond problem regardign static funcitons
-*		but that can be fixed in design, theres nothign wrong with Factory.
 * 
 * HOW TO USE
 *	must have a base class that impliments Messageable. the factory will return 
 *	this class when dealing with derived classes.
 *	e.g setup of 3 instances (Derived A, B, and C):
+* 
 *		struct Base : 
-*			public Messageable
+*			public Messageable,
+*			public Factory::FactoryInstable<Base, Base>
 *		{ ... }
 *		struct DerivedA : 
 *			public Base,
@@ -66,37 +75,38 @@
 *			public DerivedB,
 *			public Factory::FactoryInstable<Base, DerivedC>
 *		{ ... }
-*			//ambigous conflict when calling GetClassID() for DerivedC
-*			//instead use the expanded version
-*			//	`Factory::FactoryInstable<Base, DerivedC>::GetClassID()`
+*	
 * 
-*		//now when we want to send a message for some instance(known type)
+*	e.g making a instance and calling a specific implimentation of Messageable:
+* 
+*		//we want to send a message for some base class(known type)
 *		// in this case were packing a instance of DerivedA 
 *		//note that the varaible types are upto you to setup
 *		MsgDiff msg_diff = _ALL;
 *		Message msg;
 *		DerivedA* obj = new DerivedA; 
-*		Factory::InstFactory<Base>::PackAs(obj.GetClassID(), msg_diff, msg, obj);
+*		Class_Id cid_of_obj = Base::factory.GetClassId(obj);
+*		Factory::InstFactory<Base>::PackAs(cid_of_obj, msg_diff, msg, obj);
 *
 *		//dont forget to put the `Class_Id` in the packet!
-*		msg.addCId(obj.GetClassID());
+*		msg.addCId(obj.GetClassID());	//demo function
 *		
 *		//now on the the remote programs end
 *		//to get the object back
-*		Message msg = NextMessage();		//pretend this exists
+*		Message msg = NextMessage();		//demo function
 *		Class_Id id = msg.getCId();			// ^
 *		MsgDiff msg_diff = msg.getDiff();	// ^
 *		
-*		//make instance if needed
-*		std::shared_ptr<Base> ptr = Factory::InstFactory<BaseA>::GetInstance(id);
+*		//make instance from the cid
+*		std::shared_ptr<Base> ptr = Base::factory.GetInstance(id);
 *		
-*		//apply to instance
+*		//apply message to corrosponding function
 *		Factory::InstFactory<Base>::UnpackAs(id, msg_diff, msg, ptr.get());
 *		
 *		//local obj is now up to date with what ever was in the message
 */
 namespace Factory {
-	template<typename BASE, typename LEAF>
+	template<typename BASE, typename DERIVED>
 	class FactoryInstableHelper;
 
 	template<typename BASE>
@@ -105,18 +115,17 @@ namespace Factory {
 	/**
 	* adds unique item - derived form <BASE> - to factory of <BASE>s
 	*/
-	template<typename BASE, typename LEAF>
+	template<typename BASE, typename DERIVED>
 	class FactoryInstable {
 	public:
 		const static InstFactory<BASE> factory;
-		const static FactoryInstableHelper<BASE, LEAF> _dummy;
+		const static FactoryInstableHelper<BASE, DERIVED> _dummy;
 
 		FactoryInstable() {
-			static_assert(std::is_base_of_v<BASE, LEAF>);
-		}
+			static_assert(std::is_base_of_v<BASE, DERIVED>);
 
-		static Class_Id GetClassID() { 
-			return factory.class_id;
+			factory;
+			_dummy;
 		}
 	};
 
@@ -128,7 +137,7 @@ namespace Factory {
 	public:
 		typedef std::shared_ptr<BASE>
 			BasePtr;
-		typedef std::function<BasePtr()>
+		typedef std::function<std::unique_ptr<BASE>()>
 			InstanceConstructor;
 		typedef std::function<void(Message&, MsgDiffType, BASE*)>
 			Pakistan;//packs and unpakcs stuff
@@ -140,75 +149,87 @@ namespace Factory {
 		InstFactory(DERIVED* dummy) : class_id(next_class_id++) {
 			static_assert(std::is_base_of_v<Messageable, BASE>, "base must be messageable");
 			static_assert(std::is_base_of_v<BASE, DERIVED>, "attempted to register non derived class");
-			
-			/** 
+
+			/**
 			everythign after this comment is necessary junk.
 			explanation: refrences to the packer/unpacker vectors are here since
-				one of the processes that handles static initilization before 
+				one of the processes that handles static initilization before
 				runtime does weird stuff leading to the vectors being being empty
 				unless there is a reachable non static refrence to them at runtime.
 				idk with certainty but suspect its some compiler mumbo jumbo.
-
-				tried: moved refrences to a private function
-				result: needs a bit of patch work to get a pointer to _dummy but 
-					it dosent work anyways.
-				takeaway: needs to be somewhere thats reachable but not static
-
-				tried: moved to namepsace
-				result: works
-				takeaway: works BUT would then require a manual instantation in 
-					the namespace, a macro can be used but then it gets messy.
-
-				with it as is, the compiler likely just removes it (unconfirmed).
-				 side effect for having this in that this constructor (ANY 
-				 version of it) must be reachable in the program.
 			*/
 			Factory::FactoryInstable<BASE, DERIVED>::_dummy;
 			Factory::InstFactory<BASE>::_instConsts;
 			Factory::InstFactory<BASE>::_packers;
 			Factory::InstFactory<BASE>::_unpackers;
+			Factory::InstFactory<BASE>::typeToIdMap;
 		}
 
 		static void Register_Class(
 			Class_Id,
 			InstanceConstructor,
 			Pakistan packer,
-			Pakistan unpacker
+			Pakistan unpacker,
+			std::type_index
 		);
-		static BasePtr GetInstance(Class_Id);
-		static void UnpackAs(Class_Id, MsgDiffType, Message&, BASE*);
-		static void PackAs(Class_Id, MsgDiffType, Message&, BASE*);
+		static std::unique_ptr<BASE> GetInstance(Class_Id);
+		static void UnpackAs(Class_Id, Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+		static void PackAs(Class_Id, Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+		static Class_Id GetClassId(const std::type_info& info) {
+			auto it = typeToIdMap.find(std::type_index{ info });
+
+			if (it == typeToIdMap.end())
+				return BAD_CLASS_ID;
+
+			return it->second;
+		}
+		template<typename T>
+		static Class_Id GetClassId(T* t) {
+			static_assert(std::is_base_of_v<BASE, T>);
+			if(t)
+				return GetClassId(typeid(*t));
+
+			return BAD_CLASS_ID;
+		}
+		template<typename T>
+		static Class_Id GetClassId() {
+			static_assert(std::is_base_of_v<BASE, T>);
+
+			return GetClassId(typeid(T));
+		}
 
 	private:
+		static inline std::unordered_map<std::type_index, Class_Id> typeToIdMap{};
 		static std::vector<InstanceConstructor> _instConsts;
 		static std::vector<Pakistan> _packers;
 		static std::vector<Pakistan> _unpackers;
 	};
 
-	template<typename BASE, typename LEAF>
+	template<typename BASE, typename DERIVED>
 	class FactoryInstableHelper {
 	public:
 		FactoryInstableHelper() {
 			InstFactory<BASE>::Register_Class(
-				FactoryInstable<BASE, LEAF>::factory.class_id,
-				[] { return std::make_shared<LEAF>(); }, //instance constructor
+				FactoryInstable<BASE, DERIVED>::factory.class_id,
+				[] { return std::make_unique<DERIVED>(); }, //instance constructor
 				[](Message& msg, MsgDiffType diff, BASE* go) { //packer
-					((LEAF*)go)->LEAF::packMessage(msg, diff);
+					static_cast<DERIVED*>(go)->DERIVED::packMessage(msg, diff);
 				},
 				[](Message& msg, MsgDiffType diff, BASE* go) { //unpacker
-					((LEAF*)go)->LEAF::unpackMessage(msg, diff);
-				}
+					static_cast<DERIVED*>(go)->DERIVED::unpackMessage(msg, diff);
+				},
+				std::type_index{ typeid(DERIVED) }
 			);
 		}
 	};
 
-	template<typename BASE, typename LEAF>
-	const InstFactory<BASE> FactoryInstable<BASE, LEAF>::factory{ static_cast<LEAF*>(nullptr) };
-	template<typename BASE, typename LEAF>
-	const FactoryInstableHelper<BASE, LEAF> FactoryInstable<BASE, LEAF>::_dummy{};
+	template<typename BASE, typename DERIVED>
+	const InstFactory<BASE> FactoryInstable<BASE, DERIVED>::factory{ static_cast<DERIVED*>(nullptr) };
+	template<typename BASE, typename DERIVED>
+	const FactoryInstableHelper<BASE, DERIVED> FactoryInstable<BASE, DERIVED>::_dummy{};
 
 	template<typename BASE> Class_Id InstFactory<BASE>::next_class_id = 0;
-	template<typename BASE> std::vector<std::function<std::shared_ptr<BASE>()>>
+	template<typename BASE> std::vector<std::function<std::unique_ptr<BASE>()>>
 	InstFactory<BASE>::_instConsts{};
 	template<typename BASE> std::vector<std::function<void(Message&, MsgDiffType, BASE*)>>
 	InstFactory<BASE>::_packers{};
@@ -219,13 +240,9 @@ namespace Factory {
 		Class_Id cid,
 		InstanceConstructor ic,
 		Pakistan packer,
-		Pakistan unpacker
+		Pakistan unpacker,
+		std::type_index typeIdx
 	) {
-		auto nxt_cid = next_class_id;
-		auto _instcon_size = _instConsts.size();
-		auto _packer_size = _packers.size();
-		auto _unpacker_size = _unpackers.size();
-
 		if (_instConsts.size() < next_class_id) {
 			_instConsts.resize(next_class_id);
 			_packers.resize(next_class_id);
@@ -235,17 +252,16 @@ namespace Factory {
 		_instConsts[cid] = ic;
 		_packers[cid] = packer;
 		_unpackers[cid] = unpacker;
-
+		typeToIdMap[typeIdx] = cid;
 	}
-	template<typename BASE> InstFactory<BASE>::BasePtr InstFactory<BASE>::GetInstance(Class_Id cid) {
-		auto size = _instConsts.size();
-		auto nxt_class_id = next_class_id;
+	template<typename BASE> std::unique_ptr<BASE> InstFactory<BASE>::GetInstance(Class_Id cid) {
 		return _instConsts[cid]();
 	}
-	template<typename BASE> void InstFactory<BASE>::PackAs(Class_Id cid, MsgDiffType mdt, Message& msg, BASE* b) {
+	template<typename BASE> void InstFactory<BASE>::PackAs(Class_Id cid, Message& msg, BASE* b, MsgDiffType mdt) {
 		_packers[cid](msg, mdt, b);
 	}
-	template<typename BASE> void InstFactory<BASE>::UnpackAs(Class_Id cid, MsgDiffType mdt, Message& msg, BASE* b) {
+	template<typename BASE> void InstFactory<BASE>::UnpackAs(Class_Id cid, Message& msg, BASE* b, MsgDiffType mdt) {
 		_unpackers[cid](msg, mdt, b);
 	}
+
 };

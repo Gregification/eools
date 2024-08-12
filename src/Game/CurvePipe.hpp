@@ -5,7 +5,7 @@
 //pipline of curves with some extra control options
 struct CurvePipe : public virtual Messageable {
 
-	std::vector<NormalCurve> stages;
+	std::vector<std::unique_ptr<NormalCurve>> stages;
 
 	/** r clamped to this range before input to each stage */
 	float

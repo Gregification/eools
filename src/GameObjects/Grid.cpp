@@ -23,11 +23,7 @@ void Grid::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> gridPos;	
 	
 	std::vector<Instance_Id> objs;
-	unpackArray<Instance_Id>(msg,
-		objs,
-		[](net::message<NetMsgType>& msg)
-		{ Instance_Id id; msg >> id; return id; }
-	);
+	unpackArray<Instance_Id>(msg, objs);
 	//TODO: add the id's if they dont exist
 }
 

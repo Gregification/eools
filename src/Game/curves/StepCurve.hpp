@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../NormalCurve.hpp"
+#include "../../factory/Factory.hpp"
 
 /**
 * a linear steped funciton. 
@@ -13,7 +14,7 @@
 *	- stepDown equation : y=1-\frac{\operatorname{floor}\left(x\cdot s\right)}{s}
 *	- s : slider for # of steps
 */
-struct StepCurve : public virtual NormalCurve {
+struct StepCurve : public virtual NormalCurve, public Factory::FactoryInstable<NormalCurve, StepCurve> {
 	bool stepUp = true;
 	float numSteps = 2.01f;//a 2 step but does 1@1
 
