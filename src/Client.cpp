@@ -8,7 +8,7 @@
 Client::Client() : 
 	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
 	raw_mouse_screen(0) {
-	cam.trans.scaleX() = cam.trans.scaleY() = 1.0 / KM;
+	cam.trans.scaleX() = cam.trans.scaleY() = 1.0 / DIST_KM;
 	//init ui
 	{
 		windowContainer = Container::Stacked({});

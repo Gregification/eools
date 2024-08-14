@@ -74,16 +74,21 @@ constexpr long long ct_binomial_coef(long long n, long long k) {
 	return ct_fratorial(n) / (ct_fratorial(k) * ct_fratorial(n - k));
 }
 
+namespace Power {
+	typedef unsigned long long PowerUnit;
+}
+namespace Loads {
+	typedef unsigned long long LoadUnit;
+}
+
 //should be enough, am trying to keep the system as symple as possible so nothing with refrence points. just raw global coordinates
 //	maybe use the BVH setup as the coordinates? could aleivate the issue in some cases
 typedef double Unit;
 
-//units : multiply the num by these ratios to get their respective values
 //see https://en.wikipedia.org/wiki/Standard_gravitational_parameter
 
-constexpr Unit KM = 1e-3;
-constexpr Unit KT = 1e-3;
-constexpr Unit KJ = 1e-6;
-constexpr Unit LS = KM * 299'792.458;
-constexpr Unit AU = KM * 14'959'787.069'1;
+constexpr Unit DIST_KM = 1e-3;
+constexpr Unit MASS_KT = 1e-3;
+constexpr Unit DIST_LS = DIST_KM * 299'792.458;
+constexpr Unit DIST_AU = DIST_KM * 14'959'787.069'1;
 constexpr Unit GRAV_CONST = 6.67430e-11; //needs adjusted if KM & KT arnt the same scale

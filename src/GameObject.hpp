@@ -74,6 +74,15 @@ public:
 protected:
 	void addSynchronizationTarget(SyncTarget);
 
+	template<typename T>
+	void addSynchronizationTarget(Class_Id cid, T t) {
+		static_assert(std::is_same_v<std::underlying_type_t<T>, MsgDiffType>);
+		addSynchronizationTarget({
+			.class_id = cid,
+			.diff = static_cast<MsgDiffType>(t)
+		});
+	}
+
 	Instance_Id _instId;
 	std::string _displayName = "default go dispaly name";
 

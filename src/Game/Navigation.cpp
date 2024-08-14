@@ -99,7 +99,7 @@ void ALIGN::nav_update(float dt, Ship& s) {
 	float dr = RotationHandler::RotDiff(
 		targetRot,
 		s.transform.rotation.getRotation());
-	s.transform.rotation.rotateBy(dr * dt * s.rotAccele);
+	s.transform.rotation.rotateBy(dr * dt * s.driveTrain.rotAccele);
 }
 
 void ALIGN_TO::packMessage(Message& msg, MsgDiffType) { }

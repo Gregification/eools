@@ -42,9 +42,7 @@ std::optional<GameObjPtr> SceneManager::find(ID id) {
 }
 
 void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(const Message&)> send, std::function<bool(GameObject*)> canSend){
-	time_t 
-		rn = GetTime(), 
-		dt;
+	time_t rn = GetTime();
 
 	auto goVec = g->getObjVec();
 
@@ -60,11 +58,11 @@ void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(cons
 			gp->GameObject::Update(dt_f);
 
 			gp->Update(dt_f);
+
 			gp->_updateTimes.lastUpdate = rn;
 
-			dt = rn - gp->_updateTimes.lastFixedUpdate;
-
-			if (dt > tt_fixed) {
+			dt_f = rn - gp->_updateTimes.lastFixedUpdate;
+			if (dt_f > tt_fixed) {
 				dt_f = GetDT(rn - gp->_updateTimes.lastFixedUpdate);
 				
 				//TODO: also shuffle over to gpu (maybe? i forgot :( )

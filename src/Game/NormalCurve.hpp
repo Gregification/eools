@@ -11,7 +11,7 @@
 * 
 * @return a scaler. not guarenteed to be normalized
 */
-struct NormalCurve : public virtual Messageable, public virtual Factory::FactoryInstable<NormalCurve, NormalCurve> {
+struct NormalCurve : public virtual Messageable, public Factory::FactoryInstable<NormalCurve, NormalCurve> {
 	/**
 	* evaluate curve at percentage of completion.
 	* note that precentage is not necessarly relative to distance

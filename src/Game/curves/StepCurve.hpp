@@ -9,12 +9,12 @@
 * guarenteed output of 0@0 .
 * 
 * see visualization 
-*	- desmos
+*	- desmos https://www.desmos.com/calculator
 *	- stepUp equation : y=\frac{\operatorname{floor}\left(x\cdot s\right)}{s}
 *	- stepDown equation : y=1-\frac{\operatorname{floor}\left(x\cdot s\right)}{s}
 *	- s : slider for # of steps
 */
-struct StepCurve : public virtual NormalCurve, public Factory::FactoryInstable<NormalCurve, StepCurve> {
+struct StepCurve : public NormalCurve, public Factory::FactoryInstable<NormalCurve, StepCurve> {
 	bool stepUp = true;
 	float numSteps = 2.01f;//a 2 step but does 1@1
 

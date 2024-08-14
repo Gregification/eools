@@ -14,3 +14,41 @@ time_t Ping::tag() {
 
 	return getTime();
 }
+
+bool Packable::needsMessaged() const
+{
+	return !_packable_syncTargets.empty();
+}
+
+void Packable::packTargets(Message& msg)
+{
+	//overflow not a problem, results in targets being sent over mutiple 
+	//	packets instead of all in 1.
+	const uint8_t size = _packable_syncTargets.size();
+
+	auto it = _packable_syncTargets.begin();
+	for (int n = 0; n < size; n++) {
+		MsgDiffType type = *it;
+		++it;
+
+		packMessage(msg, type);
+		msg << type;
+	}
+
+	msg << size;
+
+	_packable_syncTargets.erase(_packable_syncTargets.begin(), it);
+}
+
+void Packable::unpackTargets(Message& msg)
+{
+	uint8_t n;
+	msg >> n;
+
+	for (; n > 0; n--) {
+		MsgDiffType type;
+		msg >> type;
+
+		unpackMessage(msg, type);
+	}
+}

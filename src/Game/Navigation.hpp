@@ -66,6 +66,7 @@ namespace Navigation {
 		Nav_Base_OverrideFuncs
 
 		float targetRot;
+		float rate;
 	};
 
 	struct ALIGN_TO : NavBase {

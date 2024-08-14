@@ -49,6 +49,7 @@
 *		is unique to the base class.`
 *	- the unique `Class_Id` relies on a feature I know to be part of the 
 *		MSVC/14.39 compiler, but not some others. (see `InstFactory` constructor)
+*	- is currently only able to process pointers. no refrences.
 *	- if getting vector access errors on run may be due to a gimic some compilers
 *		that require the constructor of `FactoryInstable<T>` be reachable.
 *		more of a me issue since i cant figure out the feature responsible for
@@ -119,13 +120,13 @@ namespace Factory {
 	class FactoryInstable {
 	public:
 		const static InstFactory<BASE> factory;
-		const static FactoryInstableHelper<BASE, DERIVED> _dummy;
+		const static FactoryInstableHelper<BASE, DERIVED> _dummy_factoryHelper;
 
 		FactoryInstable() {
 			static_assert(std::is_base_of_v<BASE, DERIVED>);
 
 			factory;
-			_dummy;
+			_dummy_factoryHelper;
 		}
 	};
 
@@ -158,7 +159,7 @@ namespace Factory {
 				unless there is a reachable non static refrence to them at runtime.
 				idk with certainty but suspect its some compiler mumbo jumbo.
 			*/
-			Factory::FactoryInstable<BASE, DERIVED>::_dummy;
+			Factory::FactoryInstable<BASE, DERIVED>::_dummy_factoryHelper;
 			Factory::InstFactory<BASE>::_instConsts;
 			Factory::InstFactory<BASE>::_packers;
 			Factory::InstFactory<BASE>::_unpackers;
@@ -175,6 +176,9 @@ namespace Factory {
 		static std::unique_ptr<BASE> GetInstance(Class_Id);
 		static void UnpackAs(Class_Id, Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
 		static void PackAs(Class_Id, Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+		static void UnpackAs(Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+		static void PackAs(Message&, BASE*, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING);
+
 		static Class_Id GetClassId(const std::type_info& info) {
 			auto it = typeToIdMap.find(std::type_index{ info });
 
@@ -209,6 +213,7 @@ namespace Factory {
 	class FactoryInstableHelper {
 	public:
 		FactoryInstableHelper() {
+			if constexpr(!std::is_abstract_v<DERIVED>)
 			InstFactory<BASE>::Register_Class(
 				FactoryInstable<BASE, DERIVED>::factory.class_id,
 				[] { return std::make_unique<DERIVED>(); }, //instance constructor
@@ -226,7 +231,7 @@ namespace Factory {
 	template<typename BASE, typename DERIVED>
 	const InstFactory<BASE> FactoryInstable<BASE, DERIVED>::factory{ static_cast<DERIVED*>(nullptr) };
 	template<typename BASE, typename DERIVED>
-	const FactoryInstableHelper<BASE, DERIVED> FactoryInstable<BASE, DERIVED>::_dummy{};
+	const FactoryInstableHelper<BASE, DERIVED> FactoryInstable<BASE, DERIVED>::_dummy_factoryHelper{};
 
 	template<typename BASE> Class_Id InstFactory<BASE>::next_class_id = 0;
 	template<typename BASE> std::vector<std::function<std::unique_ptr<BASE>()>>
@@ -259,6 +264,16 @@ namespace Factory {
 	}
 	template<typename BASE> void InstFactory<BASE>::PackAs(Class_Id cid, Message& msg, BASE* b, MsgDiffType mdt) {
 		_packers[cid](msg, mdt, b);
+	}
+	template<typename BASE>
+	inline void InstFactory<BASE>::UnpackAs(Message& msg, BASE* b, MsgDiffType mdt)
+	{
+		UnpackAs(GetClassId(b), msg, b, mdt);
+	}
+	template<typename BASE>
+	inline void InstFactory<BASE>::PackAs(Message& msg, BASE* b, MsgDiffType mdt)
+	{
+		PackAs(GetClassId(b), msg, b, mdt);
 	}
 	template<typename BASE> void InstFactory<BASE>::UnpackAs(Class_Id cid, Message& msg, BASE* b, MsgDiffType mdt) {
 		_unpackers[cid](msg, mdt, b);

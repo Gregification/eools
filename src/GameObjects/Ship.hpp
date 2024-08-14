@@ -5,6 +5,10 @@ class Ship;
 #include "../Game/Navigation.hpp"
 #include "../NetGameObject.hpp"
 
+#include "../Game/ship/Generator.hpp"
+#include "../Game/ship/PowerBank.hpp"
+#include "../Game/ship/DriveTrain.hpp"
+
 #ifdef DrawText
 #undef DrawText
 #endif
@@ -24,20 +28,23 @@ namespace Navigation {
 
 class Ship : public NetGameObject<Ship> {
 	public:
+		//not synched
+		Navigation::NavInfo navinfo;
+		DriveTrain driveTrain;
+
+		//synched
+		Power::PowerBank powerBank;
+		Power::Generator powerSource;
+
 		using NetGameObject::NetGameObject;
 
+		const std::vector<Vec2_f> getBody() const;		
+		void updateBody();
+
+		void Update(float) override;
 		void Draw(Canvas& c, Transformation_2D transform) override;
 		void packMessage(Message&, MsgDiffType) override;
 		void unpackMessage(Message&, MsgDiffType) override;
-
-		void Update(float);
-
-		const std::vector<Vec2_f> getBody() const;		
-		
-		Navigation::NavInfo navinfo;
-
-		float rotAccele = M_PI_4;
-		float accele = 1;
 
 	protected:
 		std::vector<Vec2_f> _body;

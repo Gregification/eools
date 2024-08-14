@@ -19,6 +19,9 @@ public:
 	void updateDescription();
 
 	Vec2_f _from, _to;
+	float _rate;
+
+	std::string rate_as_precent = "rate%";
 
 private:
 	enum class STATE {

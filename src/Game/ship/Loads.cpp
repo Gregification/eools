@@ -1,81 +1,103 @@
 #include "Loads.hpp"
 
-const Unit& Loads::LoadHandler_IOPair::getInputR() const
-{
-	return i_r;
-}
+using namespace Loads;
 
-void Loads::LoadHandler_IOPair::setInputR(const float& r)
+void Loads::LoadDistributor::addLoad(std::weak_ptr<LoadRequest> p)
 {
-	i_r = r;
-	recalOutput();
-}
-
-const Unit& Loads::LoadHandler_IOPair::getMaxDraw() const
-{
-	return max_draw;
-}
-
-void Loads::LoadHandler_IOPair::setMaxDraw(const Unit& m)
-{
-	max_draw = m;
-	recalLoads();
-}
-
-void Loads::LoadHandler_IOPair::addLoad(Load l)
-{
-	if (l) {
-		draw += l->draw;
-		loads.push_back(l);
-		recalLoads();
+	if (auto s = p.lock()) {
+		_loads.insert({ p });
+		recalculate();
 	}
 }
 
-std::vector<std::weak_ptr<Loads::LoadRequest>>& Loads::LoadHandler_IOPair::getLoads()
+void Loads::LoadDistributor::addLoadDontRecal(std::weak_ptr<LoadRequest> p)
 {
-	return loads;
+	_loads.insert({ p });
 }
 
-void Loads::LoadHandler_IOPair::removeLoad(Load l)
+void Loads::LoadDistributor::removeLoad(const LoadRequest* p)
 {
-	if(l)
-	loads.erase(std::remove_if(loads.begin(), loads.end(),
-		[l](const std::weak_ptr<LoadRequest>& obj) {
-			if(auto v = obj.lock())
-				return v.get() == l.get(); 
-			return true;
-		}),
-		loads.end());
-}
+	bool needsRecal = false;
 
-void Loads::LoadHandler_IOPair::recalLoads()
-{
-	Unit actualLoad = 0;
-	for (auto i = loads.begin(); i != loads.end();) {
-		if (auto v = i->lock()) {
-			actualLoad += v->draw;
+	for (auto i = _loads.begin(); i != _loads.end();) {
+		Load lr = i->lock();
 
-			v->received = v->draw / draw * max_draw;
+		if (!lr || lr.get() == p) {
+			needsRecal = true;
 
-			++i;
-		} else
-			loads.erase(i);
-	}
-
-	//if load did change
-	if (actualLoad != draw) {
-		draw = actualLoad;
-		for (auto i = loads.begin(); i != loads.end();) {
-			if (auto v = i->lock()) {
-				v->received = v->draw / draw * max_draw;
-				++i;
-			} else
-				loads.erase(i);
+			_loads.erase(i);
 		}
+		else 
+			++i;
 	}
+
+	if(needsRecal)
+		recalculate();
 }
 
-void Loads::LoadHandler_IOPair::recalOutput()
+void Loads::LoadDistributor::setTotalAvaliable(const LoadUnit& n)
 {
-	
+	total_avaliable = n;
+	total_used = 0;
+
+	LoadUnit totalExtraOfSupported = 0;
+	LoadUnit remaining = total_avaliable;
+
+	//hit as many minimums as possible
+	auto lastSupported = _loads.begin();
+	for (; lastSupported != _loads.end(); ++lastSupported)
+		if (Load lr = lastSupported->lock()) {
+			if (lr->min < remaining) {
+
+				lr->received = lr->min;
+				
+				remaining -= lr->min;
+				totalExtraOfSupported += lr->requested - lr->min;
+			} 
+			else
+				break;
+		}
+		else {
+			recalculate();
+		}
+
+	//for all reached mins, distribute relative to extra
+	for (auto i = _loads.begin(); i != lastSupported; ++i)
+		if (Load lr = i->lock()) {
+			LoadUnit allotted = (lr->requested - lr->min) / totalExtraOfSupported * remaining;
+
+			lr->received += allotted;
+			total_used += lr->received;
+		}
+}
+
+void Loads::LoadDistributor::recalculate()
+{
+	total_requested = 0;
+
+	for (auto i = _loads.begin(); i != _loads.end(); ++i)
+		if (Load lr = i->lock()) {
+			total_requested += lr->requested;
+		}
+		else {
+			_loads.erase(i, _loads.end());
+			break;
+		}
+
+	setTotalAvaliable(total_avaliable);
+}
+
+const LoadUnit& Loads::LoadDistributor::totalRequested() const
+{
+	return total_requested;
+}
+
+const LoadUnit& Loads::LoadDistributor::totalAvaliable() const
+{
+	return total_avaliable;
+}
+
+const LoadUnit& Loads::LoadDistributor::totalUsed() const
+{
+	return total_used;
 }

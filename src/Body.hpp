@@ -13,15 +13,15 @@ public:
 
 public:
 	long long lastUpdate;
-	Unit mass = .01 * KT;
+	Unit mass = .01 * MASS_KT;
 
 	gs::Transform transform;
 
 	std::vector<gs::Vec2_f> verticies{
-		{  0.00 * KM,  0.05 * KM},
-		{  0.05 * KM, -0.05 * KM},
-		{  0.00 * KM, -0.02 * KM},
-		{ -0.05 * KM, -0.05 * KM}
+		{  0.00 * DIST_KM,  0.05 * DIST_KM},
+		{  0.05 * DIST_KM, -0.05 * DIST_KM},
+		{  0.00 * DIST_KM, -0.02 * DIST_KM},
+		{ -0.05 * DIST_KM, -0.05 * DIST_KM}
 	};
 
 	void recalAABB();

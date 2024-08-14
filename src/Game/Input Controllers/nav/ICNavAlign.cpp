@@ -18,6 +18,8 @@ std::unique_ptr<Navigation::NavBase> ICNavAlign::GetResult()
 void ICNavAlign::Draw(Camera&, Canvas& can) const 
 {
 	can.DrawPointLine(_from.x, _from.y, _to.x, _to.y, Color::Yellow);
+	if(_rate != 0)
+		can.DrawText(_to.x, _to.y, rate_as_precent);
 }
 
 bool ICNavAlign::OnEvent(ftxui::Event& e, Camera& c)
@@ -26,7 +28,7 @@ bool ICNavAlign::OnEvent(ftxui::Event& e, Camera& c)
 		auto em = e.mouse();
 
 		if (em.button != Mouse::Left) return false;
-
+		
 		switch (state) {
 			case ICNavAlign::STATE::UNSTARTED: {
 				_from = _to = c.mouse_screen;
@@ -40,6 +42,23 @@ bool ICNavAlign::OnEvent(ftxui::Event& e, Camera& c)
 
 			case ICNavAlign::STATE::POINTING: {
 				_to = c.mouse_screen;
+				
+				{
+					Vec2_f diff = _to - _from;
+					if (diff.x < 0)
+						diff.x /= -_from.x;
+					else
+						diff.x /= c.formerSize.x - _from.x - 5;
+
+					if (diff.y < 0)
+						diff.y /= -_from.y;
+					else
+						diff.y /= c.formerSize.y - _from.y - 1;
+
+					_rate = std::max(diff.x, diff.y);
+					_rate = std::min(1.0f, _rate * 1.2f);
+					rate_as_precent = std::format("{:3.1f}%", _rate * 100.0f);
+				}
 
 				if (em.motion == Mouse::Released) {
 					state = STATE::FINISHED;
@@ -71,6 +90,8 @@ void ICNavAlign::reset()
 	state = STATE::UNSTARTED;
 
 	_from = _to = { 0 };
+
+	_rate = 0;
 
 	updateDescription();
 }

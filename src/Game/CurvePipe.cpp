@@ -3,7 +3,7 @@
 float CurvePipe::passthough(float r) const
 {
 	for (auto&& v : stages) {
-		r = std::max(r_min, std::min(r, r_max));
+		r = std::max(0.0f, std::min(r, 1.0f));
 		r = v->evaluate(r);
 	}
 
@@ -12,9 +12,6 @@ float CurvePipe::passthough(float r) const
 
 void CurvePipe::packMessage(Message& msg, MsgDiffType)
 {
-	msg >> r_max;
-	msg >> r_min;
-
 	packArray<NormalCurve>(msg, stages, [](Message& msg,  NormalCurve* nc) {
 		Class_Id cid = NormalCurve::factory.GetClassId(nc);
 		NormalCurve::factory.PackAs(cid, msg, nc);
@@ -35,7 +32,4 @@ void CurvePipe::unpackMessage(Message& msg, MsgDiffType)
 
 		return p;
 	});
-
-	msg >> r_min;
-	msg >> r_max;
 }

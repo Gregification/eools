@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <type_traits>
 #include <functional>
 #include <unordered_set>
@@ -56,10 +57,25 @@ typedef BE_NetMsgType::_enumerated NetMsgType;
 typedef net::message<NetMsgType>
 	Message;
 
-//interface 
 struct Messageable {
 	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) = 0;
 	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) = 0;
+};
+
+//messageable but for non game objects, still relies on the GO to trigger
+struct Packable : protected Messageable {
+	std::unordered_set<MsgDiffType> _packable_syncTargets;
+
+	bool needsMessaged() const;
+	void packTargets(Message&);
+	void unpackTargets(Message&);
+
+protected:
+	template<typename T>
+	void addPackageTarget(T t) {
+		static_assert(std::is_same_v<std::underlying_type_t<T>, MsgDiffType>);
+		_packable_syncTargets.insert(static_cast<MsgDiffType>(t));
+	}
 };
 
 //////////////////////////////////////////////////////////////////////////////

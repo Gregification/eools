@@ -18,6 +18,9 @@ Vec2_f Camera::getScaleVec() { return Vec2_f(trans.scaleX(), trans.scaleY()); }
 Vec2_f Camera::getOffVec()	 { return Vec2_f(offX(), offY()); }
 
 void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
+	formerSize.x = c.width();
+	formerSize.y = c.height();
+
 	Vec2_i
 		size(50),
 		pos((c.width() - size.x) / 2 , (c.height() - size.y) / 2),
