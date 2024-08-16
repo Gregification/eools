@@ -24,7 +24,6 @@ public:
 
 
 
-
 	static const int _pitsize = 4;
 	typedef std::array<std::pair<
 			std::string,
@@ -35,5 +34,7 @@ public:
 	static const PublicInterfacesType publicInterfaces;
 
 	std::vector<std::shared_ptr<Events::ListenerBase>> listeners;
-
+protected:
+	//short hand way to make buttons that add a `ResoveableResponder`
+	static ftxui::Component _MakeResolveableBtn(const std::string&, const ResolveableResponder&, const ftxui::ButtonOption&);
 };

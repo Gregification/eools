@@ -64,3 +64,19 @@ std::shared_ptr<Events::Listener<ARG>> InterfaceContent::addListener(std::shared
 	listeners.push_back(ll);
 	return ll;
 }
+
+ftxui::Component InterfaceContent::_MakeResolveableBtn(
+	const std::string& str,
+	const ResolveableResponder& rr,
+	const ftxui::ButtonOption& bo)
+{
+	return Button(
+		str, 
+		[rr] {
+			Events::ClientEvent::observer.invokeEvent<ResolveableResponder>(
+				Events::ClientEvent::CLIENT_EVENT::ADD_RESOLVEABLE_RESPONDER,
+				rr
+			);
+		},
+		bo);
+}

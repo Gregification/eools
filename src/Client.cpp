@@ -247,11 +247,11 @@ void Client::run(ScreenInteractive& screen) {
 
 			numPkt = Update();
 
-			for (int i = 0; i < unresolvedResponders.size(); i++) {
+			for (int i = 0; i < unresolvedResponders.size();) {
 				if (unresolvedResponders[i](*this)) {
 					unresolvedResponders.erase(unresolvedResponders.begin() + i);
-					i--;
 				}
+				else i++;
 			}
 
 			loop.RunOnce();
@@ -267,15 +267,15 @@ void Client::run(ScreenInteractive& screen) {
 
 			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 			
-			if (InputControllers.size() > 0) {
-				int i = InputControllers.size() - 1;
+			if(!InputControllers.empty()) {
+				const auto& ic = InputControllers[InputControllers.size() - 1].ic;
 
-				InputControllers[i].ic->Update(dt);
+				ic->Update(dt);
 
-				if (InputControllers[i].ic->IsFinished()) {
+				if (ic->IsFinished()) {
 
-					if (InputControllers[i].ic->onFinish)
-						InputControllers[i].ic->onFinish(InputControllers[i].ic.get(), *this);
+					if (ic->onFinish)
+						ic->onFinish(ic.get(), *this);
 
 					InputControllers.pop_back();
 				}
@@ -448,15 +448,18 @@ void Client::Draw(Canvas& c) {//play renderer
 }
 
 std::shared_ptr<Ship> Client::GetSelectedShip() const {
-	if (auto lock = selectedShip.lock())
-		return lock;
+	for (auto& v : selectedGOs) {
+		if (auto s = dynamic_pointer_cast<Ship>(v.lock())) {
+			return s;
+		}
+	}
 	return ship;
 }
 
 std::vector<std::shared_ptr<Ship>> Client::GetSelectedShips() const {
 	std::vector<std::shared_ptr<Ship>> ret{ship};
 
-	for (auto& v : selectedObjects) {
+	for (auto& v : selectedGOs) {
 		if (auto s = dynamic_pointer_cast<Ship>(v.lock())) {
 			ret.push_back(s);
 		}
@@ -653,7 +656,7 @@ void Client::initEvents() {
 	* network
 	***********************************************************************************************************/
 
-	auto network_send_message = addListener(MakeListener<net::message<NetMsgType>>(
+	const auto network_send_message = addListener(MakeListener<net::message<NetMsgType>>(
 		[&](const net::message<NetMsgType>& m) { 
 			Send(m); 
 		}));
@@ -662,12 +665,12 @@ void Client::initEvents() {
 	* audio
 	***********************************************************************************************************/
 
-	auto DEBUG_beep = addListener(MakeListener<>(
+	const auto DEBUG_beep = addListener(MakeListener<>(
 		[] {
 			std::cout << "\a" << std::endl; 
 		}));
 	
-	auto DEBUG_beep_string = addListener(MakeListener<std::string>(
+	const auto DEBUG_beep_string = addListener(MakeListener<std::string>(
 		[](std::string) {
 			std::cout << "\a" << std::endl; 
 		}));
@@ -676,20 +679,20 @@ void Client::initEvents() {
 	* client & keyboard events
 	***********************************************************************************************************/
 
-	auto DEBUG_add_new_demo_window = addListener(MakeListener<>(
+	const auto DEBUG_add_new_demo_window = addListener(MakeListener<>(
 		[&] {
 			static int a = 0;
 			auto b = Window({ .title = "on call" + std::to_string(a++) });
 			windowContainer->Add(b);
 		}));
 
-	auto DEBUG_message_event = addListener(MakeListener<>(
+	const auto DEBUG_message_event = addListener(MakeListener<>(
 		[&] {
 			static int a = 0;
 			ClientEvent::observer.invokeEvent(ClientEvent::CLIENT_EVENT::EVENT_MESSAGE, std::to_string(a++));
 		}));
 
-	auto on_escape = addListener(MakeListener<>(
+	const auto on_escape = addListener(MakeListener<>(
 		[&] {
 
 			for (auto& v : InputControllers)
@@ -699,7 +702,7 @@ void Client::initEvents() {
 			selectedObjects.clear();
 		}));
 
-	auto on_window_focous = addListener(MakeListener<>(
+	const auto on_window_focous = addListener(MakeListener<>(
 		[&] {
 			for (int i = 0; i < interfaceWindows.size(); i++) {
 				auto sp = interfaceWindows[i].lock();
@@ -713,7 +716,7 @@ void Client::initEvents() {
 			}
 		}));
 
-	auto on_window_unfocous = addListener(MakeListener<>(
+	const auto on_window_unfocous = addListener(MakeListener<>(
 		[&] {
 			for (int i = 0; i < interfaceWindows.size(); i++) {
 				auto sp = interfaceWindows[i].lock();
@@ -735,19 +738,19 @@ void Client::initEvents() {
 			 });
 		}));
 
-	auto open_new_window_dialogue = addListener(MakeListener(
+	const auto open_new_window_dialogue = addListener(MakeListener(
 		[&] {
 			showNewWindowModal = !showNewWindowModal;
 		}));
 
-	auto add_new_window = addListener(MakeListener<std::function<Component(Client&)>>(
+	const auto add_new_window = addListener(MakeListener<std::function<Component(Client&)>>(
 		[&] (auto f){
 			Component comp = f(*this);
 			windowContainer->Add(comp);
 			comp->TakeFocus();
 		}));
 
-	auto delete_selected_window = addListener(MakeListener(
+	const auto delete_selected_window = addListener(MakeListener(
 		[&] {
 			if (windowContainer->ChildCount() > 0){
 				auto ac = windowContainer->ActiveChild();
@@ -756,7 +759,7 @@ void Client::initEvents() {
 			}
 		}));
 
-	auto add_unresolved_responder = addListener(MakeListener<ResolveableResponder>(
+	const auto add_unresolved_responder = addListener(MakeListener<ResolveableResponder>(
 		[&] (auto v){
 			unresolvedResponders.push_back(v);
 		}));
@@ -765,19 +768,19 @@ void Client::initEvents() {
 	* game
 	***********************************************************************************************************/
 
-	auto DEBUG_send_ship_update = addListener(MakeListener(
+	const auto DEBUG_send_ship_update = addListener(MakeListener(
 		[&] {
 			Send( //just abuse POST as update
 				SceneManager::POST(currentGrid->id(), ship.get())
 			);
 		}));
 
-	auto on_go_select = addListener(MakeListener<std::vector<GameObjPtr>>(
+	const auto on_go_select = addListener(MakeListener<std::vector<GameObjPtr>>(
 		[&] (std::vector<GameObjPtr> g){
-			if (g.empty() || !g[0]) return;
-
-			if (auto dp = dynamic_pointer_cast<Ship>(g[0])) {
-				selectedShip = dp;
+			selectedGOs.reserve(g.size());
+			for (auto& v : g) {
+				if(v)
+					selectedGOs.push_back({ v });
 			}
 		}));
 

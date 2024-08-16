@@ -22,13 +22,13 @@ class Grid : public NetGameObject<Grid> {
 			GameObjPtr go;
 		};
 
-		void Draw(Canvas& c, Transformation_2D trf) override;
+		void Draw(Canvas& c, const Transformation_2D& trf) override;
 
 		void packMessage(Message&, MsgDiffType = 0) override;
 		void unpackMessage(Message&, MsgDiffType = 0) override;
 
-		void Update(float) override {};
-		void FixedUpdate(float) override {};
+		void Update(const float&) override {};
+		void FixedUpdate(const float&) override {};
 
 		/*adds a object by id, overwrites existing if it exists. returns true of overwritten*/
 		void AddObject(GameObjPtr);

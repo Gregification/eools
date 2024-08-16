@@ -6,23 +6,24 @@
 
 class Camera {
 public:
-	Camera() : mouse_screen(0), trans{ Transformation_2D::identity }, formerSize{0} {
-
-	}
-	~Camera() = default;
-	
 	Vec2_i mouse_screen;
 	Transformation_2D trans;
 
 	Vec2_f formerSize;
 
-	const Transformation_2D& getTransformationInverse();
+	//this could be just a `Transform*` but client piggybacks on this for more info
+	std::weak_ptr<GameObject> tracking;
+
+	Camera() : mouse_screen(0), trans{ Transformation_2D::identity }, formerSize{0} 
+		{}
+	~Camera() = default;
+	
 
 	inline float& offX();
 	inline float& offY();
-
 	Vec2_f getScaleVec();
 	Vec2_f getOffVec();
+	const Transformation_2D& getTransformationInverse();
 
 	void Draw(Canvas& c, std::shared_ptr<Grid> g);
 

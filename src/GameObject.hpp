@@ -38,7 +38,7 @@ public:
 
 	Instance_Id inline id() const { return _instId; }
 
-	std::string getDisplayName() const { return _displayName; }
+	const std::string& getDisplayName() const { return _displayName; }
 
 	const SyncCollection& getSynchronizationTargets();
 	void clearSynchronizationTargets();
@@ -46,15 +46,15 @@ public:
 	//as of now its all cpu based(cringe) but the plans to split off physics 
 	// to the gpu eventually
 	//https://stackoverflow.com/questions/34447682/what-is-the-difference-between-update-fixedupdate-in-unity
-	virtual void Update(float);
-	virtual void FixedUpdate(float);
+	virtual void Update(const float&);
+	virtual void FixedUpdate(const float&);
 
 	virtual void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 	virtual void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
 
-	virtual void Draw(ftxui::Canvas&, gs::Transformation_2D);
+	virtual void Draw(ftxui::Canvas&, const gs::Transformation_2D&);
 
-	virtual std::string GetDescription() const;
+	virtual const std::string& GetDescription() const;
 
 	virtual Class_Id GetClassId() const;
 

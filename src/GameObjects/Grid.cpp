@@ -5,7 +5,7 @@
 //https://www.youtube.com/watch?v=mD3cbXu3ZBE
 
 
-void Grid::Draw(Canvas& c, Transformation_2D trf) {
+void Grid::Draw(Canvas& c, const Transformation_2D& trf) {
 	
 }
 

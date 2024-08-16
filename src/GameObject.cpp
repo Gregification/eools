@@ -2,7 +2,7 @@
 #include "IdGen.hpp"
 #include "GameObjectFactory.hpp"
 
-void GameObject::Update(float dt) {
+void GameObject::Update(const float& dt) {
 
 }
 
@@ -19,17 +19,12 @@ void GameObject::clearSynchronizationTargets() {
 	_syncCollection.clear();
 }
 
-
-void GameObject::FixedUpdate(float dt) {
-	static const SyncTarget syncTarg{ 
-		.class_id = IdGen<GameObject>::gof.class_id, 
-		.diff = DEFAULT_MsgDiff_EVERYTHING};
-	addSynchronizationTarget(syncTarg);
-
+void GameObject::FixedUpdate(const float& dt) {
 	transform.Update(dt);
 }
 
-void GameObject::Draw(Canvas& c, Transformation_2D t) {
+void GameObject::Draw(Canvas& c, const Transformation_2D& t) {
+	//verticies should never be empty
 	Vec2_f a = t.applyTo(
 		transform.rotation.getUTD().applyTo(verticies[verticies.size() - 1])
 		+ transform.position
@@ -40,7 +35,7 @@ void GameObject::Draw(Canvas& c, Transformation_2D t) {
 
 		c.DrawBlockLine(a.x, a.y, b.x, b.y, Color::Blue);
 
-		a = b;
+		a = std::move(b);
 	}
 };
 
@@ -62,8 +57,7 @@ void GameObject::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> transform;
 }
 
-
-std::string GameObject::GetDescription() const {
+const std::string& GameObject::GetDescription() const {
 	return "default gameobject description";
 }
 

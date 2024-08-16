@@ -71,8 +71,11 @@ void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(cons
 				gp->FixedUpdate(dt_f);
 				gp->_updateTimes.lastFixedUpdate = rn;
 
-				if(canSend(gp) && SceneManager::NeedsUpdate(gp))
-					send(SceneManager::UPDATE(g->id(), gp));
+				if (canSend(gp)) {
+
+					if (SceneManager::NeedsUpdate(gp))
+						send(SceneManager::UPDATE(g->id(), gp));
+				}
 			}
 		}
 	}

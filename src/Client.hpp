@@ -16,6 +16,7 @@
 class Ship;
 class InterfaceContent;
 
+//returns true if is resolved
 typedef std::function<bool(Client&)> ResolveableResponder;
 
 class Client : public App, public net::client_interface<NetMsgType> {
@@ -23,10 +24,14 @@ class Client : public App, public net::client_interface<NetMsgType> {
 	friend class IFOptions;
 
 public:
+	float refreshesPS = -1;
+
+	Camera cam;
+
+	std::vector<std::weak_ptr<GameObject>> selectedGOs;
+
 	Client();
 	~Client() = default;
-
-	float refreshesPS = -1;
 
 	void run(ScreenInteractive& screen) override;
 
@@ -37,15 +42,12 @@ public:
 	*/
 	void removeEmptyWindows();
 
-	Camera cam;
-
 	void addInputController(bool cascade, bool drawDuringCascade, InputController);
 
 protected:
 	std::shared_ptr<Ship> ship;
 	std::shared_ptr<Grid> currentGrid;
 
-	std::weak_ptr<Ship> selectedShip;
 
 	Vec2_i raw_mouse_screen;
 

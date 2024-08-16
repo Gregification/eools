@@ -8,18 +8,29 @@ enum class DIFF : MsgDiffType {
 	Body
 };
 
-void Ship::Draw(Canvas& c, Transformation_2D t) {
+void Ship::Draw(Canvas& c, const Transformation_2D& t) {
 	GameObject::Draw(c, t);
 
 	auto pos = t.applyTo(transform.position);
 	c.DrawText(pos.x - 4, pos.y, getPrettyString((float)id()) + "rot:" + getPrettyString(transform.rotation.getRotation()));
 }
 
-void Ship::Update(float dt){
+void Ship::Update(const float& dt){
 	driveTrain.update(dt, *this);
 
 	if (navinfo.navPattern)
 		navinfo.navPattern->nav_update(dt, *this);
+}
+
+void Ship::FixedUpdate(const float& dt)
+{
+	GameObject::FixedUpdate(dt);
+
+	//not ht best but eh
+	static const SyncTarget syncTarg{
+		.class_id = IdGen<GameObject>::gof.class_id,
+		.diff = DEFAULT_MsgDiff_EVERYTHING };
+	addSynchronizationTarget(syncTarg);
 }
 
 const std::vector<Vec2_f> Ship::getBody() const

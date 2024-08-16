@@ -178,15 +178,15 @@ namespace gs {
 		template<typename U>
 		bool overlaps(const Rectangle_T<U>& o, const Vec2_T<T>& offset = {0}) const {
 			//a N b. top, left, right, top, bottom
-			U al = pos.x + offset.x;
-			U ar = pos.x + offset.x + size.x;
-			U at = pos.y + offset.y;
-			U ab = pos.y + offset.y + size.y;
-			U bl = o.pos.x;
-			U br = o.pos.x + o.size.x;
-			U bt = o.pos.y;
-			U bb = o.pos.y + o.size.y;
-
+			const U al = pos.x + offset.x;
+			const U ar = pos.x + offset.x + size.x;
+			const U at = pos.y + offset.y;
+			const U ab = pos.y + offset.y + size.y;
+			const U bl = o.pos.x;
+			const U br = o.pos.x + o.size.x;
+			const U bt = o.pos.y;
+			const U bb = o.pos.y + o.size.y;
+			//compiler should be smart enough to inline these or something
 			return al < br && ar > bl && at < bb && ab > bt;
 		}
 
@@ -233,7 +233,7 @@ namespace gs {
 			return false;
 		}
 
-		/** returns rectangle of region marked by 2 unsorted points*/
+		/** returns rectangle of region marked by any 2 points*/
 		static Rectangle_T<T> MakeRectangle(const Vec2_T<T>& a, const Vec2_T<T>& b) {
 			std::pair<T, T> x = std::minmax(a.x, b.x);
 			std::pair<T, T> y = std::minmax(a.y, b.y);
@@ -266,60 +266,16 @@ namespace gs {
 		inline float & scaleX() { return PT(mat, 0, 0); }
 		inline float & scaleY() { return PT(mat, 1, 1); }
 		inline float & scaleZ() { return PT(mat, 2, 2); }
-		inline float & transX()	{ return PT(mat, 2, 0); }
+		inline float & transX()	{ return PT(mat, 2, 0); }//translation
 		inline float & transY() { return PT(mat, 2, 1); }
 		inline float & shearX() { return PT(mat, 1, 0); }
 		inline float & shearY() { return PT(mat, 0, 1); }
 
-		float inline getDeterminant_2D() const{
-			return DETERMINANT_2x2(
-				PT(mat,0,0),
-				PT(mat,1,0),
-				PT(mat,0,1),
-				PT(mat,1,1)
-			);
-		}
+		float inline getDeterminant_2D() const;
 
-		float inline getDeterminant_3D() const {
-			return 0//skimmed this formula from wiki. seems shorter than having 3 sub determinants
-				+ PT(mat,0,0) * PT(mat,1,1) * PT(mat,2,2) //+aei
-				+ PT(mat,1,0) * PT(mat,2,1) * PT(mat,0,2) //+bfg
-				+ PT(mat,2,0) * PT(mat,0,1) * PT(mat,1,2) //+cdh
-				- PT(mat,2,0) * PT(mat,1,1) * PT(mat,0,2) //-ceg
-				- PT(mat,1,0) * PT(mat,0,1) * PT(mat,2,2) //-bdi
-				- PT(mat,0,0) * PT(mat,2,1) * PT(mat,1,2) //-afh
-			;
- 		}
+		float inline getDeterminant_3D() const;
 
-		Transformation_2D getInverse() const {
-			Mat3x3 inv;
-
-			float det_3D = getDeterminant_3D();
-
-			// ...
-			if (det_3D == 0) 
-				det_3D = 1;
-
-			for (int x = 0; x < 3; x++)
-				for (int y = 0; y < 3; y++) {
-					//cofactor matrix
-					//& reflected
-					int
-						x1 = (x + 1) % 3,
-						x2 = (x + 2) % 3,
-						y1 = (y + 1) % 3,
-						y2 = (y + 2) % 3;
-
-					PT(inv,y,x) = DETERMINANT_2x2(
-						PT(mat,x1, y1),
-						PT(mat,x2, y1),
-						PT(mat,x1, y2),
-						PT(mat,x2, y2)
-					) / det_3D;
-				}
-
-			return Transformation_2D(inv);
-		}
+		Transformation_2D getInverse() const;
 
 		template<typename T>
 		Vec2_T<T> applyTo(Vec2_T<T> vec, float vecz = 1) const {
@@ -350,11 +306,7 @@ namespace gs {
 		static Transformation_2D clear;
 		static Transformation_2D zero;
 
-		bool operator==(const Transformation_2D& o) const {
-			return mat[0] == o.mat[0]
-				&& mat[1] == o.mat[1]
-				&& mat[2] == o.mat[2];
-		}
+		bool operator==(const Transformation_2D& o) const;
 	};
 	static_assert(std::is_standard_layout<gs::Transformation_2D>::value);
 
@@ -419,19 +371,7 @@ namespace gs {
 
 		Vec2 position, velocity, acceleration;
 
-		Transform() :
-			acceleration(0),
-			angularVelocity(0)
-		{}
-
-		void Update(float dt) {
-
-			rotation.rotateBy(angularVelocity * dt);
-
-			velocity += acceleration * dt;
-
-			position += velocity * dt;
-		}
+		void Update(const float& dt);
 		
 		void applyAccele(float magnitude, float direction_rot);
 		void applyInlineVelocity(const float& magnitude);
@@ -454,6 +394,7 @@ namespace gs {
 		for (const auto& tb : v) {
 			auto b = r.applyTo<T>(tb);
 
+			//condensed one liner
 			//from https://wrfranklin.org/Research/Short_Notes/pnpoly.html
 			if ((a.y > p.y != b.y > p.y) &&
 				(p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x))

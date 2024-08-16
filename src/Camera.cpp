@@ -21,41 +21,31 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 	formerSize.x = c.width();
 	formerSize.y = c.height();
 
-	Vec2_i
-		size(50),
-		pos((c.width() - size.x) / 2 , (c.height() - size.y) / 2),
-		tl(pos),
-		tr(pos.x + size.x, pos.y),
-		bl(pos.x, pos.y + size.y),
-		br(pos.x + size.x, pos.y + size.y)
-	;
-	
-	/*tl = trans.applyTo(tl);
-	bl = trans.applyTo(bl);
-	tr = trans.applyTo(tr);
-	br = trans.applyTo(br);
-	c.DrawPointLine(bl.x, bl.y, tl.x, tl.y, Color::Green);
-	c.DrawPointLine(bl.x, bl.y, br.x, br.y, Color::Green);
-	c.DrawPointLine(tr.x, tr.y, br.x, br.y, Color::Green);
-	c.DrawPointLine(tr.x, tr.y, tl.x, tl.y, Color::Green);
-	c.DrawPointLine(tl.x, tl.y, br.x, br.y, Color::Blue);
-	c.DrawPointLine(bl.x, bl.y, tr.x, tr.y, Color::Orange1);*/
+	//track
+	if (auto p = tracking.lock()) {
+		const Vec2 sp = formerSize * .5 - gridToScreen(p->transform.position);
+		offX() += sp.x * .5;
+		offY() += sp.y * .5;
+	}
 
+	//debug
+	static const Vec2_i size{ 50 };
+	Vec2_i pos((c.width() - size.x) * .5f , (c.height() - size.y) * .5f );
 	c.DrawText(20, 20, "drawing grid w/ id: " + std::to_string(g->id()));
 	c.DrawText(20, 30, "# children: " + std::to_string(g->_go_vec.size()));
-
-	c.DrawText(pos.x, pos.y, "scale: " + (std::string)getScaleVec());
+	c.DrawText(pos.x, pos.y,      "scale: "  + (std::string)getScaleVec());
 	c.DrawText(pos.x, pos.y + 10, "offset: " + (std::string)getOffVec());
-	c.DrawText(pos.x, pos.y + 20, "mouse: " + (std::string)mouse_screen);
-	c.DrawText(pos.x, pos.y + 30, "stog: " + (std::string)screenToGrid(mouse_screen));
-	c.DrawText(pos.x, pos.y + 40, "gtos: " + (std::string)gridToScreen(screenToGrid(mouse_screen)));
+	c.DrawText(pos.x, pos.y + 20, "mouse: "  + (std::string)mouse_screen);
+	c.DrawText(pos.x, pos.y + 40, "gtos: "   + (std::string)gridToScreen(screenToGrid(mouse_screen)));
+	c.DrawText(pos.x, pos.y + 30, "stog: "   + (std::string)screenToGrid(mouse_screen));
 
 	int y = 30;
 	for (auto& v : g->_go_vec) {
 		c.DrawText(25, y += 10, "id: " + std::to_string(v.id) + "?" + (v.go ? ("exists@(" + std::to_string(v.go->transform.position.x) + "," + std::to_string(v.go->transform.position.y) + ")") : "dne"));
 		if (!v.go) continue;
 
-		/*{//draw the AABB
+		//draw the AABB
+		/*{
 			auto aabb = v.go->getAABB();
 			aabb.size = gridToScreen(aabb.pos + aabb.size + v.go->transform.position);
 			aabb.pos = gridToScreen(aabb.pos + v.go->transform.position);
@@ -77,6 +67,8 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 
 		v.go->Draw(c, trans);		
 	}
+
+	//draw point at 0,0
 	auto gp = trans.applyTo(Vec2_f(0));
 	c.DrawBlock(gp.x, gp.y, true);
 }

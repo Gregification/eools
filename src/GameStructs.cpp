@@ -54,8 +54,6 @@ Mat3x3 Transformation_2D::mul(const Transformation_2D& o) {
 
 	Mat3x3 out;
 
-	ARR(3) tmpthis;
-
 	//assuming [y][x] setup
 	for (int y = 0; y < 3; y++) {
 		for (int x = 0; x < 3; x++) {
@@ -69,6 +67,71 @@ Mat3x3 Transformation_2D::mul(const Transformation_2D& o) {
 	return out;
 }
 
+float inline Transformation_2D::getDeterminant_2D() const {
+	return DETERMINANT_2x2(
+		PT(mat, 0, 0),
+		PT(mat, 1, 0),
+		PT(mat, 0, 1),
+		PT(mat, 1, 1)
+	);
+}
+
+float inline Transformation_2D::getDeterminant_3D() const {
+	return 0//skimmed this formula from wiki. seems shorter than having 3 sub determinants
+		+ PT(mat, 0, 0) * PT(mat, 1, 1) * PT(mat, 2, 2) //+aei
+		+ PT(mat, 1, 0) * PT(mat, 2, 1) * PT(mat, 0, 2) //+bfg
+		+ PT(mat, 2, 0) * PT(mat, 0, 1) * PT(mat, 1, 2) //+cdh
+		- PT(mat, 2, 0) * PT(mat, 1, 1) * PT(mat, 0, 2) //-ceg
+		- PT(mat, 1, 0) * PT(mat, 0, 1) * PT(mat, 2, 2) //-bdi
+		- PT(mat, 0, 0) * PT(mat, 2, 1) * PT(mat, 1, 2) //-afh
+		;
+}
+
+bool Transformation_2D::operator==(const Transformation_2D& o) const {
+	return mat[0] == o.mat[0]
+		&& mat[1] == o.mat[1]
+		&& mat[2] == o.mat[2];
+}
+
+Transformation_2D Transformation_2D::getInverse() const {
+	Mat3x3 inv;
+
+	float det_3D = getDeterminant_3D();
+
+	// ...
+	if (det_3D == 0)
+		det_3D = 1;
+
+	for (int x = 0; x < 3; x++)
+		for (int y = 0; y < 3; y++) {
+			//cofactor matrix
+			//& reflected
+			int
+				x1 = (x + 1) % 3,
+				x2 = (x + 2) % 3,
+				y1 = (y + 1) % 3,
+				y2 = (y + 2) % 3;
+
+			PT(inv, y, x) = DETERMINANT_2x2(
+				PT(mat, x1, y1),
+				PT(mat, x2, y1),
+				PT(mat, x1, y2),
+				PT(mat, x2, y2)
+			) / det_3D;
+		}
+
+	return Transformation_2D{inv};
+}
+
+void Transform::Update(const float& dt) {
+
+	rotation.rotateBy(angularVelocity * dt);
+
+	velocity += acceleration * dt;
+
+	position += velocity * dt;
+}
+
 void Transform::applyAccele(float mag, float rot) {
 	acceleration += Vec2_f::Rot({ mag }, { 0 }, rot);
 }
@@ -78,7 +141,7 @@ void Transform::applyInlineVelocity(const float& mag) {
 }
 
 void RotationHandler::SetRotationMatTo(const float& radians, Mat2x2& mat){
-	float
+	const float
 		sin = std::sinf(radians),
 		cos = std::cosf(radians);
 
@@ -98,7 +161,6 @@ std::pair<float, float> RotationHandler::RotDist(const float& a, const float& b)
 }
 
 inline float RotationHandler::RotScale(const float& rot) {
-	//_rotation = rot % (2 * Pi)
 	constexpr float topi = M_PI * 2.0f;
 	return std::fmodf(rot, topi);
 }
@@ -108,11 +170,10 @@ void RotationHandler::rotateBy(const float& dr) {
 }
 
 void RotationHandler::setRotation(const float& rot) {
-	float nr = RotScale(rot);
+	const float nr = RotScale(rot);
 	
-	if(!isMatBad)
-		isMatBad = nr != _rotation;
-
+	isMatBad = nr != _rotation;
+	
 	_rotation = nr;
 }
 

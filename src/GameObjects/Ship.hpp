@@ -41,8 +41,9 @@ class Ship : public NetGameObject<Ship> {
 		const std::vector<Vec2_f> getBody() const;		
 		void updateBody();
 
-		void Update(float) override;
-		void Draw(Canvas& c, Transformation_2D transform) override;
+		void Update(const float&) override;
+		void FixedUpdate(const float&) override;
+		void Draw(Canvas& c,const Transformation_2D& transform) override;
 		void packMessage(Message&, MsgDiffType) override;
 		void unpackMessage(Message&, MsgDiffType) override;
 

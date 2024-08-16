@@ -83,25 +83,32 @@
 *		//we want to send a message for some base class(known type)
 *		// in this case were packing a instance of DerivedA 
 *		//note that the varaible types are upto you to setup
+* 
 *		MsgDiff msg_diff = _ALL;
 *		Message msg;
 *		DerivedA* obj = new DerivedA; 
+* 
 *		Class_Id cid_of_obj = Base::factory.GetClassId(obj);
+* 
 *		Factory::InstFactory<Base>::PackAs(cid_of_obj, msg_diff, msg, obj);
 *
 *		//dont forget to put the `Class_Id` in the packet!
+* 
 *		msg.addCId(obj.GetClassID());	//demo function
 *		
 *		//now on the the remote programs end
 *		//to get the object back
+* 
 *		Message msg = NextMessage();		//demo function
 *		Class_Id id = msg.getCId();			// ^
 *		MsgDiff msg_diff = msg.getDiff();	// ^
 *		
 *		//make instance from the cid
+* 
 *		std::shared_ptr<Base> ptr = Base::factory.GetInstance(id);
 *		
 *		//apply message to corrosponding function
+* 
 *		Factory::InstFactory<Base>::UnpackAs(id, msg_diff, msg, ptr.get());
 *		
 *		//local obj is now up to date with what ever was in the message
