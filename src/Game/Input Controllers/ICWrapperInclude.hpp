@@ -2,6 +2,7 @@
 
 #include "../Navigation.hpp"
 #include "../../Client.hpp"
+#include "../InputControl.hpp"
 
 /*
 * explination for code bellow

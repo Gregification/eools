@@ -31,7 +31,7 @@ void Body::recalAABB() {
 	//adjust so that it coveragean be rotated however
 	// pythagorean
 	coverage.size *= coverage.size;
-	coverage.size *= 2;
+	coverage.size *= 2.0f;
 	coverage.size.x = std::sqrtf(coverage.size.x);
 	coverage.size.y = std::sqrtf(coverage.size.y);
 
@@ -39,7 +39,7 @@ void Body::recalAABB() {
 	coverage.pos -= (coverage.size - rawsize) / 2;
 }
 
-gs::Rectangle Body::getAABB() {
+const gs::Rectangle& Body::getAABB() {
 	if (coverage.getArea() == 0 && verticies.size() > 1)
 		recalAABB();
 

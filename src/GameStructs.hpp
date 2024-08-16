@@ -77,7 +77,7 @@ namespace gs {
 			y = static_cast<T>(rhs.y);
 			return *this;
 		}
-		
+
 		bool operator==(const Vec2_T<T>& other) const {
 			return x == other.x && y == other.y;
 		}
@@ -117,6 +117,12 @@ namespace gs {
 
 		operator std::string() const {
 			return getPrettyString(x) + ", " + getPrettyString(y);
+		}
+
+		template<typename U,
+			typename std::enable_if<std::is_convertible<T, U>::value, int>::type = 0>
+		operator Vec2_T<U>() const {
+			return Vec2_T<U>{static_cast<U>(x), static_cast<U>(y)};
 		}
 	};
 	
@@ -170,12 +176,12 @@ namespace gs {
 
 		/** returns true if overlaping AREA exists*/
 		template<typename U>
-		bool overlaps(const Rectangle_T<U>& o) const {
+		bool overlaps(const Rectangle_T<U>& o, const Vec2_T<T>& offset = {0}) const {
 			//a N b. top, left, right, top, bottom
-			U al = pos.x;
-			U ar = pos.x + size.x;
-			U at = pos.y;
-			U ab = pos.y + size.y;
+			U al = pos.x + offset.x;
+			U ar = pos.x + offset.x + size.x;
+			U at = pos.y + offset.y;
+			U ab = pos.y + offset.y + size.y;
 			U bl = o.pos.x;
 			U br = o.pos.x + o.size.x;
 			U bt = o.pos.y;
@@ -186,30 +192,31 @@ namespace gs {
 
 		/** returns true if overlap exists, complete unlayered check*/
 		template<typename U>
-		bool overlaps(const std::vector<Vec2_T<U>>& poly) const {
-			typedef Vec2_T<U> V2;
+		bool overlaps(const std::vector<Vec2_T<U>>& poly, const Vec2_T<T>& offset = { 0 }) const {
+			typedef Vec2_T<T> V2;
 			//cant find a algorithm that does it without extra data structs
 			//	so heres the homebrew mess that does
 
-			const std::array<const V2, 4> rectPts{ {
-					static_cast<V2>(pos),		//tl
-					static_cast<V2>(pos + size),//br
-					{U(pos.x), U(pos.y + size.y)},	//bl
-					{U(pos.x + size.x), U(pos.y)}		//tr
+			int constexpr numPts = 4;
+			const std::array<const V2, numPts> rectPts{ {
+					static_cast<V2>(pos),			//tl
+					static_cast<V2>(pos + size),	//br
+					{static_cast<T>(pos.x), static_cast<T>(pos.y + size.y)},	//bl
+					{static_cast<T>(pos.x + size.x), static_cast<T>(pos.y)}	//tr
 				} };
 
 			for (int i = 0; i < poly.size(); i++) {
-				auto pa = poly[i];
-				auto pb = poly[(i + 1) % poly.size()];
+				Vec2_T<T> pa = poly[i] + offset;
+				Vec2_T<T> pb = poly[(i + 1) % poly.size()] + offset;
 
 				//if a polygons poitn is inside the rect
 				if (containsPoint(pa))
 					return true;
 
 				//check for intersection of verticies
-				for (int j = 0; j < rectPts.size(); j++) {
+				for (int j = 0; j < numPts; j++) {
 					auto ra = rectPts[j];
-					auto rb = rectPts[(j + 1) % rectPts.size()];
+					auto rb = rectPts[(j + 1) % numPts];
 
 					//interseciton of any rect verts to current poly vert.
 					const auto op = GetIntersectionScalers(pa, (pb - pa), ra, (rb - ra));
@@ -224,6 +231,16 @@ namespace gs {
 			}
 
 			return false;
+		}
+
+		/** returns rectangle of region marked by 2 unsorted points*/
+		static Rectangle_T<T> MakeRectangle(const Vec2_T<T>& a, const Vec2_T<T>& b) {
+			std::pair<T, T> x = std::minmax(a.x, b.x);
+			std::pair<T, T> y = std::minmax(a.y, b.y);
+			return Rectangle_T<T>{
+				{x.first, y.first},
+				{x.second - x.first, y.second - y.first}
+			};
 		}
 	};
 
@@ -359,6 +376,9 @@ namespace gs {
 		/** smallest rotation to span */
 		static float RotDiff(const float& from, const float& to);
 
+		/** distance to reach `to` form from, either direciton <+,-> (think unit circle) */
+		static std::pair<float, float> RotDist(const float& form, const float& to);
+
 		/** mods to valud rotation value */
 		static inline float RotScale(const float&);
 
@@ -370,7 +390,7 @@ namespace gs {
 		/** rotates according to current rotation */
 		void rotateBy(const float& relative_radians);
 
-		const float getRotation() const { return _rotation; }
+		const float& getRotation() const { return _rotation; }
 
 		/** sets rotation, flags rotation-mat as bad */
 		void setRotation(const float& newRotation_radians);
@@ -384,10 +404,10 @@ namespace gs {
 		template<typename T>
 		Vec2_T<T> applyTo(const Vec2_T<T>& point) const {
 			return {
-				  PT(mat, 0, 0) * point.x
-				+ PT(mat, 1, 0) * point.y,
-				  PT(mat, 0, 1) * point.x
-				+ PT(mat, 1, 1) * point.y
+				  static_cast<T>(PT(mat, 0, 0) * point.x)
+				+ static_cast<T>(PT(mat, 1, 0) * point.y),
+				  static_cast<T>(PT(mat, 0, 1) * point.x)
+				+ static_cast<T>(PT(mat, 1, 1) * point.y)
 			};
 		}
 	};
@@ -414,6 +434,7 @@ namespace gs {
 		}
 		
 		void applyAccele(float magnitude, float direction_rot);
+		void applyInlineVelocity(const float& magnitude);
 	};
 	static_assert(std::is_standard_layout<gs::Transform>::value);
 

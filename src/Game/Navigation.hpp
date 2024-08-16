@@ -9,7 +9,7 @@ namespace Navigation {
 	#define Nav_Base_OverrideFuncs  \
 		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
 		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override; \
-		void reset() override; \
+		void reset(Ship&) override; \
 		void nav_update(float, Ship&) override; \
 		TRAVEL_STATE::_enumerated getTravelState() const override;
 
@@ -49,8 +49,9 @@ namespace Navigation {
 	struct NavBase : Messageable {
 		/**
 		* resets what ever cache variables there are
+		*  to be relivent to the given ship
 		*/
-		virtual void reset();
+		virtual void reset(Ship&);
 
 		//some concerns on how to effeciently access the target ship, for now just 
 		//	brute force it by getting a shared_ptr from the weak_ptr each update
@@ -65,8 +66,12 @@ namespace Navigation {
 	struct ALIGN : NavBase {
 		Nav_Base_OverrideFuncs
 
+		//positive nums only plz
 		float targetRot;
 		float rate;
+
+	private:
+		float _targetDAccele;
 	};
 
 	struct ALIGN_TO : NavBase {

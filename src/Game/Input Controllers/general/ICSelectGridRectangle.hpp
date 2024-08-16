@@ -15,7 +15,6 @@ public:
 	bool IsSuccessful() const override;
 	void reset();
 
-private:
 	enum class STATE : int{
 		PICK_LOWERBOUNDS,
 		PICK_UPPERBOUNDS,

@@ -25,7 +25,7 @@ public:
 	};
 
 	void recalAABB();
-	gs::Rectangle getAABB();
+	const gs::Rectangle& getAABB();
 
 	bool isDetected() { return true; }
 

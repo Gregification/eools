@@ -179,7 +179,7 @@ namespace Events {
 			ON_SHIP_OPERABLE_SHIP_FOCOUS,
 			ON_WINDOW_FOCUS,
 			ON_WINDOW_UNFOCUS,
-			ON_GAMEOBJECT_SELECT		//expected GameObjPtr
+			ON_GAMEOBJECT_SELECT		//expected vecotr<GameObjPtr>
 		);
 		typedef BE_CLIENT_EVENT::_enumerated CLIENT_EVENT;
 

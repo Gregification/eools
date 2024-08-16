@@ -49,7 +49,7 @@ Class_Id GameObject::GetClassId() const {
 }
 
 bool GameObject::containsPoint(const Vec2_f& p) const {
-	return gs::IsPointInPoly(verticies, p - transform.position, transform.rotation);
+	return gs::IsPointInPoly(verticies, p, transform.rotation);
 }
 
 void GameObject::packMessage(Message& msg, MsgDiffType) {

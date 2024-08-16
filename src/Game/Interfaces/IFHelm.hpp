@@ -14,6 +14,8 @@ public:
 
 protected:
 	std::weak_ptr<Ship> _ship;
+	
+	ftxui::Component controls;
 
 	ftxui::Component getShipView() const;
 };

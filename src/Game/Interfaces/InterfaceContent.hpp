@@ -22,6 +22,9 @@ public:
 	/*called once if it was just formerly the focoused tab*/
 	virtual void OnUnfocus() {}
 
+
+
+
 	static const int _pitsize = 4;
 	typedef std::array<std::pair<
 			std::string,

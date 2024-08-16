@@ -69,6 +69,9 @@ void NavInfo::unpackMessage(Message& msg, MsgDiffType mdt) {
 	if (ts == TRAVEL_STATE::_enumerated::NONE) 
 		return;
 
+	//not bothering with a factory since this is limited and very specific
+	// also need some flexability in instantiating that a factory wont allow
+
 	//tests should have ensured every state has associated pattern
 	navPattern = stateToNavigator[ts]();
 
@@ -92,37 +95,49 @@ void ALIGN::packMessage(Message& msg, MsgDiffType) {
 void ALIGN::unpackMessage(Message& msg, MsgDiffType) {
 	msg >> targetRot;
 }
-void ALIGN::reset() {
-	targetRot = 0;
+void ALIGN::reset(Ship& s) {
+
 }
-void ALIGN::nav_update(float dt, Ship& s) {
-	float dr = RotationHandler::RotDiff(
-		targetRot,
-		s.transform.rotation.getRotation());
-	s.transform.rotation.rotateBy(dr * dt * s.driveTrain.rotAccele);
+void ALIGN::nav_update(float dt, Ship& ship) {
+	//	- unrelated : https://stackoverflow.com/questions/53990369/is-modulo-a-verb-if-so-how-is-it-conjugated
+	
+	const float& v = ship.transform.angularVelocity;
+	const float a = ship.driveTrain.u_rotAccele * rate;
+
+	const float d = RotationHandler::RotDiff(
+		ship.transform.rotation.getRotation(),
+		targetRot
+	);
+
+	const float tv = v + dt * std::min(a, std::max(-a, d * a - v));
+
+	if (std::abs(tv) < 0.00001)
+		ship.transform.angularVelocity = 0;
+	else
+		ship.transform.angularVelocity = tv;
 }
 
 void ALIGN_TO::packMessage(Message& msg, MsgDiffType) { }
 void ALIGN_TO::unpackMessage(Message& msg, MsgDiffType) { }
-void ALIGN_TO::reset() {}
+void ALIGN_TO::reset(Ship&) {}
 void ALIGN_TO::nav_update(float dt, Ship& s) {}
 
 void APPROACH::packMessage(Message& msg, MsgDiffType) { }
 void APPROACH::unpackMessage(Message& msg, MsgDiffType) { }
-void APPROACH::reset() {}
+void APPROACH::reset(Ship&) {}
 void APPROACH::nav_update(float dt, Ship& s) {}
 
 void MAINTAIN_DISTANCE::packMessage(Message& msg, MsgDiffType) { }
 void MAINTAIN_DISTANCE::unpackMessage(Message& msg, MsgDiffType) { }
-void MAINTAIN_DISTANCE::reset() {}
+void MAINTAIN_DISTANCE::reset(Ship&) {}
 void MAINTAIN_DISTANCE::nav_update(float dt, Ship& s) {}
 
 void ORBIT::packMessage(Message& msg, MsgDiffType) {  }
 void ORBIT::unpackMessage(Message& msg, MsgDiffType) { }
-void ORBIT::reset() {}
+void ORBIT::reset(Ship&) {}
 void ORBIT::nav_update(float dt, Ship& s) {}
 
-void Navigation::NavBase::reset()
+void Navigation::NavBase::reset(Ship&)
 {
 }
 

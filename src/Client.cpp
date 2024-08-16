@@ -1,13 +1,16 @@
 #include "Client.hpp"
 
 #include "Game/Interfaces/InterfaceContent.hpp"
+#include "Game/Input Controllers/general/ICSelectGridRectangle.hpp"
+#include "Game/InputControl.hpp"
 #include <ftxui/component/component.hpp>
 #include "Game/Interfaces/IFOptions.hpp"
 #include "GameObjects/Ship.hpp"
 
 Client::Client() : 
-	ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
-	raw_mouse_screen(0) {
+		ship(std::make_shared<Ship>(IDPartition::LOCAL_PARITION.getNext())),
+		raw_mouse_screen(0) 
+{
 	cam.trans.scaleX() = cam.trans.scaleY() = 1.0 / DIST_KM;
 	//init ui
 	{
@@ -264,7 +267,7 @@ void Client::run(ScreenInteractive& screen) {
 
 			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 			
-			if (InputControllers.size() != 0) {
+			if (InputControllers.size() > 0) {
 				int i = InputControllers.size() - 1;
 
 				InputControllers[i].ic->Update(dt);
@@ -483,54 +486,107 @@ void Client::OnMouse(Event e) {
 	cam.mouse_screen.x += 3;
 	cam.mouse_screen.y += 4;
 	
-	switch (e.mouse().motion) {
-	/*case Mouse::Pressed: {
-		switch (e.mouse().button) {
-			default: break;
-		}
-	} break;*/
+	static int mouseHeld = 0;
+	static Vec2_i initialPress_srceen;
 
-	case Mouse::Released: {
+	switch (e.mouse().motion) {
+	case Mouse::Pressed: {
+		if (mouseHeld++ == 1)
+			initialPress_srceen = cam.mouse_screen;
+
 		switch (e.mouse().button) {
 			case Mouse::Left: {
-				//ship->transform.position = cam.screenToGrid(cam.mouse_screen);
-				using namespace Events;
+				//open rectangular seleciton dialoug if needed
+				if (mouseHeld > 4 && InputControllers.size() == 0) {
+					static std::shared_ptr<ICSelectGridRectangle> icsg;
+					if (!icsg) {
+						icsg = std::make_shared<ICSelectGridRectangle>();
 
-				ClientEvent::observer.invokeEvent<GameObjPtr>(
-					ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
-					currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen))
-				);
+						icsg->onFinish = [&](InputControl_Base* _t, Client& c) {
 
-			}break;
-			case Mouse::Right: {
+							ICSelectGridRectangle* t = dynamic_cast<ICSelectGridRectangle*>(_t);
+							if (!t || !t->IsSuccessful())
+								return;
 
-				static std::weak_ptr<IFOptions> former;
+							std::unique_ptr<gs::Rectangle> region = t->GetResult();
 
-				if (former.expired()) {
-					const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5 };
+							if (region)
+								Events::ClientEvent::observer.invokeEvent<std::vector<GameObjPtr>>(
+									Events::ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+									currentGrid->ObjectsWithin(*region)
+								);
+							};
+					}
+					else
+						icsg->reset();
 
-					GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
+					icsg->state = ICSelectGridRectangle::STATE::PICK_UPPERBOUNDS;
+					icsg->rect.pos = cam.screenToGrid(initialPress_srceen);
 
-					std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, go, *this);
-					former = ops;
-
-					interfaceWindows.push_back(ops);
-
-
-					windowContainer->Add(Window({
-							.inner = ops,
-							.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
-							.left = e.mouse().x - 2,
-							.top = e.mouse().y - 1,
-							.width = 30,
-							.height = 10,
-						}));
+					addInputController(
+						true,
+						true,
+						icsg
+					);
 				}
-
 			}break;
-
 			default: break;
 		}
+	} break;
+
+	case Mouse::Released: {
+		if (mouseHeld < 0) {
+			mouseHeld = 0;
+			break;
+		}
+
+		switch (e.mouse().button) {
+		case Mouse::Left: {
+			using namespace Events;
+
+			ClientEvent::observer.invokeEvent<std::vector<GameObjPtr>>(
+				ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
+				{ currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen)) }
+			);
+
+			}break;
+
+		case Mouse::Right: {
+			//ship->transform.position = cam.screenToGrid(cam.mouse_screen);
+			//break;
+
+			static std::weak_ptr<IFOptions> former;
+
+			if (former.expired()) {
+				const Vec2_i pos{ e.mouse().x - 5, e.mouse().y - 5 };
+
+				GameObjPtr go = currentGrid->ObjectAt(cam.screenToGrid(cam.mouse_screen));
+
+				std::shared_ptr<IFOptions> ops = ftxui::Make<IFOptions>(pos, go, *this);
+				former = ops;
+
+				interfaceWindows.push_back(ops);
+
+
+				static int preffW = 30;
+				static int preffH = 10;
+
+				windowContainer->Add(Window({
+						.inner = ops,
+						.title = go ? go->getDisplayName() : (std::string)cam.screenToGrid(cam.mouse_screen),
+						.left = e.mouse().x - 2,
+						.top = e.mouse().y - 1,
+						.width = &preffW,
+						.height = &preffH,
+					}));
+			}
+
+		}break;
+
+		default: break;
+		}
+
+		mouseHeld = 0;
 	} break;
 
 	default: break;
@@ -716,11 +772,11 @@ void Client::initEvents() {
 			);
 		}));
 
-	auto on_go_select = addListener(MakeListener<GameObjPtr>(
-		[&] (auto g){
-			if (!g) return;
+	auto on_go_select = addListener(MakeListener<std::vector<GameObjPtr>>(
+		[&] (std::vector<GameObjPtr> g){
+			if (g.empty() || !g[0]) return;
 
-			if (auto dp = dynamic_pointer_cast<Ship>(g)) {
+			if (auto dp = dynamic_pointer_cast<Ship>(g[0])) {
 				selectedShip = dp;
 			}
 		}));
@@ -756,7 +812,7 @@ void Client::initEvents() {
 		ClientEvent::CLIENT_EVENT::ON_WINDOW_UNFOCUS, 
 		on_window_unfocous
 	);
-	ClientEvent::observer.AddListenerToEvent(
+	ClientEvent::observer.AddListenerToEvent<std::vector<GameObjPtr>>(
 		ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
 		on_go_select
 	);

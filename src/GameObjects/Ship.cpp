@@ -16,6 +16,8 @@ void Ship::Draw(Canvas& c, Transformation_2D t) {
 }
 
 void Ship::Update(float dt){
+	driveTrain.update(dt, *this);
+
 	if (navinfo.navPattern)
 		navinfo.navPattern->nav_update(dt, *this);
 }

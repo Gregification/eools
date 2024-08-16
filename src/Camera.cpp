@@ -55,6 +55,26 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 		c.DrawText(25, y += 10, "id: " + std::to_string(v.id) + "?" + (v.go ? ("exists@(" + std::to_string(v.go->transform.position.x) + "," + std::to_string(v.go->transform.position.y) + ")") : "dne"));
 		if (!v.go) continue;
 
+		/*{//draw the AABB
+			auto aabb = v.go->getAABB();
+			aabb.size = gridToScreen(aabb.pos + aabb.size + v.go->transform.position);
+			aabb.pos = gridToScreen(aabb.pos + v.go->transform.position);
+			aabb.size -= aabb.pos;
+			Vec2 tl = aabb.pos;
+			Vec2 tr = aabb.pos; tr.x += aabb.size.x;
+			Vec2 bl = aabb.pos; bl.y += aabb.size.y;
+			Vec2 br = aabb.pos + aabb.size;
+			//-
+			c.DrawPointLine(tl.x, tl.y, tr.x, tr.y, Color::Green);
+			// |
+			c.DrawPointLine(tr.x, tr.y, br.x, br.y, Color::Green);
+			//_
+			c.DrawPointLine(bl.x, bl.y, br.x, br.y, Color::Green);
+			//| 
+			c.DrawPointLine(bl.x, bl.y, tl.x, tl.y, Color::Green);
+			//loss
+		}*/
+
 		v.go->Draw(c, trans);		
 	}
 	auto gp = trans.applyTo(Vec2_f(0));

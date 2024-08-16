@@ -18,6 +18,8 @@ std::unique_ptr<gs::Rectangle> ICSelectGridRectangle::GetResult() {
 }
 
 void ICSelectGridRectangle::Draw(Camera& cam, Canvas& can ) const {
+	//it owuld be better to store these as screen coordinates and 
+	//	instaed convert to grid for `GetResult`
 	auto p = cam.gridToScreen(rect.pos);
 	auto e = cam.gridToScreen(rect.pos + rect.size);
 	

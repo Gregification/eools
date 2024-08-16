@@ -73,6 +73,10 @@ void Transform::applyAccele(float mag, float rot) {
 	acceleration += Vec2_f::Rot({ mag }, { 0 }, rot);
 }
 
+void Transform::applyInlineVelocity(const float& mag) {
+	velocity += rotation.getUTD().applyTo(Vec2_f{0, mag});
+}
+
 void RotationHandler::SetRotationMatTo(const float& radians, Mat2x2& mat){
 	float
 		sin = std::sinf(radians),
@@ -85,13 +89,17 @@ void RotationHandler::SetRotationMatTo(const float& radians, Mat2x2& mat){
 }
 
 float RotationHandler::RotDiff(const float& a, const float& b) {
-	float tr = RotScale(a - b);
+	const float tr = RotScale(b - a);
 	return tr > M_PI ? M_PI - tr : tr;
+}
+
+std::pair<float, float> RotationHandler::RotDist(const float& a, const float& b) {
+	return { RotScale(b - a), RotScale(a - b) };
 }
 
 inline float RotationHandler::RotScale(const float& rot) {
 	//_rotation = rot % (2 * Pi)
-	static constexpr float topi = M_PI * 2.0f;
+	constexpr float topi = M_PI * 2.0f;
 	return std::fmodf(rot, topi);
 }
 

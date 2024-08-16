@@ -36,12 +36,16 @@ void Grid::RemoveAllObjects() {
 //		also link it to the renderer somehow
 GameObjPtr Grid::ObjectAt(const Vec2& gridPos) const {
 
-	for(const auto& v : _go_vec)
-		if(v.go 
-			&& v.go->getAABB().containsPoint(gridPos)
-			&& v.go->containsPoint(static_cast<Vec2_f>(gridPos - v.go->transform.position))
+	for (const auto& v : _go_vec) {
+		if (v.go) {
+			const Vec2 ap = gridPos - v.go->transform.position;
+
+			if(v.go->getAABB().containsPoint(ap)
+				&& v.go->containsPoint(ap)
 			)
-			return GameObjPtr(v.go);
+				return GameObjPtr(v.go);
+		}
+	}
 
 	return GameObjPtr();
 }
@@ -49,13 +53,15 @@ GameObjPtr Grid::ObjectAt(const Vec2& gridPos) const {
 std::vector<GameObjPtr> Grid::ObjectsWithin(const gs::Rectangle& gridArea) const {
 	std::vector<GameObjPtr> ret{};
 
-	for (const auto& v : _go_vec)
-		if (v.go
-			&& gridArea.overlaps(v.go->getAABB())
-			&& gridArea.overlaps(v.go->verticies)
+	for (const auto& v : _go_vec) {
+		if (!v.go) continue;
+
+		//verticie check isnt working, this alwayse evaluates true if aabb is true
+		if(gridArea.overlaps(v.go->getAABB(), v.go->transform.position)
+			&& gridArea.overlaps(v.go->verticies, v.go->transform.position)
 			)
 			ret.push_back(v.go);
-
+	}
 	return ret;
 }
 

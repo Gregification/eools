@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ICWrapperInclude.hpp"
+#include "../general/ICScreenLine.hpp"
 
 //must inherit 'Navigation::Base' for IC compatiability reasons
 
@@ -17,17 +18,6 @@ public:
 	void Update(const float& dt) override;
 
 	void updateDescription();
-
-	Vec2_f _from, _to;
-	float _rate;
-
-	std::string rate_as_precent = "rate%";
-
 private:
-	enum class STATE {
-		UNSTARTED,
-		POINTING,
-		FINISHED
-	};
-	STATE state;
+	ICScreenLine icsl;
 };

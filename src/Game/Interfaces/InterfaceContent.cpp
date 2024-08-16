@@ -46,9 +46,12 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 
 		ClientEvent::observer.AddListenerToEvent(
 			ClientEvent::CLIENT_EVENT::ON_GAMEOBJECT_SELECT,
-			fi->addListener(Events::MakeListener<GameObjPtr>(
-				[p = fi] (auto g){
-					p->setInspectedObject(g);
+			fi->addListener(Events::MakeListener<std::vector<GameObjPtr>>(
+				[p = fi](auto g) {
+					if (g.empty())
+						p->setInspectedObject(std::weak_ptr<GameObject>{});
+					else
+						p->setInspectedObject(g[0]);
 				}))
 		);
 
