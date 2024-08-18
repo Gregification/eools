@@ -7,24 +7,42 @@ IFHelm::IFHelm() {
 		auto s = _ship.lock();
 
 		if (!s)
-			return vbox({text("!!! ship disappeared?")});
+			//theres probably somthign really screwed up if this ever happens
+			return vbox({text("nothing selected")});
 
-		return ftxui::vbox({
-			text("pos:" + (std::string)s->transform.position),
-			text("vls:" + (std::string)s->transform.velocity),
-			text("agl vel:" + std::to_string(s->transform.angularVelocity)),
-		});
+		static FlexboxConfig config{
+			.direction = FlexboxConfig::Direction::Row,
+			.wrap = FlexboxConfig::Wrap::NoWrap,
+			.justify_content = FlexboxConfig::JustifyContent::SpaceBetween,
+			.align_items = FlexboxConfig::AlignItems::FlexStart
+		};
+
+		return  ftxui::flexbox({
+			//alignment by hand plz
+			ftxui::vbox({
+				text("pos    : " + (std::string)s->transform.position),
+				text("vls    : " + (std::string)s->transform.velocity),
+				text("rot    : " + std::to_string(s->transform.rotation.getRotation())),
+				text("rot vls: " + std::to_string(s->transform.angularVelocity)),
+				text("pow bnk mx: " + getPrettyString(s->powerBank.getCapacity())),
+			}),ftxui::vbox({
+				text("drive    : "	+ std::to_string(s->driveTrain.accele_throttle * s->driveTrain.u_accele)),
+				text("gen out  : "	+ std::to_string(s->powerSource.getMaxGenerate())),
+				text("gen cnsmp: "	+ std::to_string(s->powerSource.getMaxConsumption())),
+				text("pow bnk  : "  + getPrettyString(s->powerBank.getValue())),
+			})
+		}, config) | flex;
 	});
 
 	controls = Container::Vertical({});
 
 	Add(
-		Container::Horizontal({
-			Container::Vertical({
+		Container::Vertical({
+			Container::Horizontal({
 				rdTransform,
-				getShipView(),
+				//getShipView(),
 			}),
-			controls
+			controls | xflex_grow
 		})
 	);
 }
@@ -45,7 +63,7 @@ std::weak_ptr<Ship> IFHelm::getShip() const {
 
 ftxui::Component IFHelm::getShipView() const {
 	return  Renderer([&] {
-		const static Vec2_i r(35), off(1);
+		const static Vec2_i r(15), off(1);
 		const static Vec2_i centered = r / 2;
 		const static Vec2_i direciotnIndicator{centered.x, 0};
 
@@ -90,13 +108,19 @@ ftxui::Component IFHelm::getShipView() const {
 
 Component IFHelm::GenControls(Ship& s)
 {
-	auto drive_throttle = ftxui::Slider("meow",
+	auto drive_r = ftxui::Slider("drive% ",
 		&s.driveTrain.accele_throttle,
 		0.0f,
-		100.0f,
-		2.5f);
+		1.0f,
+		0.05f);
+	auto gen_r = ftxui::Slider(  "gen%   ",
+		&s.powerSource.throttle_n,
+		0.0f,
+		1.0f,
+		0.05f);
 
-	return {
-		drive_throttle,
-	};
+	return Container::Vertical({
+		drive_r,
+		gen_r,
+	});
 }

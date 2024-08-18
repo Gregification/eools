@@ -24,8 +24,8 @@ void Camera::Draw(Canvas& c, std::shared_ptr<Grid> g) {
 	//track
 	if (auto p = tracking.lock()) {
 		const Vec2 sp = formerSize * .5 - gridToScreen(p->transform.position);
-		offX() += sp.x * .5;
-		offY() += sp.y * .5;
+		offX() += sp.x;
+		offY() += sp.y;
 	}
 
 	//debug

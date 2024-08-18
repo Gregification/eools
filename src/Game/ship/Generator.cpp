@@ -19,10 +19,16 @@ Generator::Generator()
 {
 	gen_g = std::make_unique<LinearCurve>();
 	con_g = std::make_unique<LinearCurve>();
+
+	setThrottlePrecentage(throttle_n);
 }
 
 void Generator::update(const float& dt, PowerBank& pb)
 {
+	if (throttle_n != throttle_n_c) {
+		setThrottlePrecentage(throttle_n);
+	}
+
 	if (!pb.isFull()) {
 		auto gen = c_gen_n * maxGenerate * dt;
 		auto con = c_con_n * maxConsumption * dt;
@@ -55,6 +61,7 @@ const float& Generator::getThrottlePrecentage() const
 void Generator::setThrottlePrecentage(float n)
 {
 	throttle_n = std::min(1.0f, std::max(0.0f, n));
+	throttle_n_c = throttle_n;
 	addPackageTarget(DIFF::throttle_n);
 
 	c_gen_n = gen_g->evaluate(throttle_n);

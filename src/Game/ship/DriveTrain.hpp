@@ -12,9 +12,9 @@ struct DriveTrain {
 	//d : direcitonal (TODO: ill figure out the details later)
 
 	float u_rotAccele = M_PI / 10;
-	Unit u_accele = 0;// 0.001 * DIST_KM;
+	Unit u_accele = 0.001 * DIST_KM;
 
-	float accele_throttle = .5f;
+	float accele_throttle = 0.0;
 
 	void update(const float& dt, Ship&);
 };

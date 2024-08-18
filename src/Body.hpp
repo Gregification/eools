@@ -12,7 +12,7 @@ public:
 	virtual ~Body() = default;
 
 public:
-	long long lastUpdate;
+	time_t lastUpdate;
 	Unit mass = .01 * MASS_KT;
 
 	gs::Transform transform;

@@ -12,7 +12,7 @@ void Ship::Draw(Canvas& c, const Transformation_2D& t) {
 	GameObject::Draw(c, t);
 
 	auto pos = t.applyTo(transform.position);
-	c.DrawText(pos.x - 4, pos.y, getPrettyString((float)id()) + "rot:" + getPrettyString(transform.rotation.getRotation()));
+	c.DrawText(pos.x - 4, pos.y, getPrettyString(id()));
 }
 
 void Ship::Update(const float& dt){
@@ -30,7 +30,8 @@ void Ship::FixedUpdate(const float& dt)
 	static const SyncTarget syncTarg{
 		.class_id = IdGen<GameObject>::gof.class_id,
 		.diff = DEFAULT_MsgDiff_EVERYTHING };
-	addSynchronizationTarget(syncTarg);
+	if(transform.velocity != 0 || transform.angularVelocity != 0)
+		addSynchronizationTarget(syncTarg);
 }
 
 const std::vector<Vec2_f> Ship::getBody() const

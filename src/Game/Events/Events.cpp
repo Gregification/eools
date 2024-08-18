@@ -42,11 +42,7 @@ KeyBinds::Key2ControlEvents KeyBinds::KeyMap = {
 	{ftxui::Event::Character('n'),		{KeyBinds::CONTROL_EVENT::DISPLAY_NEW_WINDOW}  },
 	{ftxui::Event::Character('m'),		{KeyBinds::CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY}  },
 	{ftxui::Event::Special("\x1B[3~"),	{KeyBinds::CONTROL_EVENT::DISPLAY_REMOVE_WINDOW}},
-	{ftxui::Event::Character('s'),		{KeyBinds::CONTROL_EVENT::ENGR_INCREASE_PSU}  },
-	{ftxui::Event::Character('x'),		{KeyBinds::CONTROL_EVENT::ENGR_DECREASE_PSU}  },
-	{ftxui::Event::Character('q'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_ALIGN_TO}  },
-	{ftxui::Event::Character('a'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE}  },
-	{ftxui::Event::Character('z'),		{KeyBinds::CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE}  },
+	{ftxui::Event::Character('x'),		{KeyBinds::CONTROL_EVENT::SELECT_SELF_SHIP}  },
 };
 
 /*****************************************************************************************************************
@@ -59,11 +55,7 @@ Observer<KeyBinds::CONTROL_EVENT> KeyBinds::observer = {{
 	{CONTROL_EVENT::DISPLAY_NEW_WINDOW, {"open new window", "shows windows avalible to open"}},
 	{CONTROL_EVENT::DISPLAY_TOGGLE_MOVEMENT_OVERLAY, {"toggle movement overlay", "shows directional vectors of the specified object"}},
 	{CONTROL_EVENT::DISPLAY_REMOVE_WINDOW, {"remove selected window", "removes the latest selected window"}},
-	{CONTROL_EVENT::ENGR_INCREASE_PSU, {"increase psu output",""}},
-	{CONTROL_EVENT::ENGR_DECREASE_PSU, {"decrease psu output",""}},
-	{CONTROL_EVENT::MOVEMENT_ALIGN_TO, {"align to","points ship towards specified position"}},
-	{CONTROL_EVENT::MOVEMENT_INCREASE_DRIVE, {"increase drive output",""}},
-	{CONTROL_EVENT::MOVEMENT_DECREASE_DRIVE, {"decrease drive output",""}},
+	{CONTROL_EVENT::SELECT_SELF_SHIP, {"select players ship", "selects the orgional ship"}},
 }};
 
 //this is somewhat pointless since the client wont care and this is for ui

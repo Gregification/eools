@@ -1,4 +1,9 @@
+#pragma once
+
 #include "InterfaceContent.hpp"
+
+class IFHelm;
+
 #include "../../GameObjects/Ship.hpp"
 
 /*

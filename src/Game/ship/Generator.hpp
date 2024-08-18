@@ -1,11 +1,14 @@
 #pragma once
 
+namespace Power {
+	class Generator;
+}
+
 #include "../NormalCurve.hpp"
 #include "Loads.hpp"
 
 #include "PowerBank.hpp"
 #include "../../NetMessageType.hpp"
-
 //planned this to be more intricate but didnt work out.
 //	what remains is eh
 
@@ -16,7 +19,11 @@ namespace Power {
 	* TODO: actually consume stuff. is waiting on item system
 	*/
 	class Generator : public Packable {
+		friend class IFHelm;
+
+		//live
 		float throttle_n = 0;
+		float throttle_n_c;
 
 		std::unique_ptr<NormalCurve> gen_g;
 		std::unique_ptr<NormalCurve> con_g;

@@ -58,7 +58,7 @@ std::vector<GameObjPtr> Grid::ObjectsWithin(const gs::Rectangle& gridArea) const
 
 		//verticie check isnt working, this alwayse evaluates true if aabb is true
 		if(gridArea.overlaps(v.go->getAABB(), v.go->transform.position)
-			&& gridArea.overlaps(v.go->verticies, v.go->transform.position)
+			//&& gridArea.overlaps(v.go->verticies, v.go->transform.position)
 			)
 			ret.push_back(v.go);
 	}
