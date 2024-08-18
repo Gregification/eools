@@ -1,5 +1,7 @@
 #include "IFHelm.hpp"
 
+#include <ftxui/component/component.hpp>
+
 IFHelm::IFHelm() {
 	auto rdTransform = Renderer([&]() {
 		auto s = _ship.lock();
@@ -32,18 +34,8 @@ void IFHelm::setShip(std::shared_ptr<Ship> s) {
 
 	controls->DetachAllChildren();
 	if(s)
-	{//repopulate controls
-		{//drive throttle
-			auto slider = ftxui::Slider<float>({
-					.value = &s->driveTrain.accele_throttle,
-					.min = 0.0f,
-					.max = 1.0f,
-					.increment = 0.05f
-				});
-			//slider->On
-
-			controls->Add(slider);
-		}
+	{
+		controls->Add(GenControls(*s));
 	}
 }
 
@@ -94,4 +86,17 @@ ftxui::Component IFHelm::getShipView() const {
 
 		return canvas(std::move(c));
 		});
+}
+
+Component IFHelm::GenControls(Ship& s)
+{
+	auto drive_throttle = ftxui::Slider("meow",
+		&s.driveTrain.accele_throttle,
+		0.0f,
+		100.0f,
+		2.5f);
+
+	return {
+		drive_throttle,
+	};
 }

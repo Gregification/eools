@@ -18,4 +18,7 @@ protected:
 	ftxui::Component controls;
 
 	ftxui::Component getShipView() const;
+
+private:
+	Component GenControls(Ship& s);
 };

@@ -1,6 +1,8 @@
 #include "IFInspector.hpp"
 
 IFInspector::IFInspector() {
+	//a cluttered mess but at least it has a clear meaning 
+
 	Component btn_track = _MakeResolveableBtn(
 		"trk",
 		[this](Client& c) -> bool {

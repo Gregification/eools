@@ -14,7 +14,7 @@ struct DriveTrain {
 	float u_rotAccele = M_PI / 10;
 	Unit u_accele = 0;// 0.001 * DIST_KM;
 
-	float accele_throttle = 0.5f;
+	float accele_throttle = .5f;
 
 	void update(const float& dt, Ship&);
 };
