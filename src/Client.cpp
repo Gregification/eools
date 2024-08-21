@@ -311,6 +311,11 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 	}
 
 	switch (msg.header.id) {
+		case NetMsgType::OtherMsg: {
+			OtherMsg other;
+			msg >> other;
+			_onMessageOtherMsg(other, msg, *this);
+		} break;
 		case NetMsgType::Ping: {
 				auto ping = Ping();
 				msg >> ping;
@@ -354,6 +359,20 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				auto res = SceneManager::processMessage(msg, gop);
 				if (res) Send(res.value());
 			}break;
+	}
+}
+
+void Client::_onMessageOtherMsg(OtherMsg other, Message& msg, Client& c) {
+	using namespace OTHERMSG;
+	switch (other.type) {
+	case OtherMsg::TYPE::CHAT_MSG: {
+		ChatMsg cm;
+		cm.unpackMessage(msg);
+		Events::ClientEvent::observer.invokeEvent(
+		Events::ClientEvent::CLIENT_EVENT::EVENT_MESSAGE,
+			std::move(cm.str)
+		);
+	}break;
 	}
 }
 

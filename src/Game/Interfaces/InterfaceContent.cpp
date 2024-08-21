@@ -1,6 +1,7 @@
 #include "InterfaceContent.hpp"
 #include "../Events/Events.hpp"
 #include "InterfaceInclude.hpp"
+#include "IFMessager.hpp"
 
 using namespace Events;
 
@@ -22,6 +23,9 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 
 		return mv;
 	}},
+	{"Messager",[](Client&) {
+		return ftxui::Make<IFMessager>();
+	}},
 	{"Helm",[](Client& c) {
 		auto mv = ftxui::Make<IFHelm>();
 
@@ -38,10 +42,10 @@ const InterfaceContent::PublicInterfacesType InterfaceContent::publicInterfaces 
 
 		return mv;
 	}},
-	{"Controlls",[](Client& c) {
+	{"Controlls",[](Client&) {
 		return ftxui::Make<IFControlls>();
 	}},
-	{"Inspector",[](Client& c) {
+	{"Inspector",[](Client&) {
 		auto fi = ftxui::Make<IFInspector>();
 
 		ClientEvent::observer.AddListenerToEvent(

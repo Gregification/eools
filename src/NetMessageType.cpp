@@ -52,3 +52,43 @@ void Packable::unpackTargets(Message& msg)
 		unpackMessage(msg, type);
 	}
 }
+
+bool ID::IsGrid() const
+{
+	return grid_id == inst_id;
+}
+
+Instance_Id IDPartition::getNext()
+{
+	return nxt++;
+}
+
+bool IDPartition::withinRange(Instance_Id num) const
+{
+	return num >= min && num <= max;
+}
+
+bool IDPartition::IsBad() const
+{
+	return nxt < min || nxt > max;
+}
+
+void OTHERMSG::ChatMsg::packMessage(Message& m, MsgDiffType)
+{
+	size_t len = std::min(str.length(), MAX_LEN);
+
+	for (int i = len - 1; i > 0; i--)
+		m << str[i];
+	m << len;
+}
+
+void OTHERMSG::ChatMsg::unpackMessage(Message& m, MsgDiffType)
+{
+	size_t len;
+	m >> len;
+
+	str.resize(len);
+
+	for (int i = 0; i < len; i++)
+		m >> str[i]; //lots of potential for screw up
+}

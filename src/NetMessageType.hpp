@@ -19,14 +19,15 @@ BETTER_ENUM(BE_NetMsgType, uint8_t,
 	*/
 	Ping,
 	
-	/*1.
+	//1.
+	/*
 	* this dosent do anything, too much work to remove ir
 	* server: 
 	* is it someone in the queue ? or ready to start ?
 	*/
 	ConnectionStatus, 
-
-	/*2.
+	//2.
+	/*
 	* request a GameObject id partition
 	* client: a new valid partition
 	* server: (not currently implimented) responds indicating a unused idpartition the server is free to reuse
@@ -39,18 +40,24 @@ BETTER_ENUM(BE_NetMsgType, uint8_t,
 	*/
 	IDCorrection,
 
-	//4. request resource by id. grid and object id supprted
+	//4.
+	//request resource by id. grid and object id supprted
 	RequestById,
 
 	//user tries to make a new grid at a location. if location is 
 	// not allowed server corrects grid id to effectively rerout the user
 	GridRequest,
 
-	//6. game object update event. 
+	//6.
+	//game object update event. 
 	GameObjectUpdate,
 
 	//game object creation event (has full description)
-	GameObjectPost
+	GameObjectPost,
+	
+	//8.
+	//non gameobject related things like messaging or scoreboard
+	OtherMsg
 );
 typedef BE_NetMsgType::_enumerated NetMsgType;
 
@@ -232,9 +239,7 @@ struct ID {
 	Instance_Id grid_id;
 	Instance_Id inst_id;
 
-	bool IsGrid() {
-		return grid_id == inst_id;
-	}
+	bool IsGrid() const;
 };
 static_assert(std::is_standard_layout<ID>::value);
 
@@ -246,25 +251,15 @@ struct IDPartition {
 
 	static IDPartition LOCAL_PARITION;
 
-	Instance_Id getNext() {
-		return nxt++;
-	}
-
-	bool withinRange(Instance_Id num) {
-		return num >= min && num <= max;
-	}
-
-	bool IsBad() {
-		return nxt < min || nxt > max;
-	}
+	Instance_Id getNext();
+	bool withinRange(Instance_Id) const;
+	bool IsBad() const;
 };
 static_assert(std::is_standard_layout<IDPartition>::value);
 
 struct ConnectionStatus {
-	Instance_Id clientId;
-	bool isQueue;
-	ConnectionStatus() : isQueue(false) {}
-
+	Instance_Id clientId = BAD_ID;
+	bool isQueue = false;
 };
 static_assert(std::is_standard_layout<ConnectionStatus>::value);
 
@@ -298,9 +293,34 @@ struct GridRequest {
 };
 static_assert(std::is_standard_layout<GridRequest>::value);
 
+struct OtherMsg {
+	enum class TYPE {
+		CHAT_MSG,
+	};
+	TYPE type;
+};
+static_assert(std::is_standard_layout<OtherMsg>::value);
+
+//////////////////////////////////////////////////////////////////////////////
+//	standarized OtherMsg messages
+// * see OtherMsg
+//////////////////////////////////////////////////////////////////////////////
+
+namespace OTHERMSG {
+	struct ChatMsg : public Messageable {
+		static const size_t MAX_LEN = 255;
+
+		std::string str;
+
+		// Inherited via Messageable
+		void packMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
+		void unpackMessage(Message&, MsgDiffType = DEFAULT_MsgDiff_EVERYTHING) override;
+	};
+};
+
 //////////////////////////////////////////////////////////////////////////////
 //	standarized gameobject messages
-// * see Gameobject & GameObjectFactory.
+// * see Gameobject & GameObjectFactory/Factory.
 //////////////////////////////////////////////////////////////////////////////
 
 struct GameObjectUpdate {

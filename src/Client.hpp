@@ -52,7 +52,7 @@ protected:
 	Vec2_i raw_mouse_screen;
 
 	void OnMessage(net::message<NetMsgType> msg) override;
-
+	void _onMessageOtherMsg(OtherMsg, Message&, Client&);
 private:
 	bool isWindowSelected = false;
 	bool showNewWindowModal = false;
@@ -102,7 +102,7 @@ private:
 	Component Renderer_inventory();	
 
 	void Draw(Canvas& c);
-	
+
 public:
 	std::vector<std::weak_ptr<GameObject>> selectedObjects;
 

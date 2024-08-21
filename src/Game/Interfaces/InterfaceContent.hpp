@@ -24,7 +24,7 @@ public:
 
 
 
-	static const int _pitsize = 4;
+	static const int _pitsize = 5;
 	typedef std::array<std::pair<
 			std::string,
 			std::function<std::shared_ptr<InterfaceContent>(Client&)>
