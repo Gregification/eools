@@ -359,6 +359,10 @@ void Client::OnMessage(net::message<NetMsgType> msg) {
 				auto res = SceneManager::processMessage(msg, gop);
 				if (res) Send(res.value());
 			}break;
+		default:
+			//BUILD WITHOUT ASSERT
+			assert(false);
+			break;
 	}
 }
 

@@ -136,7 +136,7 @@ void Server::run(ScreenInteractive& screen) {
 
 			//automatic pings
 			static auto lastPingTime = high_resolution_clock::now();
-			if (duration_cast<milliseconds>(start - lastPingTime).count() > pingTarget) {
+			if (false && duration_cast<milliseconds>(start - lastPingTime).count() > pingTarget) {
 				lastPingTime = start;
 
 				auto ping = Ping();
