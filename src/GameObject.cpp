@@ -3,7 +3,7 @@
 #include "GameObjectFactory.hpp"
 
 void GameObject::Update(const float& dt) {
-
+	transform.Update(dt);
 }
 
 //adds target if it didnt exist, overwrites if the ttl is shorter
@@ -20,7 +20,7 @@ void GameObject::clearSynchronizationTargets() {
 }
 
 void GameObject::FixedUpdate(const float& dt) {
-	transform.Update(dt);
+	
 }
 
 void GameObject::Draw(Canvas& c, const Transformation_2D& t) {

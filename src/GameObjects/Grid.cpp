@@ -65,7 +65,7 @@ std::vector<GameObjPtr> Grid::ObjectsWithin(const gs::Rectangle& gridArea) const
 	return ret;
 }
 
-const std::vector<Grid::GOObj> Grid::getObjVec() const {
+const std::vector<Grid::GOObj>& Grid::getObjVec() const {
 	return _go_vec;
 }
 

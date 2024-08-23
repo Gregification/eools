@@ -230,6 +230,7 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 		//the ones that should alwayse be visible
 		case NetMsgType::ConnectionStatus:
 		case NetMsgType::IDPartition:
+		case NetMsgType::OtherMsg:
 			messageViewer->Post_Message(
 				std::format("[received] {} - {}", 
 					client->connectionID,
@@ -245,6 +246,9 @@ void Server::OnMessage(std::shared_ptr<net::connection<NetMsgType>> client, net:
 	}
 
 	switch (msg.header.id) {
+		case NetMsgType::OtherMsg: {
+			MessageAllClients(msg, client);
+		}break;
 		case NetMsgType::Ping : {
 				Ping ping = Ping();
 				msg >> ping;

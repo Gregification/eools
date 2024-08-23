@@ -44,10 +44,10 @@ std::optional<GameObjPtr> SceneManager::find(ID id) {
 void SceneManager::processGrid(Grid* g, time_t tt_fixed, std::function<void(const Message&)> send, std::function<bool(GameObject*)> canSend){
 	time_t rn = GetTime();
 
-	auto goVec = g->getObjVec();
+	auto& goVec = g->getObjVec();
 
 	for (int i = 0; i < goVec.size(); i++) {
-		if (!(i % 5)) rn = GetTime();
+		if ((i % 5) == 0) rn = GetTime();
 
 		if (goVec[i].go) {
 			GameObject* gp = goVec[i].go.get();

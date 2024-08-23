@@ -43,7 +43,7 @@ class Grid : public NetGameObject<Grid> {
 
 		std::vector<GameObjPtr> ObjectsWithin(const gs::Rectangle& gridArea) const;
 
-		const std::vector<GOObj> getObjVec() const;
+		const std::vector<GOObj>& getObjVec() const;
 
 	private:
 		using GameObject::Update;

@@ -308,6 +308,7 @@ static_assert(std::is_standard_layout<OtherMsg>::value);
 
 namespace OTHERMSG {
 	struct ChatMsg : public Messageable {
+		//zero indexed
 		static const size_t MAX_LEN = 255;
 
 		std::string str;

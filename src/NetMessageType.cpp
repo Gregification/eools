@@ -75,7 +75,7 @@ bool IDPartition::IsBad() const
 
 void OTHERMSG::ChatMsg::packMessage(Message& m, MsgDiffType)
 {
-	size_t len = std::min(str.length()-2, MAX_LEN);
+	uint16_t len = std::min(str.length()-2, MAX_LEN);
 
 	for (int i = len; i >= 0; i--)
 		m << str[i];
@@ -84,12 +84,12 @@ void OTHERMSG::ChatMsg::packMessage(Message& m, MsgDiffType)
 
 void OTHERMSG::ChatMsg::unpackMessage(Message& m, MsgDiffType)
 {
-	size_t len;
+	uint16_t len;
 	m >> len;
 
 	str.resize(len+1);
 
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i <= len; i++)
 		m >> str[i]; //lots of potential for screw up
-	str[len] = '\n';
+	str[len + 1] = '\n';
 }

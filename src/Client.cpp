@@ -235,17 +235,18 @@ void Client::run(ScreenInteractive& screen) {
 
 		time_point start = steady_clock::now();
 
-		const time_t target = 1000 / 25;
+		constexpr time_t target_fixedUpdate = 1000 / 2;
+		constexpr time_t target_frame = 1000 / 40;
 		time_t dt;
 
-		float numPkt, avgElapse = target;
-		const float weight = 1.0f/10;
+		float avgElapse = target_frame;
+		const float weight = 0.1f;
 
 		while(!loop.HasQuitted()) {
 			start = steady_clock::now();
 
 
-			numPkt = Update();
+			Update();
 
 			for (int i = 0; i < unresolvedResponders.size();) {
 				if (unresolvedResponders[i](*this)) {
@@ -259,13 +260,12 @@ void Client::run(ScreenInteractive& screen) {
 			if (currentGrid) {
 				SceneManager::processGrid(
 					currentGrid.get(),
-					target,
+					target_fixedUpdate,
 					[&](const Message& m) { Send(m); },
 					[ship = ship.get()](GameObject* g) { return g == ship; }
 				);
 			}
 
-			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 			
 			if(!InputControllers.empty()) {
 				const auto& ic = InputControllers[InputControllers.size() - 1].ic;
@@ -281,14 +281,15 @@ void Client::run(ScreenInteractive& screen) {
 				}
 			}
 
-			if (false && dt < target) {
-				std::this_thread::sleep_for(milliseconds(target - dt));
+			dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
+
+			if (dt < target_frame) {
+				std::this_thread::sleep_for(milliseconds(target_frame - dt));
 				dt = duration_cast<milliseconds>(steady_clock::now() - start).count();
 			}
 
 			avgElapse = avgElapse + (dt - avgElapse) * weight;
-			avgPackets= avgPackets+ (numPkt - avgPackets) * weight;
-			refreshesPS = 1000.0f / avgElapse + target * 0.1f;//counter is a bit janky
+			refreshesPS = 1000.0f / avgElapse + target_frame * 0.1f;//counter is a bit janky
 
 			screen.PostEvent(Event::Custom);
 		}

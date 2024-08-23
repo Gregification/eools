@@ -32,6 +32,7 @@ IFMessager::IFMessager()
 					);
 
 					static Message msg{ .header = {.id = NetMsgType::OtherMsg} };
+					msg._body.clear();
 
 					chatMessage.packMessage(msg);
 					{//adding message meta
