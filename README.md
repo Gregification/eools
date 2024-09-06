@@ -13,7 +13,7 @@ feel free to baseline off of.
 - total trust of communicaitons
 - server trumps client for conflict resolution
 
-<a href="[https://youtu.be/q-cjrOFxMUE](https://youtu.be/q-cjrOFxMUE)" alt="quick demo">
+<a href="https://youtu.be/q-cjrOFxMUE" alt="quick demo">
     <img style="width: 100%" src="https://img.youtube.com/vi/DLsmTSdtgWU/hqdefault.jpg"/>
 </a>
 
